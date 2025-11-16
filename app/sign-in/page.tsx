@@ -3,11 +3,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AuthSkeleton } from '../components/ui/Skeleton';
 
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     // Simulate loading
@@ -88,7 +90,11 @@ export default function SignIn() {
             </p>
           </div>
 
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={(e) => {
+            e.preventDefault();
+            // Temporary dev shortcut: navigate to dashboard after sign in
+            router.push('/dashboard');
+          }}>
             {/* Email Address */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2">

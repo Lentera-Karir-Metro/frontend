@@ -43,7 +43,7 @@ export default function Courses() {
 	return (
 		<section id="courses" className="relative bg-[#FAFAFA] py-16 md:py-20 lg:py-24 overflow-hidden">
 			{/* Decorative circles - top right */}
-			<div className="absolute top-8 right-0 w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48">
+			<div className="absolute top-8 right-0 w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 rotate-180">
 				<Image
 					src="/images/polkadot.png"
 					alt="Decorative Circle"
@@ -53,9 +53,9 @@ export default function Courses() {
 			</div>
 
 			{/* Decorative circles - bottom left */}
-			<div className="absolute bottom-8 left-0 w-24 h-24 md:w-32 md:h-32 lg:w-36 lg:h-36">
+			<div className="absolute bottom-8 left-0 w-24 h-24 md:w-32 md:h-32 lg:w-36 lg:h-36 rotate-90">
 				<Image
-					src="/images/polkadot-ungu.png"
+					src="/images/polkadot-ungu-serong.png"
 					alt="Decorative Circle Ungu"
 					fill
 					className="object-cover"
@@ -65,13 +65,13 @@ export default function Courses() {
 			<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 relative z-10">
 				{/* Header */}
 				<div className="mb-12 md:mb-16">
-					<h3 className="text-[#661FFF] text-sm md:text-base font-semibold mb-3 md:mb-4">
+					<h3 className="text-[#661FFF] text-[18px] sm:text-[20px] md:text-[22px] lg:text-[24px] xl:text-[26px] 2xl:text-[28px] font-semibold mb-2 sm:mb-3 md:mb-4">
 						Our Courses
 					</h3>
 					<h2 className="text-[32px] sm:text-[36px] md:text-[40px] lg:text-[44px] font-bold text-gray-900 mb-3 md:mb-4 leading-[1.2]">
 						Kelas Unggulan dari Lentera Karir
 					</h2>
-					<p className="text-gray-700 text-[15px] md:text-[16px] lg:text-[17px] leading-[1.6] max-w-[700px]">
+					<p className="text-gray-700 text-[15px] md:text-[16px] lg:text-[17px] leading-[1.6] w-full whitespace-nowrap">
 						Setiap kelas dirancang untuk membantumu tumbuh melalui praktik nyata, bukan sekadar teori.
 					</p>
 				</div>

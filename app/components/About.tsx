@@ -2,7 +2,7 @@ import Image from 'next/image';
 
 export default function About() {
 	return (
-		<section id="about" className="relative bg-[#FAFAFA] py-20 md:py-28 lg:py-32 overflow-visible">
+		<section id="about" className="relative bg-white py-20 md:py-28 lg:py-32 overflow-visible">
 			{/* Polkadot kiri atas */}
 			<div className="absolute top-0 left-0 z-0 w-20 md:w-28 lg:w-32">
 				<Image src="/images/polkadot.png" alt="Polkadot" width={130} height={130} className="w-full h-auto" />

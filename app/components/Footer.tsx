@@ -1,7 +1,15 @@
+"use client";
 import Image from 'next/image';
-import Link from 'next/link';
 
 export default function Footer() {
+	const handleSmoothScroll = (e: any) => {
+		e.preventDefault();
+		const id = e.currentTarget.getAttribute('href')?.slice(1);
+		if (!id) return;
+		const el = document.getElementById(id);
+		if (el) el.scrollIntoView({ behavior: 'smooth' });
+	};
+
 	return (
 		<footer className="relative bg-[#661FFF] text-white py-12 md:py-16 lg:py-20 overflow-hidden">
 			{/* Decorative stars */}
@@ -80,24 +88,24 @@ export default function Footer() {
 						<h4 className="text-lg md:text-xl font-bold mb-4">Navigation</h4>
 						<ul className="space-y-2 text-sm md:text-base">
 							<li>
-								<Link href="#about" className="hover:underline">
+								<a href="#about" className="hover:underline" onClick={handleSmoothScroll}>
 									About Us
-								</Link>
+								</a>
 							</li>
 							<li>
-								<Link href="#features" className="hover:underline">
+								<a href="#features" className="hover:underline" onClick={handleSmoothScroll}>
 									Features
-								</Link>
+								</a>
 							</li>
 							<li>
-								<Link href="#testimonials" className="hover:underline">
+								<a href="#testimonies" className="hover:underline" onClick={handleSmoothScroll}>
 									Testimonies
-								</Link>
+								</a>
 							</li>
 							<li>
-								<Link href="#courses" className="hover:underline">
+								<a href="#courses" className="hover:underline" onClick={handleSmoothScroll}>
 									Courses
-								</Link>
+								</a>
 							</li>
 						</ul>
 					</div>

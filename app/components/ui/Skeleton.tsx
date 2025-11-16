@@ -75,3 +75,54 @@ export function AuthSkeleton() {
     </div>
   );
 }
+
+export function DashboardSkeleton() {
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* Navbar skeleton */}
+      <div className="h-20 md:h-24 bg-white border-b border-gray-200 flex items-center">
+        <div className="max-w-[1400px] mx-auto px-6 w-full">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-10 w-28" />
+            </div>
+            <div className="hidden md:flex items-center gap-6">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Hero */}
+      <div className="bg-gray-100 py-12 md:py-16 lg:py-20">
+        <div className="max-w-[1400px] mx-auto px-6">
+          <Skeleton className="h-12 w-1/3 mb-4" />
+          <Skeleton className="h-5 w-1/2" />
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="py-8 md:py-12 lg:py-16 bg-white">
+        <div className="max-w-[1400px] mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <Skeleton className="h-36 w-full rounded-2xl" />
+          <Skeleton className="h-36 w-full rounded-2xl" />
+          <Skeleton className="h-36 w-full rounded-2xl" />
+        </div>
+      </div>
+
+      {/* Content list */}
+      <div className="py-8 md:py-12 lg:py-16 bg-gray-50 flex-grow">
+        <div className="max-w-[1400px] mx-auto px-6 space-y-6">
+          <Skeleton className="h-8 w-1/4" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Skeleton className="h-64 w-full rounded-2xl" />
+            <Skeleton className="h-64 w-full rounded-2xl" />
+            <Skeleton className="h-64 w-full rounded-2xl" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
