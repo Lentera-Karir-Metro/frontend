@@ -1,11 +1,19 @@
 "use client";
 import Image from 'next/image';
 import DashboardNavbar from '../../components/DashboardNavbar';
-import Footer from '../../components/Footer';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { DashboardSkeleton } from '../../components/ui/Skeleton';
 
 export default function SertifikatPage() {
+	const [isLoading, setIsLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState('');
+
+	useEffect(() => {
+		const t = setTimeout(() => setIsLoading(false), 1000);
+		return () => clearTimeout(t);
+	}, []);
+
+	if (isLoading) return <DashboardSkeleton />;
 
 	// Sample certificate data - replace with actual data from API
 	const certificates = [
@@ -28,7 +36,7 @@ export default function SertifikatPage() {
 	);
 
 	return (
-		<div className="min-h-screen flex flex-col">
+		<div className="min-h-screen flex flex-col pb-18 md:pb-20 lg:pb-22 bg-white">
 			<DashboardNavbar />
 
 			<main className="flex-grow bg-[#E5E1F6]">
@@ -47,8 +55,8 @@ export default function SertifikatPage() {
 				{/* Search Bar Section */}
 				<section className="bg-[#E5E1F6] pb-8">
 					<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
-						<div className="flex flex-col sm:flex-row gap-4">
-							<div className="flex-grow relative">
+						<div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
+							<div className="flex-grow relative md:flex-grow-0 md:w-[420px]">
 								<input
 									type="text"
 									placeholder="Cari Sertifikat"
@@ -107,8 +115,6 @@ export default function SertifikatPage() {
 					</div>
 				</section>
 			</main>
-
-			<Footer />
 		</div>
 	);
 }

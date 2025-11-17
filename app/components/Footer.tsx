@@ -1,13 +1,21 @@
 "use client";
 import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Footer() {
-	const handleSmoothScroll = (e: any) => {
-		e.preventDefault();
-		const id = e.currentTarget.getAttribute('href')?.slice(1);
-		if (!id) return;
-		const el = document.getElementById(id);
-		if (el) el.scrollIntoView({ behavior: 'smooth' });
+	const pathname = usePathname();
+
+	const handleNavClick = (e: any) => {
+		const href = e.currentTarget.getAttribute('href') || e.currentTarget.dataset.href;
+		const id = href?.split('#')[1];
+		// If we're already on the homepage, do a smooth scroll to the element
+		if (pathname === '/' && id) {
+			e.preventDefault();
+			const el = document.getElementById(id);
+			if (el) el.scrollIntoView({ behavior: 'smooth' });
+		}
+		// otherwise let Link handle navigation to /#id
 	};
 
 	return (
@@ -88,24 +96,24 @@ export default function Footer() {
 						<h4 className="text-lg md:text-xl font-bold mb-4">Navigation</h4>
 						<ul className="space-y-2 text-sm md:text-base">
 							<li>
-								<a href="#about" className="hover:underline" onClick={handleSmoothScroll}>
+								<Link href="/#about" className="hover:underline" onClick={handleNavClick}>
 									About Us
-								</a>
+								</Link>
 							</li>
 							<li>
-								<a href="#features" className="hover:underline" onClick={handleSmoothScroll}>
+								<Link href="/#features" className="hover:underline" onClick={handleNavClick}>
 									Features
-								</a>
+								</Link>
 							</li>
 							<li>
-								<a href="#testimonies" className="hover:underline" onClick={handleSmoothScroll}>
+								<Link href="/#testimonies" className="hover:underline" onClick={handleNavClick}>
 									Testimonies
-								</a>
+								</Link>
 							</li>
 							<li>
-								<a href="#courses" className="hover:underline" onClick={handleSmoothScroll}>
+								<Link href="/#courses" className="hover:underline" onClick={handleNavClick}>
 									Courses
-								</a>
+								</Link>
 							</li>
 						</ul>
 					</div>

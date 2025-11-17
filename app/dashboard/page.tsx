@@ -19,7 +19,7 @@ export default function Dashboard() {
 		<div className="min-h-screen flex flex-col">
 			<DashboardNavbar />
 
-			<main className="flex-grow bg-white">
+			<main className="flex-grow bg-white pb-20 md:pb-24 lg:pb-32">
 				{/* Hero Section */}
 				<section className="relative bg-gradient-to-r from-gray-900 to-gray-800 py-12 md:py-16 lg:py-20">
 					<div className="absolute inset-0 opacity-50">
@@ -102,8 +102,7 @@ export default function Dashboard() {
 				</section>
 
 				{/* Lanjutkan Belajar Section */}
-				{/* Lanjutkan Belajar Section */}
-				<section className="py-10 md:py-14 lg:py-20">
+				<section className="py-8 md:py-10 lg:py-12">
 					<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
 						<h2 className="text-[26px] sm:text-[30px] md:text-[36px] font-bold text-gray-900 mb-6 md:mb-8">
 							Lanjutkan Belajar
@@ -144,7 +143,7 @@ export default function Dashboard() {
 				</section>
 
 				{/* Rekomendasi Kelas Section */}
-				<section className="py-8 md:py-12 lg:py-16 bg-gray-50">
+				<section className="py-0 md:py-2 lg:py-6">
 					<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
 						<h2 className="text-[24px] sm:text-[28px] md:text-[32px] font-bold text-gray-900 mb-6 md:mb-8">
 							Rekomendasi Kelas

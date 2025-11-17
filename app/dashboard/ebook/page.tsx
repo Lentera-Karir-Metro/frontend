@@ -1,11 +1,19 @@
 "use client";
 import Image from 'next/image';
 import DashboardNavbar from '../../components/DashboardNavbar';
-import Footer from '../../components/Footer';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { DashboardSkeleton } from '../../components/ui/Skeleton';
 
 export default function EbookPage() {
+	const [isLoading, setIsLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState('');
+
+	useEffect(() => {
+		const t = setTimeout(() => setIsLoading(false), 1000);
+		return () => clearTimeout(t);
+	}, []);
+
+	if (isLoading) return <DashboardSkeleton />;
 
 	// Sample ebook data - replace with actual data from API
 	const ebooks = [
@@ -28,10 +36,10 @@ export default function EbookPage() {
 	);
 
 	return (
-		<div className="min-h-screen flex flex-col">
+		<div className="min-h-screen flex flex-col pb-18 md:pb-20 lg:pb-22 bg-white">
 			<DashboardNavbar />
 
-			<main className="flex-grow bg-[#E5E1F6]">
+			<main className="flex-grow">
 				{/* Hero Section */}
 				<section className="bg-[#E5E1F6] pt-12 pb-8 md:pt-16 md:pb-12">
 					<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
@@ -47,8 +55,8 @@ export default function EbookPage() {
 				{/* Search Bar Section */}
 				<section className="bg-[#E5E1F6] pb-8">
 					<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
-						<div className="flex flex-col sm:flex-row gap-4">
-							<div className="flex-grow relative">
+						<div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
+							<div className="flex-grow relative md:flex-grow-0 md:w-[420px]">
 								<input
 									type="text"
 									placeholder="Cari Ebook"
@@ -109,8 +117,6 @@ export default function EbookPage() {
 					</div>
 				</section>
 			</main>
-
-			<Footer />
 		</div>
 	);
 }
