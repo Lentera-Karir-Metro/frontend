@@ -2,9 +2,17 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function DashboardNavbar() {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const pathname = usePathname();
+
+	const isActive = (path: string) => {
+		if (!pathname) return false;
+		if (path === '/') return pathname === '/';
+		return pathname === path || pathname.startsWith(path + '/') || pathname.startsWith(path);
+	};
 
 	return (
 		<nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -26,16 +34,16 @@ export default function DashboardNavbar() {
 
 					{/* Desktop Menu */}
 					<div className="hidden md:flex items-center gap-8 lg:gap-10">
-						<Link href="/dashboard" className="text-gray-900 hover:text-[#661FFF] transition-colors font-bold">
+						<Link href="/dashboard" className={`${isActive('/dashboard') ? 'text-gray-900' : 'text-gray-600'} hover:text-[#661FFF] transition-colors font-bold`}>
 							Dashboard
 						</Link>
-						<Link href="/explore" className="text-gray-600 hover:text-[#661FFF] transition-colors font-bold">
+						<Link href="/explore" className={`${isActive('/explore') ? 'text-gray-900' : 'text-gray-600'} hover:text-[#661FFF] transition-colors font-bold`}>
 							Explore
 						</Link>
-						<Link href="/article" className="text-gray-600 hover:text-[#661FFF] transition-colors font-bold">
+						<Link href="/article" className={`${isActive('/article') ? 'text-gray-900' : 'text-gray-600'} hover:text-[#661FFF] transition-colors font-bold`}>
 							Article
 						</Link>
-						<Link href="/contact" className="text-gray-600 hover:text-[#661FFF] transition-colors font-bold">
+						<Link href="/contact" className={`${isActive('/contact') ? 'text-gray-900' : 'text-gray-600'} hover:text-[#661FFF] transition-colors font-bold`}>
 							Contact Us
 						</Link>
 					</div>
@@ -77,16 +85,16 @@ export default function DashboardNavbar() {
 				{isMenuOpen && (
 					<div className="md:hidden py-4 border-t border-gray-200">
 						<div className="flex flex-col gap-4">
-							<Link href="/dashboard" className="text-gray-900 hover:text-[#661FFF] transition-colors font-medium">
+							<Link href="/dashboard" className={`${isActive('/dashboard') ? 'text-gray-900' : 'text-gray-600'} hover:text-[#661FFF] transition-colors font-medium`}>
 								Dashboard
 							</Link>
-							<Link href="/explore" className="text-gray-600 hover:text-[#661FFF] transition-colors font-medium">
+							<Link href="/explore" className={`${isActive('/explore') ? 'text-gray-900' : 'text-gray-600'} hover:text-[#661FFF] transition-colors font-medium`}>
 								Explore
 							</Link>
-							<Link href="/article" className="text-gray-600 hover:text-[#661FFF] transition-colors font-medium">
+							<Link href="/article" className={`${isActive('/article') ? 'text-gray-900' : 'text-gray-600'} hover:text-[#661FFF] transition-colors font-medium`}>
 								Article
 							</Link>
-							<Link href="/contact" className="text-gray-600 hover:text-[#661FFF] transition-colors font-medium">
+							<Link href="/contact" className={`${isActive('/contact') ? 'text-gray-900' : 'text-gray-600'} hover:text-[#661FFF] transition-colors font-medium`}>
 								Contact Us
 							</Link>
 						</div>
