@@ -79,7 +79,7 @@ export default function ExplorerPage() {
 						<h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
 							Explore Katalog Kelas
 						</h1>
-						<p className="font-semibold text-black text-base md:text-lg max-w-xl mx-auto">
+						<p className=" text-gray-600 text-base md:text-lg max-w-xl mx-auto">
 							Lentera karir menyediakan berbagai kelas dengan kurikulum terbaru dan sesuai standar industri
 						</p>
 					</div>
