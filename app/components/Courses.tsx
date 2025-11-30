@@ -1,44 +1,44 @@
+"use client";
+
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
+
+type LearningPath = {
+  id: string;
+  title: string;
+  description?: string;
+  price?: number;
+  thumbnail_url?: string;
+}
 
 export default function Courses() {
-	const courses = [
-		{
-			id: 1,
-			image: '/images/courses.png',
-			badge: 'Bootcamp',
-			title: 'Bootcamp: Kick-Start Karier Digital',
-			price: 'Rp250,000',
-			mentor: 'Budi (Mentor Bootcamp)',
-			mentorImage: '/images/mentor.png'
-		},
-		{
-			id: 2,
-			image: '/images/courses.png',
-			badge: 'Bootcamp',
-			title: 'Bootcamp: Kick-Start Karier Digital',
-			price: 'Rp250,000',
-			mentor: 'Budi (Mentor Bootcamp)',
-			mentorImage: '/images/mentor.png'
-		},
-		{
-			id: 3,
-			image: '/images/courses.png',
-			badge: 'Bootcamp',
-			title: 'Bootcamp: Kick-Start Karier Digital',
-			price: 'Rp250,000',
-			mentor: 'Budi (Mentor Bootcamp)',
-			mentorImage: '/images/mentor.png'
-		},
-		{
-			id: 4,
-			image: '/images/courses.png',
-			badge: 'Bootcamp',
-			title: 'Bootcamp: Kick-Start Karier Digital',
-			price: 'Rp250,000',
-			mentor: 'Budi (Mentor Bootcamp)',
-			mentorImage: '/images/mentor.png'
-		}
-	];
+	const [learningPaths, setLearningPaths] = useState<LearningPath[] | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		const base = process.env.NEXT_PUBLIC_API_BASE || '';
+		const url = `${base}/catalog/learning-paths`;
+
+		let cancelled = false;
+
+		const fetchData = async () => {
+			setIsLoading(true);
+			try {
+				const res = await fetch(url);
+				if (!res.ok) throw new Error(`Server returned ${res.status}`);
+				const data = await res.json();
+				if (!cancelled) setLearningPaths(data);
+			} catch (err: any) {
+				if (!cancelled) setError(err.message || 'Failed to load');
+			} finally {
+				if (!cancelled) setIsLoading(false);
+			}
+		};
+
+		fetchData();
+		return () => { cancelled = true };
+	}, []);
 
 	return (
 		<section id="courses" className="relative bg-[#FAFAFA] py-16 md:py-20 lg:py-24 overflow-hidden">
@@ -78,16 +78,47 @@ export default function Courses() {
 
 				{/* Courses Grid */}
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-					{courses.map((course) => (
+					{isLoading && (
+						<div className="col-span-full flex flex-col items-center justify-center py-16">
+							<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#661FFF] mb-4"></div>
+							<p className="text-gray-500 text-lg">Memuat kelas...</p>
+						</div>
+					)}
+
+					{error && (
+						<div className="col-span-full flex flex-col items-center justify-center py-16">
+							<svg className="w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+							</svg>
+							<p className="text-red-500 text-lg font-semibold">Terjadi Kesalahan</p>
+							<p className="text-gray-600 mt-2">{error}</p>
+						</div>
+					)}
+
+					{!isLoading && !error && learningPaths && learningPaths.length === 0 && (
+						<div className="col-span-full flex flex-col items-center justify-center py-16">
+							<div className="bg-gray-100 rounded-full p-6 mb-4">
+								<svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+								</svg>
+							</div>
+							<h3 className="text-gray-900 font-bold text-xl mb-2">Belum Ada Kelas Tersedia</h3>
+							<p className="text-gray-600 text-center max-w-md">
+								Kelas sedang dalam persiapan. Pantau terus halaman ini untuk update terbaru!
+							</p>
+						</div>
+					)}
+
+					{!isLoading && !error && learningPaths && learningPaths.slice(0, 4).map((lp) => (
 						<div 
-							key={course.id} 
+							key={lp.id} 
 							className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300 border border-gray-100"
 						>
 							{/* Course Image */}
 							<div className="relative w-full h-48 md:h-52 bg-gray-200">
 								<Image
-									src={course.image}
-									alt={course.title}
+									src={lp.thumbnail_url || '/images/courses.png'}
+									alt={lp.title}
 									fill
 									className="object-cover"
 								/>
@@ -95,35 +126,18 @@ export default function Courses() {
 
 							{/* Course Content */}
 							<div className="p-5 md:p-6">
-								{/* Badge */}
-								<span className="inline-block bg-[#F3E8FF] text-[#661FFF] text-xs font-medium px-3 py-1 rounded-full mb-3">
-									{course.badge}
-								</span>
 
 								{/* Title */}
 								<h3 className="text-gray-900 font-bold text-base md:text-lg mb-2 leading-snug">
-									{course.title}
+									{lp.title}
 								</h3>
 
 								{/* Price */}
-								<p className="text-gray-900 font-semibold text-base md:text-lg mb-4">
-									{course.price}
+								<p className="text-[#661FFF] font-semibold text-base md:text-lg mb-4">
+									{lp.price ? `Rp${Number(lp.price).toLocaleString('id-ID')}` : 'Gratis'}
 								</p>
 
-								{/* Mentor Info */}
-								<div className="flex items-center gap-2">
-									<div className="relative w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-										<Image
-											src={course.mentorImage}
-											alt={course.mentor}
-											fill
-											className="object-cover"
-										/>
-									</div>
-									<span className="text-gray-600 text-sm">
-										{course.mentor}
-									</span>
-								</div>
+								{/* Description intentionally hidden on this list page */}
 							</div>
 						</div>
 					))}

@@ -3,14 +3,25 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthSkeleton } from '../components/ui/Skeleton';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [verificationMsg, setVerificationMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     // Simulate loading
@@ -20,6 +31,18 @@ export default function SignIn() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    // Check if redirected from sign-up with verification needed
+    if (searchParams) {
+      const verified = searchParams.get('verified');
+      const email = searchParams.get('email');
+      
+      if (verified === 'false' && email) {
+        setVerificationMsg(`Pendaftaran berhasil! Silakan cek email ${email} untuk verifikasi akun Anda sebelum login.`);
+      }
+    }
+  }, [searchParams]);
 
   if (isLoading) {
     return <AuthSkeleton />;
@@ -91,10 +114,85 @@ export default function SignIn() {
             </p>
           </div>
 
-          <form className="space-y-6" onSubmit={(e) => {
+          {/* Verification Message */}
+          {verificationMsg && (
+            <div className="mb-6 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-xl">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <p className="text-sm font-medium">{verificationMsg}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {errorMsg && (
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                <p className="text-sm font-medium">{errorMsg}</p>
+              </div>
+            </div>
+          )}
+
+          <form className="space-y-6" onSubmit={async (e) => {
             e.preventDefault();
-            // Temporary dev shortcut: navigate to dashboard after sign in
-            router.push('/dashboard');
+            setIsSubmitting(true);
+            setErrorMsg('');
+
+            try {
+              // 1. Login ke Supabase
+              const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+              });
+
+              if (authError) {
+                setErrorMsg(authError.message === 'Invalid login credentials' 
+                  ? 'Email atau password salah' 
+                  : authError.message);
+                setIsSubmitting(false);
+                return;
+              }
+
+              if (!authData.session) {
+                setErrorMsg('Gagal mendapatkan session');
+                setIsSubmitting(false);
+                return;
+              }
+
+              // 2. Sinkronisasi ke MySQL backend
+              const syncResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/sync`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${authData.session.access_token}`
+                }
+              });
+
+              const syncData = await syncResponse.json();
+
+              if (!syncResponse.ok) {
+                setErrorMsg(syncData.message || 'Gagal sinkronisasi data');
+                setIsSubmitting(false);
+                return;
+              }
+
+              // 3. Simpan data ke localStorage
+              localStorage.setItem('supabase_token', authData.session.access_token);
+              localStorage.setItem('user_data', JSON.stringify(syncData.user));
+
+              // 4. Redirect ke dashboard
+              router.push('/dashboard');
+
+            } catch (error: any) {
+              console.error('Sign in error:', error);
+              setErrorMsg('Terjadi kesalahan. Silakan coba lagi.');
+              setIsSubmitting(false);
+            }
           }}>
             {/* Email Address */}
             <div>
@@ -104,8 +202,12 @@ export default function SignIn() {
               <input
                 type="email"
                 id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="inibudii@gmail.com"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#661FFF] transition-colors text-gray-900 placeholder:text-gray-400"
+                required
+                disabled={isSubmitting}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#661FFF] transition-colors text-gray-900 placeholder:text-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -118,8 +220,12 @@ export default function SignIn() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Input your password"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#661FFF] transition-colors text-gray-900 placeholder:text-gray-400 pr-12"
+                  required
+                  disabled={isSubmitting}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#661FFF] transition-colors text-gray-900 placeholder:text-gray-400 pr-12 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
@@ -148,9 +254,20 @@ export default function SignIn() {
             {/* Sign In Button */}
             <button
               type="submit"
-              className="w-full bg-[#661FFF] text-white py-3.5 rounded-xl font-semibold text-base hover:bg-[#5518CC] transition-colors shadow-lg shadow-[#661FFF]/20"
+              disabled={isSubmitting}
+              className="w-full bg-[#661FFF] text-white py-3.5 rounded-xl font-semibold text-base hover:bg-[#5518CC] transition-colors shadow-lg shadow-[#661FFF]/20 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              Sign In
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Signing In...
+                </>
+              ) : (
+                'Sign In'
+              )}
             </button>
 
             {/* Divider */}
@@ -166,8 +283,29 @@ export default function SignIn() {
             {/* Sign In with Google */}
             <button
               type="button"
-              onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-              className="w-full flex items-center justify-center gap-3 py-3.5 border-2 border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              onClick={async () => {
+                try {
+                  setErrorMsg('');
+                  const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                      redirectTo: `${window.location.origin}/auth/callback`,
+                      queryParams: {
+                        prompt: 'select_account',
+                      }
+                    }
+                  });
+
+                  if (error) {
+                    setErrorMsg('Gagal login dengan Google: ' + error.message);
+                  }
+                } catch (error: any) {
+                  console.error('Google sign in error:', error);
+                  setErrorMsg('Terjadi kesalahan saat login dengan Google');
+                }
+              }}
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center gap-3 py-3.5 border-2 border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

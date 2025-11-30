@@ -3,13 +3,26 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AuthSkeleton } from '../components/ui/Skeleton';
 
 export default function SignUp() {
+  const router = useRouter();
+  
+  // Form inputs
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
+  // UI states
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
     // Simulate loading
@@ -19,6 +32,130 @@ export default function SignUp() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    // Validations
+    if (!username.trim() || !email.trim() || !password || !confirmPassword) {
+      setErrorMsg('Semua field harus diisi.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMsg('Password dan konfirmasi password tidak sama.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setErrorMsg('Password minimal 6 karakter.');
+      return;
+    }
+
+    if (!agreedToTerms) {
+      setErrorMsg('Anda harus menyetujui syarat dan ketentuan.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // 1. Sign up to Supabase Auth
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      const signUpResponse = await fetch(`${supabaseUrl}/auth/v1/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey || '',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          data: {
+            username,
+          },
+        }),
+      });
+
+      const signUpData = await signUpResponse.json();
+
+      if (!signUpResponse.ok) {
+        // Handle specific error messages
+        const errorMsg = signUpData?.msg || signUpData?.error_description || signUpData?.message || 'Gagal mendaftar';
+        const lowerError = errorMsg.toLowerCase();
+        
+        if (lowerError.includes('rate limit') || lowerError.includes('email_send_rate_limit')) {
+          throw new Error('Batas Pengiriman Email Tercapai\n\nAnda telah mencoba terlalu banyak dalam waktu singkat. Silakan tunggu beberapa menit atau gunakan email lain untuk mendaftar.');
+        }
+        
+        if (lowerError.includes('already registered') || lowerError.includes('already been registered') || lowerError.includes('user already registered')) {
+          throw new Error('Email Sudah Terdaftar\n\nEmail ini sudah digunakan. Silakan gunakan email lain atau langsung login jika Anda sudah memiliki akun.');
+        }
+        
+        if (lowerError.includes('invalid email')) {
+          throw new Error('Format Email Tidak Valid\n\nSilakan periksa kembali alamat email Anda dan pastikan formatnya benar.');
+        }
+        
+        if (lowerError.includes('password') && (lowerError.includes('weak') || lowerError.includes('short'))) {
+          throw new Error('Password Terlalu Lemah\n\nGunakan password yang lebih kuat dengan minimal 6 karakter, kombinasi huruf dan angka.');
+        }
+        
+        // Default error with better formatting
+        throw new Error(`Pendaftaran Gagal\n\n${errorMsg}`);
+      }
+
+      // Check if we got access token
+      const accessToken = signUpData?.access_token;
+
+      if (!accessToken) {
+        // Email confirmation might be required
+        setSuccessMsg('Pendaftaran berhasil! Mengalihkan ke halaman login...');
+        setIsSubmitting(false);
+        
+        // Clear form
+        setUsername('');
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+        setAgreedToTerms(false);
+        
+        // Redirect to sign-in with verification message
+        setTimeout(() => {
+          router.push('/sign-in?verified=false&email=' + encodeURIComponent(email));
+        }, 2000);
+        return;
+      }
+
+      // 2. Sync with backend MySQL
+      const backendResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/auth/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!backendResponse.ok) {
+        const backendError = await backendResponse.json().catch(() => ({}));
+        throw new Error(backendError?.message || 'Gagal menyinkronkan dengan database');
+      }
+
+      // Success - redirect to dashboard
+      setSuccessMsg('Pendaftaran berhasil! Mengalihkan ke dashboard...');
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1500);
+
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Terjadi kesalahan saat mendaftar. Silakan coba lagi.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (isLoading) {
     return <AuthSkeleton />;
@@ -90,7 +227,28 @@ export default function SignUp() {
             </p>
           </div>
 
-          <form className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Error Message */}
+            {errorMsg && (
+              <div className="bg-red-50 border-2 border-red-500 text-red-700 px-4 py-4 rounded-lg shadow-sm">
+                <div className="flex items-start">
+                  <svg className="w-6 h-6 mr-3 flex-shrink-0 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold whitespace-pre-line leading-relaxed text-justify">{errorMsg}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Success Message */}
+            {successMsg && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl">
+                <p className="text-sm font-medium">{successMsg}</p>
+              </div>
+            )}
+
             {/* Username */}
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-900 mb-2">
@@ -99,8 +257,11 @@ export default function SignUp() {
               <input
                 type="text"
                 id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 placeholder="input your username"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#661FFF] transition-colors text-gray-900 placeholder:text-gray-400"
+                disabled={isSubmitting}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#661FFF] transition-colors text-gray-900 placeholder:text-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -112,8 +273,11 @@ export default function SignUp() {
               <input
                 type="email"
                 id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="input your email"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#661FFF] transition-colors text-gray-900 placeholder:text-gray-400"
+                disabled={isSubmitting}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#661FFF] transition-colors text-gray-900 placeholder:text-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -126,8 +290,11 @@ export default function SignUp() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="input your password"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#661FFF] transition-colors text-gray-900 placeholder:text-gray-400 pr-12"
+                  disabled={isSubmitting}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#661FFF] transition-colors text-gray-900 placeholder:text-gray-400 pr-12 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
@@ -157,8 +324,11 @@ export default function SignUp() {
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
                   id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="input your password"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#661FFF] transition-colors text-gray-900 placeholder:text-gray-400 pr-12"
+                  disabled={isSubmitting}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#661FFF] transition-colors text-gray-900 placeholder:text-gray-400 pr-12 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
@@ -182,9 +352,20 @@ export default function SignUp() {
             {/* Sign Up Button */}
             <button
               type="submit"
-              className="w-full bg-[#661FFF] text-white py-3.5 rounded-xl font-semibold text-base hover:bg-[#5518CC] transition-colors shadow-lg shadow-[#661FFF]/20"
+              disabled={isSubmitting}
+              className="w-full bg-[#661FFF] text-white py-3.5 rounded-xl font-semibold text-base hover:bg-[#5518CC] transition-colors shadow-lg shadow-[#661FFF]/20 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center"
             >
-              Sign Up
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Mendaftar...
+                </>
+              ) : (
+                'Sign Up'
+              )}
             </button>
 
             {/* Terms and Conditions Checkbox */}
