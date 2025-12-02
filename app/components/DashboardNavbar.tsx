@@ -1,12 +1,53 @@
 "use client";
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function DashboardNavbar() {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [isProfileOpen, setIsProfileOpen] = useState(false);
+	const [userName, setUserName] = useState('User');
+	const [userEmail, setUserEmail] = useState('');
 	const pathname = usePathname();
+	const router = useRouter();
+
+	useEffect(() => {
+		// Ambil data user dari localStorage
+		const userData = localStorage.getItem('user_data');
+		if (userData) {
+			try {
+				const user = JSON.parse(userData);
+				setUserName(user.username || user.email?.split('@')[0] || 'User');
+				setUserEmail(user.email || '');
+			} catch (error) {
+				console.error('Error parsing user data:', error);
+			}
+		}
+	}, []);
+
+	// Close dropdown when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			const target = event.target as HTMLElement;
+			if (isProfileOpen && !target.closest('.profile-dropdown-container')) {
+				setIsProfileOpen(false);
+			}
+		};
+
+		document.addEventListener('mousedown', handleClickOutside);
+		return () => document.removeEventListener('mousedown', handleClickOutside);
+	}, [isProfileOpen]);
+
+	const handleLogout = () => {
+		// Hapus semua data dari localStorage
+		localStorage.removeItem('token');
+		localStorage.removeItem('supabase_token');
+		localStorage.removeItem('user_data');
+		
+		// Redirect ke halaman sign-in
+		router.push('/sign-in');
+	};
 
 	const isActive = (path: string) => {
 		if (!pathname) return false;
@@ -58,11 +99,57 @@ export default function DashboardNavbar() {
 						</button>
 
 						{/* User Profile */}
-						<div className="flex items-center gap-6 cursor-pointer hover:opacity-80 transition-opacity">
-							<span className="hidden sm:block text-gray-900 font-medium text-sm md:text-base">Halo, Budi</span>
-							<div className="relative w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden bg-gray-200">
-								<Image src="/images/avatar-placeholder.png" alt="User" fill className="object-cover" />
+						<div className="relative profile-dropdown-container">
+							<div 
+								className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+								onClick={() => setIsProfileOpen(!isProfileOpen)}
+							>
+								<span className="hidden sm:block text-gray-900 font-medium text-sm md:text-base">
+									Halo, {userName}
+								</span>
+								<div className="relative w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden bg-gray-200">
+									<Image src="/images/avatar-placeholder.png" alt={userName} fill className="object-cover" />
+								</div>
 							</div>
+
+							{/* Dropdown Menu */}
+							{isProfileOpen && (
+								<div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+									<div className="px-4 py-3 border-b border-gray-100">
+										<p className="text-sm font-semibold text-gray-900">{userName}</p>
+										<p className="text-xs text-gray-500 truncate">{userEmail}</p>
+									</div>
+									<Link 
+										href="/dashboard" 
+										className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+										onClick={() => setIsProfileOpen(false)}
+									>
+										Dashboard
+									</Link>
+									<Link 
+										href="/dashboard/kelas" 
+										className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+										onClick={() => setIsProfileOpen(false)}
+									>
+										Kelas Saya
+									</Link>
+									<Link 
+										href="/dashboard/sertifikat" 
+										className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+										onClick={() => setIsProfileOpen(false)}
+									>
+										Sertifikat
+									</Link>
+									<div className="border-t border-gray-100 mt-2">
+										<button
+											onClick={handleLogout}
+											className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+										>
+											Logout
+										</button>
+									</div>
+								</div>
+							)}
 						</div>
 
 						{/* Mobile Menu Button */}

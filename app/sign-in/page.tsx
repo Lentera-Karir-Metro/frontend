@@ -182,7 +182,8 @@ export default function SignIn() {
               }
 
               // 3. Simpan data ke localStorage
-              localStorage.setItem('supabase_token', authData.session.access_token);
+              localStorage.setItem('token', authData.session.access_token); // Untuk payment & API calls
+              localStorage.setItem('supabase_token', authData.session.access_token); // Backup
               localStorage.setItem('user_data', JSON.stringify(syncData.user));
 
               // 4. Redirect ke dashboard

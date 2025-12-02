@@ -1,5 +1,6 @@
 "use client";
 import Image from 'next/image';
+import Link from 'next/link';
 import DashboardNavbar from '../../components/DashboardNavbar';
 import Footer from '../../components/Footer';
 import { useState, useEffect } from 'react';
@@ -7,57 +8,92 @@ import { DashboardSkeleton } from '../../components/ui/Skeleton';
 
 type FilterType = 'all' | 'progress' | 'completed';
 
+interface Course {
+	id: string;
+	title: string;
+	description: string;
+	thumbnail_url: string;
+	price: number;
+	rating: number;
+	review_count: number;
+	category: string;
+	level: string;
+	discount_amount?: number;
+	progress_percent?: number;
+	total_modules?: number;
+}
+
 export default function KelasPage() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 	const [searchQuery, setSearchQuery] = useState('');
+	const [courses, setCourses] = useState<Course[]>([]);
+	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		const t = setTimeout(() => setIsLoading(false), 1000);
-		return () => clearTimeout(t);
+		fetchMyCourses();
 	}, []);
+
+	const fetchMyCourses = async () => {
+		try {
+			setIsLoading(true);
+			setError(null);
+			const token = localStorage.getItem('token');
+			
+			if (!token) {
+				window.location.href = '/sign-in';
+				return;
+			}
+
+			const response = await fetch('http://localhost:3000/api/v1/learn/dashboard', {
+				headers: {
+					'Authorization': `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				}
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			const data = await response.json();
+			console.log('API Response:', data);
+			
+			// Handle if data is array directly or wrapped in object
+			const coursesData = Array.isArray(data) ? data : (data.data || []);
+			setCourses(coursesData);
+			
+			if (coursesData.length === 0) {
+				console.log('No courses found');
+			}
+		} catch (err: any) {
+			console.error('Error fetching courses:', err);
+			setError(err.message || 'Terjadi kesalahan saat memuat data');
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
 	if (isLoading) return <DashboardSkeleton />;
 
-	// Sample course data - replace with actual data from API
-	const courses = [
-		{
-			id: 1,
-			title: 'Bootcamp: Kick-Start Karier Digital',
-			price: 'Rp250.000',
-			rating: 5,
-			reviews: 256,
-			image: '/images/dashboard.png',
-			status: 'progress',
-			progress: 25
-		},
-		{
-			id: 2,
-			title: 'Bootcamp: Kick-Start Karier Digital',
-			price: 'Rp250.000',
-			rating: 5,
-			reviews: 256,
-			image: '/images/dashboard.png',
-			status: 'completed',
-			progress: 100
-		},
-		{
-			id: 3,
-			title: 'Bootcamp: Kick-Start Karier Digital',
-			price: 'Rp250.000',
-			rating: 5,
-			reviews: 256,
-			image: '/images/dashboard.png',
-			status: 'progress',
-			progress: 60
-		}
-	];
+	console.log('Total courses:', courses.length);
+	console.log('Active filter:', activeFilter);
 
 	const filteredCourses = courses.filter(course => {
-		const matchesFilter = activeFilter === 'all' || course.status === activeFilter;
+		// Search filter
 		const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase());
+		
+		// Progress filter
+		const progress = course.progress_percent || 0;
+		const matchesFilter = 
+			activeFilter === 'all' || 
+			(activeFilter === 'progress' && progress > 0 && progress < 100) ||
+			(activeFilter === 'completed' && progress === 100);
+		
 		return matchesFilter && matchesSearch;
 	});
+
+	console.log('Filtered courses:', filteredCourses.length);
 
 	return (
 		<div className="min-h-screen flex flex-col pb-18 md:pb-20 lg:pb-22 bg-white">
@@ -80,22 +116,28 @@ export default function KelasPage() {
 				<section className="bg-[#E5E1F6] pb-8">
 					<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
 						{/* Search Bar */}
-						<div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
-							<div className="flex-grow relative md:flex-grow-0 md:w-[420px]">
-								<input
-									type="text"
-									placeholder="Cari Kelas.."
-									value={searchQuery}
-									onChange={(e) => setSearchQuery(e.target.value)}
-									className="w-full px-6 py-4 rounded-full border-2 border-[#661FFF] focus:outline-none focus:ring-2 focus:ring-[#661FFF] text-gray-700 placeholder-gray-400"
-								/>
+						<div className="relative max-w-xl">
+							<div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400">
+								<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+								</svg>
 							</div>
-							<button className="bg-[#661FFF] text-white px-12 py-4 rounded-full font-semibold hover:bg-[#5518CC] transition-colors whitespace-nowrap">
-								Search
-							</button>
+							<input
+								type="text"
+								placeholder="Cari kelas berdasarkan judul..."
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+								className="w-full pl-14 pr-6 py-4 rounded-full border-2 border-[#661FFF] focus:outline-none focus:ring-2 focus:ring-[#661FFF] focus:ring-opacity-20 text-gray-700 placeholder-gray-400 transition-all"
+							/>
 						</div>
-
-						{/* Filter Buttons moved below purple area */}
+						{searchQuery && (
+							<p className="mt-3 text-sm text-gray-600">
+								{filteredCourses.length > 0 
+									? `Ditemukan ${filteredCourses.length} kelas`
+									: 'Tidak ada kelas ditemukan'
+								}
+							</p>
+						)}
 					</div>
 				</section>
 
@@ -136,60 +178,93 @@ export default function KelasPage() {
 							</button>
 						</div>
 
-						{filteredCourses.length === 0 ? (
+						{error ? (
 							<div className="text-center py-12">
-								<p className="text-gray-600 text-lg">Tidak ada kelas ditemukan</p>
+								<div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
+									<svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+									</svg>
+								</div>
+								<p className="text-gray-600 text-lg mb-4">{error}</p>
+								<button
+									onClick={fetchMyCourses}
+									className="px-6 py-2 bg-[#661FFF] text-white rounded-lg hover:bg-[#5518CC] transition"
+								>
+									Coba Lagi
+								</button>
+							</div>
+						) : filteredCourses.length === 0 ? (
+							<div className="text-center py-12">
+								<div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+									<svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+									</svg>
+								</div>
+								<p className="text-gray-600 text-lg mb-4">
+									{searchQuery ? 'Tidak ada kelas yang sesuai dengan pencarian' : 'Kamu belum mendaftar kelas apapun'}
+								</p>
+								{!searchQuery && (
+									<Link href="/explore" className="inline-block px-6 py-2 bg-[#661FFF] text-white rounded-lg hover:bg-[#5518CC] transition">
+										Jelajahi Kelas
+									</Link>
+								)}
 							</div>
 						) : (
 							// Jika filter 'all' tampilkan layout grid 3 kolom seperti dashboard
 							(activeFilter === 'all') ? (
 								<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
 									{filteredCourses.map((course) => (
-										<div key={course.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow border border-gray-100">
-											<div className="relative w-full h-48 md:h-52 bg-gray-200">
-												<Image src={course.image} alt={course.title} fill className="object-cover" />
-											</div>
-											<div className="p-5 md:p-6">
-												<h3 className="text-[16px] md:text-[18px] font-bold text-gray-900 mb-2">{course.title}</h3>
-												<p className="text-[18px] md:text-[20px] font-bold text-[#661FFF] mb-4">{course.price}</p>
-												<div className="flex items-center gap-2 text-yellow-500 text-sm">
-													<div className="flex items-center gap-1 leading-none">
-														{[1,2,3,4,5].map(star => (
-															<svg key={star} className="w-4 h-4 block" viewBox="0 0 329.942 329.942" fill="#f7e84b" aria-hidden="true">
-																<path d="M329.208,126.666c-1.765-5.431-6.459-9.389-12.109-10.209l-95.822-13.922l-42.854-86.837 c-2.527-5.12-7.742-8.362-13.451-8.362c-5.71,0-10.925,3.242-13.451,8.362l-42.851,86.836l-95.825,13.922 c-5.65,0.821-10.345,4.779-12.109,10.209c-1.764,5.431-0.293,11.392,3.796,15.377l69.339,67.582L57.496,305.07 c-0.965,5.628,1.348,11.315,5.967,14.671c2.613,1.899,5.708,2.865,8.818,2.865c2.387,0,4.784-0.569,6.979-1.723l85.711-45.059 l85.71,45.059c2.208,1.161,4.626,1.714,7.021,1.723c8.275-0.012,14.979-6.723,14.979-15c0-1.152-0.13-2.275-0.376-3.352 l-16.233-94.629l69.339-67.583C329.501,138.057,330.972,132.096,329.208,126.666z"/></svg>
-															))}
+										<Link key={course.id} href={`/dashboard/kelas/${course.id}`}>
+											<div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow border border-gray-100">
+												<div className="relative w-full h-48 md:h-52 bg-gray-200">
+													<Image src={course.thumbnail_url || '/images/placeholder.jpg'} alt={course.title} fill className="object-cover" />
+												</div>
+												<div className="p-5 md:p-6">
+													<h3 className="text-[16px] md:text-[18px] font-bold text-gray-900 mb-2 line-clamp-2">{course.title}</h3>
+													<p className="text-[18px] md:text-[20px] font-bold text-[#661FFF] mb-4">
+														{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(course.price)}
+													</p>
+													<div className="flex items-center gap-2 text-yellow-500 text-sm">
+														<div className="flex items-center gap-1 leading-none">
+															{[1,2,3,4,5].map(star => (
+																<svg key={star} className="w-4 h-4 block" viewBox="0 0 329.942 329.942" fill={star <= Math.floor(course.rating) ? "#f7e84b" : "#e5e7eb"} aria-hidden="true">
+																	<path d="M329.208,126.666c-1.765-5.431-6.459-9.389-12.109-10.209l-95.822-13.922l-42.854-86.837 c-2.527-5.12-7.742-8.362-13.451-8.362c-5.71,0-10.925,3.242-13.451,8.362l-42.851,86.836l-95.825,13.922 c-5.65,0.821-10.345,4.779-12.109,10.209c-1.764,5.431-0.293,11.392,3.796,15.377l69.339,67.582L57.496,305.07 c-0.965,5.628,1.348,11.315,5.967,14.671c2.613,1.899,5.708,2.865,8.818,2.865c2.387,0,4.784-0.569,6.979-1.723l85.711-45.059 l85.71,45.059c2.208,1.161,4.626,1.714,7.021,1.723c8.275-0.012,14.979-6.723,14.979-15c0-1.152-0.13-2.275-0.376-3.352 l-16.233-94.629l69.339-67.583C329.501,138.057,330.972,132.096,329.208,126.666z"/></svg>
+																))}
+														</div>
+														<span className="text-gray-600 text-sm leading-none">({course.rating.toFixed(1)})</span>
 													</div>
-													<span className="text-gray-600 text-sm leading-none">({course.reviews})</span>
 												</div>
 											</div>
-										</div>
+										</Link>
 									))}
 								</div>
 							) : (
 								// Untuk 'progress' dan 'completed' gunakan layout bar progress (tetap seperti sebelumnya)
 								<div className="grid grid-cols-1 gap-6 md:gap-8">
 									{filteredCourses.map((course) => (
-										<div key={course.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow border border-gray-100 cursor-pointer">
-											<div className="p-6 md:p-8">
-												<div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-													<div className="relative w-full sm:w-40 md:w-48 h-40 md:h-36 rounded-xl overflow-hidden bg-gray-200 flex-shrink-0">
-														<Image src={course.image} alt={course.title} fill className="object-cover" />
-													</div>
-													<div className="flex-grow w-full">
-														<h3 className="text-[16px] md:text-[18px] font-bold text-gray-900 mb-3 leading-tight">{course.title}</h3>
-														<div>
-															<div className="flex justify-between items-center mb-2">
-																<span className="text-[14px] text-gray-600">Lanjutkan Belajar</span>
-																<span className="text-[14px] font-semibold text-[#661FFF]">{course.progress}%</span>
-															</div>
-															<div className="w-full bg-gray-200 rounded-full h-3">
-																<div className="bg-[#661FFF] h-3 rounded-full" style={{ width: `${course.progress}%` }}></div>
+										<Link key={course.id} href={`/dashboard/kelas/${course.id}`}>
+											<div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow border border-gray-100 cursor-pointer">
+												<div className="p-6 md:p-8">
+													<div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+														<div className="relative w-full sm:w-40 md:w-48 h-40 md:h-36 rounded-xl overflow-hidden bg-gray-200 flex-shrink-0">
+															<Image src={course.thumbnail_url || '/images/placeholder.jpg'} alt={course.title} fill className="object-cover" />
+														</div>
+														<div className="flex-grow w-full">
+															<h3 className="text-[16px] md:text-[18px] font-bold text-gray-900 mb-3 leading-tight">{course.title}</h3>
+															<div>
+																<div className="flex justify-between items-center mb-2">
+																	<span className="text-[14px] text-gray-600">{course.progress_percent === 100 ? 'Selesai' : 'Lanjutkan Belajar'}</span>
+																	<span className="text-[14px] font-semibold text-[#661FFF]">{course.progress_percent || 0}%</span>
+																</div>
+																<div className="w-full bg-gray-200 rounded-full h-3">
+																	<div className="bg-[#661FFF] h-3 rounded-full" style={{ width: `${course.progress_percent || 0}%` }}></div>
+																</div>
 															</div>
 														</div>
 													</div>
 												</div>
 											</div>
-										</div>
+										</Link>
 									))}
 								</div>
 							)

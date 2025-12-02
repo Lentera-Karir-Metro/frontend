@@ -9,6 +9,14 @@ type LearningPath = {
   description?: string;
   price?: number;
   thumbnail_url?: string;
+  discount_amount?: number;
+  rating?: number;
+  review_count?: number;
+  category?: string;
+  level?: string;
+  mentor_name?: string;
+  mentor_title?: string;
+  mentor_avatar_url?: string;
 }
 
 export default function Courses() {
@@ -17,7 +25,7 @@ export default function Courses() {
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		const base = process.env.NEXT_PUBLIC_API_BASE || '';
+		const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 		const url = `${base}/catalog/learning-paths`;
 
 		let cancelled = false;

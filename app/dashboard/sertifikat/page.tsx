@@ -1,39 +1,80 @@
 "use client";
 import Image from 'next/image';
+import Link from 'next/link';
 import DashboardNavbar from '../../components/DashboardNavbar';
+import Footer from '../../components/Footer';
 import { useState, useEffect } from 'react';
 import { DashboardSkeleton } from '../../components/ui/Skeleton';
+
+interface Certificate {
+	id: string;
+	user_id: string;
+	learning_path_id: string;
+	issued_at: string;
+	total_hours: number;
+	certificate_url: string | null;
+	LearningPath: {
+		id: string;
+		title: string;
+		description: string;
+		thumbnail_url: string;
+		category: string;
+	};
+}
 
 export default function SertifikatPage() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState('');
+	const [certificates, setCertificates] = useState<Certificate[]>([]);
+	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		const t = setTimeout(() => setIsLoading(false), 1000);
-		return () => clearTimeout(t);
+		fetchCertificates();
 	}, []);
+
+	const fetchCertificates = async () => {
+		try {
+			const token = localStorage.getItem('token');
+			if (!token) {
+				window.location.href = '/sign-in';
+				return;
+			}
+
+			const response = await fetch('http://localhost:3000/api/v1/certificates', {
+				headers: {
+					'Authorization': `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				}
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				setCertificates(data.data || []);
+			} else {
+				setError('Gagal memuat sertifikat');
+			}
+		} catch (err) {
+			console.error('Error fetching certificates:', err);
+			setError('Terjadi kesalahan saat memuat data');
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
 	if (isLoading) return <DashboardSkeleton />;
 
-	// Sample certificate data - replace with actual data from API
-	const certificates = [
-		{
-			id: 1,
-			title: 'Bootcamp: Kick-start Karier Digital',
-			image: '/images/dashboard.png',
-			viewLink: '#'
-		},
-		{
-			id: 2,
-			title: 'Bootcamp: Kick-start Karier Digital',
-			image: '/images/dashboard.png',
-			viewLink: '#'
-		}
-	];
-
 	const filteredCertificates = certificates.filter(cert => 
-		cert.title.toLowerCase().includes(searchQuery.toLowerCase())
+		cert.LearningPath.title.toLowerCase().includes(searchQuery.toLowerCase())
 	);
+
+	const formatDate = (dateString: string) => {
+		const date = new Date(dateString);
+		return date.toLocaleDateString('id-ID', { 
+			day: 'numeric', 
+			month: 'long', 
+			year: 'numeric' 
+		});
+	};
 
 	return (
 		<div className="min-h-screen flex flex-col pb-18 md:pb-20 lg:pb-22 bg-white">
@@ -55,20 +96,28 @@ export default function SertifikatPage() {
 				{/* Search Bar Section */}
 				<section className="bg-[#E5E1F6] pb-8">
 					<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
-						<div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
-							<div className="flex-grow relative md:flex-grow-0 md:w-[420px]">
-								<input
-									type="text"
-									placeholder="Cari Sertifikat"
-									value={searchQuery}
-									onChange={(e) => setSearchQuery(e.target.value)}
-									className="w-full px-6 py-4 rounded-full border-2 border-[#661FFF] focus:outline-none focus:ring-2 focus:ring-[#661FFF] text-gray-700 placeholder-gray-400"
-								/>
+						<div className="relative max-w-xl">
+							<div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400">
+								<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+								</svg>
 							</div>
-							<button className="bg-[#661FFF] text-white px-12 py-4 rounded-full font-semibold hover:bg-[#5518CC] transition-colors whitespace-nowrap">
-								Search
-							</button>
+							<input
+								type="text"
+								placeholder="Cari sertifikat berdasarkan judul kelas..."
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+								className="w-full pl-14 pr-6 py-4 rounded-full border-2 border-[#661FFF] focus:outline-none focus:ring-2 focus:ring-[#661FFF] focus:ring-opacity-20 text-gray-700 placeholder-gray-400 transition-all"
+							/>
 						</div>
+						{searchQuery && (
+							<p className="mt-3 text-sm text-gray-600">
+								{filteredCertificates.length > 0 
+									? `Ditemukan ${filteredCertificates.length} sertifikat`
+									: 'Tidak ada sertifikat ditemukan'
+								}
+							</p>
+						)}
 					</div>
 				</section>
 
@@ -87,26 +136,65 @@ export default function SertifikatPage() {
 										className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow border border-gray-200"
 									>
 										{/* Certificate Image */}
-										<div className="relative w-full h-48 md:h-56 bg-gray-100 p-4">
-											<Image
-												src={certificate.image}
-												alt={certificate.title}
-												fill
-												className="object-contain p-2"
-											/>
+										<div className="relative w-full h-48 md:h-56 bg-gradient-to-br from-[#661FFF] to-[#9D6FFF]">
+											<div className="absolute inset-0 flex items-center justify-center">
+												<div className="relative w-full h-full">
+													<Image
+														src={certificate.LearningPath.thumbnail_url || '/images/placeholder.jpg'}
+														alt={certificate.LearningPath.title}
+														fill
+														className="object-cover opacity-30"
+													/>
+												</div>
+												<div className="absolute inset-0 flex items-center justify-center">
+													<div className="text-center text-white">
+														<div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm mb-2">
+															<svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+																<path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z" />
+																<path d="M3 8a2 2 0 012-2v10h8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+															</svg>
+														</div>
+														<span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-semibold">
+															{certificate.LearningPath.category}
+														</span>
+													</div>
+												</div>
+											</div>
 										</div>
 
 										{/* Certificate Info */}
 										<div className="p-5 md:p-6">
-											<h3 className="text-[16px] md:text-[18px] font-bold text-gray-900 mb-3 leading-tight">
-												{certificate.title}
+											<h3 className="text-[16px] md:text-[18px] font-bold text-gray-900 mb-2 leading-tight line-clamp-2">
+												{certificate.LearningPath.title}
 											</h3>
-											<a
-												href={certificate.viewLink}
-												className="text-[14px] md:text-[16px] font-semibold text-[#661FFF] hover:text-[#5518CC] underline transition-colors"
-											>
-												Lihat Sertifikat
-											</a>
+											<div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
+												<span>
+													{new Date(certificate.issued_at).toLocaleDateString('id-ID', { 
+														day: 'numeric', 
+														month: 'long', 
+														year: 'numeric' 
+													})}
+												</span>
+												<span>•</span>
+												<span>{certificate.total_hours} Jam</span>
+											</div>
+											{certificate.certificate_url ? (
+												<a
+													href={certificate.certificate_url}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="inline-block text-[14px] md:text-[16px] font-semibold text-[#661FFF] hover:text-[#5518CC] underline transition-colors"
+												>
+													Lihat Sertifikat
+												</a>
+											) : (
+												<Link
+													href={`/dashboard/sertifikat/${certificate.id}`}
+													className="inline-block text-[14px] md:text-[16px] font-semibold text-[#661FFF] hover:text-[#5518CC] underline transition-colors"
+												>
+													Lihat Detail
+												</Link>
+											)}
 										</div>
 									</div>
 								))}
@@ -115,6 +203,8 @@ export default function SertifikatPage() {
 					</div>
 				</section>
 			</main>
+
+			<Footer />
 		</div>
 	);
 }
