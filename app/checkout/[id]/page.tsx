@@ -123,19 +123,61 @@ export default function CheckoutPage() {
 				throw new Error(data.message || data.error || 'Checkout failed');
 			}
 
+			// Helper function untuk check payment status
+			const checkPaymentStatus = async (orderId: string) => {
+				try {
+					console.log('[AutoSync] Checking payment status for:', orderId);
+					const checkResponse = await fetch(`${baseUrl}/payments/status/${orderId}`, {
+						headers: {
+							'Authorization': `Bearer ${token}`
+						}
+					});
+					const statusData = await checkResponse.json();
+					console.log('[AutoSync] Payment status response:', statusData);
+					
+					if (statusData.success && statusData.status === 'success') {
+						console.log('[AutoSync] ✅ Payment confirmed and synced to database!');
+					}
+					
+					return statusData;
+				} catch (err) {
+					console.error('[AutoSync] Error checking payment status:', err);
+					return null;
+				}
+			};
+
 			// Gunakan Snap.js untuk embed payment form
 			if (data.transaction && data.transaction.token) {
 				setIsPaymentPopupOpen(true); // Aktifkan blur overlay
 				
 				window.snap.pay(data.transaction.token, {
-					onSuccess: function(result: any) {
-						console.log('Payment success:', result);
+					onSuccess: async function(result: any) {
+						console.log('[Midtrans] Payment success:', result);
 						setIsPaymentPopupOpen(false);
+						
+						// Auto-check payment status untuk sync dengan database
+						if (result.order_id) {
+							console.log('[AutoSync] Starting auto-sync for order:', result.order_id);
+							const syncResult = await checkPaymentStatus(result.order_id);
+							if (syncResult?.success) {
+								console.log('[AutoSync] ✅ Sync successful!');
+							} else {
+								console.warn('[AutoSync] ⚠️ Sync failed or incomplete');
+							}
+						}
+						
 						router.push(`/payment/success?order_id=${result.order_id}&transaction_status=${result.transaction_status}`);
 					},
-					onPending: function(result: any) {
-						console.log('Payment pending:', result);
+					onPending: async function(result: any) {
+						console.log('[Midtrans] Payment pending:', result);
 						setIsPaymentPopupOpen(false);
+						
+						// Auto-check payment status untuk sync dengan database
+						if (result.order_id) {
+							console.log('[AutoSync] Checking pending payment:', result.order_id);
+							await checkPaymentStatus(result.order_id);
+						}
+						
 						router.push(`/payment/pending?order_id=${result.order_id}&transaction_status=${result.transaction_status}`);
 					},
 					onError: function(result: any) {
@@ -144,10 +186,29 @@ export default function CheckoutPage() {
 						setError('Pembayaran gagal. Silakan coba lagi.');
 						setIsProcessing(false);
 					},
-					onClose: function() {
-						console.log('Payment popup closed');
+					onClose: async function() {
+						console.log('[Midtrans] Payment popup closed by user');
 						setIsPaymentPopupOpen(false);
 						setIsProcessing(false);
+						
+						// Sync semua pending payments saat popup ditutup
+						try {
+							console.log('[AutoSync] Syncing all pending payments...');
+							const syncResponse = await fetch(`${baseUrl}/payments/sync`, {
+								method: 'POST',
+								headers: {
+									'Authorization': `Bearer ${token}`
+								}
+							});
+							const syncData = await syncResponse.json();
+							console.log('[AutoSync] Sync result:', syncData);
+							
+							if (syncData.synced > 0) {
+								console.log(`[AutoSync] ✅ Synced ${syncData.synced} payment(s)`);
+							}
+						} catch (err) {
+							console.error('[AutoSync] Error syncing payments:', err);
+						}
 					}
 				});
 			} else {

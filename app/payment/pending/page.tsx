@@ -9,20 +9,56 @@ export default function PaymentPendingPage() {
 	const searchParams = useSearchParams();
 	const [countdown, setCountdown] = useState(10);
 
+	// Auto-check payment status untuk sync dengan database
+	useEffect(() => {
+		const orderId = searchParams.get('order_id');
+		if (orderId) {
+			const checkStatus = async () => {
+				try {
+					console.log('[PendingPage] Auto-checking payment status for:', orderId);
+					const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+					const token = localStorage.getItem('token');
+					
+					if (token) {
+						const response = await fetch(`${baseUrl}/payments/status/${orderId}`, {
+							headers: {
+								'Authorization': `Bearer ${token}`
+							}
+						});
+						const data = await response.json();
+						console.log('[PendingPage] Status check result:', data);
+						
+						// Jika ternyata sudah success, redirect ke success page
+						if (data.status === 'success') {
+							console.log('[PendingPage] ✅ Payment confirmed! Redirecting to success page...');
+							router.push(`/payment/success?order_id=${orderId}&transaction_status=settlement`);
+						} else {
+							console.log('[PendingPage] Payment still pending:', data.status);
+						}
+					} else {
+						console.warn('[PendingPage] No token found, skipping auto-sync');
+					}
+				} catch (err) {
+					console.error('[PendingPage] Error checking payment status:', err);
+				}
+			};
+			checkStatus();
+		}
+	}, [searchParams, router]);
+
 	useEffect(() => {
 		const timer = setInterval(() => {
-			setCountdown((prev) => {
-				if (prev <= 1) {
-					clearInterval(timer);
-					router.push('/dashboard');
-					return 0;
-				}
-				return prev - 1;
-			});
+			setCountdown((prev) => prev - 1);
 		}, 1000);
 
 		return () => clearInterval(timer);
-	}, [router]);
+	}, []);
+
+	useEffect(() => {
+		if (countdown <= 0) {
+			router.push('/dashboard');
+		}
+	}, [countdown, router]);
 
 	const orderId = searchParams.get('order_id');
 	const transactionStatus = searchParams.get('transaction_status');
