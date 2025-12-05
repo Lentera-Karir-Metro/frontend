@@ -1,8 +1,19 @@
+"use client";
+import { useCallback } from 'react';
 import Navbar from './Navbar';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function Hero() {
+  const handleSmoothScroll = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
+    // If it's a normal Link navigation, prevent the default and smooth scroll to target
+    event.preventDefault();
+    const targetId = event.currentTarget.getAttribute('href')?.slice(1);
+    const targetElement = targetId ? document.getElementById(targetId) : null;
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
   return (
     <section className="relative min-h-screen w-full overflow-hidden bg-gray-900">
       {/* Background Image with Overlay */}
@@ -45,6 +56,7 @@ export default function Hero() {
               {/* CTA Button */}
               <Link
                 href="#courses"
+                onClick={handleSmoothScroll}
                 className="inline-block px-8 sm:px-9 2xl:px-11 py-3 sm:py-3.5 2xl:py-4 bg-[#661FFF] text-white text-[15px] sm:text-[16px] 2xl:text-[18px] font-semibold rounded-full hover:bg-[#4B13B3] transition-all hover:scale-105 shadow-lg shadow-[#661FFF]/30"
               >
                 Mulai Belajar Sekarang

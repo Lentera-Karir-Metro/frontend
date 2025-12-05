@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import DashboardNavbar from '../../components/DashboardNavbar';
 import Footer from '../../components/Footer';
+import Toast from '../../components/Toast';
 import { useState, useEffect } from 'react';
 import { DashboardSkeleton } from '../../components/ui/Skeleton';
 
@@ -28,7 +29,7 @@ export default function KelasPage() {
 	const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 	const [searchQuery, setSearchQuery] = useState('');
 	const [courses, setCourses] = useState<Course[]>([]);
-	const [error, setError] = useState<string | null>(null);
+	const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
 	useEffect(() => {
 		fetchMyCourses();
@@ -37,7 +38,7 @@ export default function KelasPage() {
 	const fetchMyCourses = async () => {
 		try {
 			setIsLoading(true);
-			setError(null);
+			setToastMessage(null);
 			const token = localStorage.getItem('token');
 			
 			if (!token) {
@@ -68,7 +69,7 @@ export default function KelasPage() {
 			}
 		} catch (err: any) {
 			console.error('Error fetching courses:', err);
-			setError(err.message || 'Terjadi kesalahan saat memuat data');
+			setToastMessage({ type: 'error', text: err.message || 'Terjadi kesalahan saat memuat data' });
 		} finally {
 			setIsLoading(false);
 		}
@@ -96,8 +97,17 @@ export default function KelasPage() {
 	console.log('Filtered courses:', filteredCourses.length);
 
 	return (
-		<div className="min-h-screen flex flex-col pb-18 md:pb-20 lg:pb-22 bg-white">
-			<DashboardNavbar />
+		<>
+			{toastMessage && (
+				<Toast
+					type={toastMessage.type}
+					message={toastMessage.type === 'success' ? 'Berhasil' : 'Terjadi Kesalahan'}
+					subMessage={toastMessage.text}
+					onClose={() => setToastMessage(null)}
+				/>
+			)}
+			<div className="min-h-screen flex flex-col pb-18 md:pb-20 lg:pb-22 bg-white">
+				<DashboardNavbar />
 
 			<main className="flex-grow bg-[#E5E1F6]">
 				{/* Hero Section */}
@@ -178,22 +188,7 @@ export default function KelasPage() {
 							</button>
 						</div>
 
-						{error ? (
-							<div className="text-center py-12">
-								<div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
-									<svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-									</svg>
-								</div>
-								<p className="text-gray-600 text-lg mb-4">{error}</p>
-								<button
-									onClick={fetchMyCourses}
-									className="px-6 py-2 bg-[#661FFF] text-white rounded-lg hover:bg-[#5518CC] transition"
-								>
-									Coba Lagi
-								</button>
-							</div>
-						) : filteredCourses.length === 0 ? (
+						{filteredCourses.length === 0 ? (
 							<div className="text-center py-12">
 								<div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
 									<svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -272,6 +267,8 @@ export default function KelasPage() {
 					</div>
 				</section>
 			</main>
-		</div>
+			<Footer />
+			</div>
+		</>
 	);
 }

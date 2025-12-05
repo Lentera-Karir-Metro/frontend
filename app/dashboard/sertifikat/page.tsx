@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import DashboardNavbar from '../../components/DashboardNavbar';
 import Footer from '../../components/Footer';
+import Toast from '../../components/Toast';
 import { useState, useEffect } from 'react';
 import { DashboardSkeleton } from '../../components/ui/Skeleton';
 
@@ -26,7 +27,7 @@ export default function SertifikatPage() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [certificates, setCertificates] = useState<Certificate[]>([]);
-	const [error, setError] = useState<string | null>(null);
+	const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
 	useEffect(() => {
 		fetchCertificates();
@@ -51,11 +52,11 @@ export default function SertifikatPage() {
 				const data = await response.json();
 				setCertificates(data.data || []);
 			} else {
-				setError('Gagal memuat sertifikat');
+				setToastMessage({ type: 'error', text: 'Gagal memuat sertifikat' });
 			}
 		} catch (err) {
 			console.error('Error fetching certificates:', err);
-			setError('Terjadi kesalahan saat memuat data');
+			setToastMessage({ type: 'error', text: 'Terjadi kesalahan saat memuat data' });
 		} finally {
 			setIsLoading(false);
 		}
@@ -77,8 +78,17 @@ export default function SertifikatPage() {
 	};
 
 	return (
-		<div className="min-h-screen flex flex-col pb-18 md:pb-20 lg:pb-22 bg-white">
-			<DashboardNavbar />
+		<>
+			{toastMessage && (
+				<Toast
+					type={toastMessage.type}
+					message={toastMessage.type === 'success' ? 'Berhasil' : 'Terjadi Kesalahan'}
+					subMessage={toastMessage.text}
+					onClose={() => setToastMessage(null)}
+				/>
+			)}
+			<div className="min-h-screen flex flex-col pb-18 md:pb-20 lg:pb-22 bg-white">
+				<DashboardNavbar />
 
 			<main className="flex-grow bg-[#E5E1F6]">
 				{/* Hero Section */}
@@ -126,7 +136,23 @@ export default function SertifikatPage() {
 					<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
 						{filteredCertificates.length === 0 ? (
 							<div className="text-center py-12">
-								<p className="text-gray-600 text-lg">Tidak ada sertifikat ditemukan</p>
+								<div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+									<svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+										<path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z" />
+										<path d="M3 8a2 2 0 012-2v10h8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+									</svg>
+								</div>
+								<p className="text-gray-600 text-lg mb-2">
+									{searchQuery ? 'Tidak ada sertifikat yang sesuai dengan pencarian' : 'Kamu belum memiliki sertifikat'}
+								</p>
+								<p className="text-gray-500 text-sm mb-6">
+									Selesaikan kelas hingga 100% untuk mendapatkan sertifikat
+								</p>
+								{!searchQuery && (
+									<Link href="/dashboard/kelas" className="inline-block px-6 py-2 bg-[#661FFF] text-white rounded-lg hover:bg-[#5518CC] transition">
+										Lihat Kelas Saya
+									</Link>
+								)}
 							</div>
 						) : (
 							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
@@ -206,5 +232,6 @@ export default function SertifikatPage() {
 
 			<Footer />
 		</div>
+		</>
 	);
 }

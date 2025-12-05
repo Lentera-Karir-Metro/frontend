@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import DashboardNavbar from '../components/DashboardNavbar';
 import Footer from '../components/Footer';
+import Toast from '../components/Toast';
 import { useState, useEffect } from 'react';
 import { DashboardSkeleton } from '../components/ui/Skeleton';
 
@@ -40,7 +41,7 @@ export default function Dashboard() {
 	const [stats, setStats] = useState<DashboardStats>({ totalKelas: 0, totalEbook: 0, totalSertifikat: 0 });
 	const [continueLearning, setContinueLearning] = useState<ContinueLearning | null>(null);
 	const [recommended, setRecommended] = useState<RecommendedCourse[]>([]);
-	const [error, setError] = useState<string | null>(null);
+	const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
 	useEffect(() => {
 		fetchDashboardData();
@@ -86,15 +87,24 @@ export default function Dashboard() {
 			setIsLoading(false);
 		} catch (err) {
 			console.error('Error fetching dashboard data:', err);
-			setError('Gagal memuat data dashboard');
+			setToastMessage({ type: 'error', text: 'Gagal memuat data dashboard' });
 			setIsLoading(false);
 		}
 	};
 
 	if (isLoading) return <DashboardSkeleton />;
 	return (
-		<div className="min-h-screen flex flex-col">
-			<DashboardNavbar />
+		<>
+			{toastMessage && (
+				<Toast
+					type={toastMessage.type}
+					message={toastMessage.type === 'success' ? 'Berhasil' : 'Terjadi Kesalahan'}
+					subMessage={toastMessage.text}
+					onClose={() => setToastMessage(null)}
+				/>
+			)}
+			<div className="min-h-screen flex flex-col">
+				<DashboardNavbar />
 
 			<main className="flex-grow bg-white pb-20 md:pb-24 lg:pb-32">
 				{/* Hero Section */}
@@ -299,6 +309,7 @@ export default function Dashboard() {
 			</main>
 
 			<Footer />
-		</div>
+			</div>
+		</>
 	);
 }

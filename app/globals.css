@@ -51,3 +51,19 @@ body {
 .animate-marquee-right {
   animation: marquee-right 30s linear infinite;
 }
+
+/* Toast Slide In From Right Animation */
+@keyframes slide-in-right {
+  0% {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-right {
+  animation: slide-in-right 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}

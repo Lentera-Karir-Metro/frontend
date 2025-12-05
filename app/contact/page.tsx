@@ -1,7 +1,9 @@
 "use client";
 import { useState } from 'react';
+import emailjs from 'emailjs-com';
 import DashboardNavbar from '../components/DashboardNavbar';
 import Footer from '../components/Footer';
+import Toast from '../components/Toast';
 
 export default function ContactPage() {
 	const [formData, setFormData] = useState({
@@ -9,11 +11,52 @@ export default function ContactPage() {
 		email: '',
 		message: ''
 	});
+	const [isLoading, setIsLoading] = useState(false);
+	const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		// Handle form submission (bisa disambungkan ke API)
-		console.log('Form submitted:', formData);
+		setIsLoading(true);
+		setStatusMessage(null);
+
+		try {
+			// EmailJS configuration
+			const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'YOUR_SERVICE_ID';
+			const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || 'YOUR_TEMPLATE_ID';
+			const userId = process.env.NEXT_PUBLIC_EMAILJS_USER_ID || 'YOUR_USER_ID';
+
+			// Template parameters
+			const templateParams = {
+				from_name: formData.username,
+				from_email: formData.email,
+				message: formData.message,
+				to_email: 'lentera.karir.internship15@gmail.com'
+			};
+
+			// Send email via EmailJS
+			await emailjs.send(serviceId, templateId, templateParams, userId);
+
+			// Success
+			setStatusMessage({ 
+				type: 'success', 
+				text: 'Pesan Anda berhasil dikirim' 
+			});
+			
+			// Reset form
+			setFormData({
+				username: '',
+				email: '',
+				message: ''
+			});
+		} catch (error) {
+			console.error('EmailJS Error:', error);
+			setStatusMessage({ 
+				type: 'error', 
+				text: 'Gagal mengirim pesan. Silakan coba lagi.' 
+			});
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -25,6 +68,24 @@ export default function ContactPage() {
 
 	return (
 		<div className="min-h-screen flex flex-col bg-gray-50">
+			{/* Toast Notification */}
+			{statusMessage && (
+				<Toast
+					type={statusMessage.type}
+					message={
+						statusMessage.type === 'success'
+							? 'Pesan Anda berhasil dikirim'
+							: 'Pesan gagal dikirim'
+					}
+					subMessage={
+						statusMessage.type === 'success'
+							? 'Terima kasih — tim admin akan membaca dan menindaklanjuti pesan Anda.'
+							: 'Silakan coba lagi nanti atau hubungi tim admin jika masalah berlanjut.'
+					}
+					onClose={() => setStatusMessage(null)}
+				/>
+			)}
+
 			<DashboardNavbar />
 
 			{/* Main Content */}
@@ -93,9 +154,24 @@ export default function ContactPage() {
 						{/* Submit Button */}
 						<button
 							type="submit"
-							className="w-full bg-[#661FFF] text-white py-4 rounded-full font-semibold text-base md:text-lg hover:bg-[#5518CC] transition-colors shadow-lg shadow-[#661FFF]/30"
+							disabled={isLoading}
+							className={`w-full py-4 rounded-full font-semibold text-base md:text-lg transition-colors shadow-lg ${
+								isLoading
+									? 'bg-gray-400 cursor-not-allowed'
+									: 'bg-[#661FFF] hover:bg-[#5518CC] shadow-[#661FFF]/30'
+							} text-white flex items-center justify-center gap-2`}
 						>
-							Submit
+							{isLoading ? (
+								<>
+									<svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+										<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+										<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+									</svg>
+									Mengirim...
+								</>
+							) : (
+								'Submit'
+							)}
 						</button>
 					</form>
 				</div>
