@@ -56,67 +56,70 @@ export default function CourseLearnPage() {
 	const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
 	const [showQuiz, setShowQuiz] = useState(false);
 	const [currentQuiz, setCurrentQuiz] = useState<any>(null);
+	const [currentAttemptId, setCurrentAttemptId] = useState<string | null>(null);
 	const [quizAnswers, setQuizAnswers] = useState<{ [key: number]: number }>({});
 	const [showSubmitModal, setShowSubmitModal] = useState(false);
 	const [showResultModal, setShowResultModal] = useState(false);
-	const [quizScore, setQuizScore] = useState(0);
+	const [quizResult, setQuizResult] = useState<any>(null);
+	const [quizBestScore, setQuizBestScore] = useState<number | null>(null);
+	const [quizHasPassed, setQuizHasPassed] = useState<boolean>(false);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	useEffect(() => {
-		const fetchLearningContent = async () => {
-			try {
-				setIsLoading(true);
-				const token = localStorage.getItem('token');
-				
-				if (!token) {
-					router.push('/sign-in');
+	const fetchLearningContent = async () => {
+		try {
+			setIsLoading(true);
+			const token = localStorage.getItem('token');
+			
+			if (!token) {
+				router.push('/sign-in');
+				return;
+			}
+
+			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+			const response = await fetch(`${baseUrl}/learn/learning-paths/${courseId}`, {
+				headers: {
+					'Authorization': `Bearer ${token}`
+				}
+			});
+
+			if (!response.ok) {
+				if (response.status === 403) {
+					// User belum beli kelas
+					alert('Anda belum terdaftar di kelas ini. Silakan beli kelas terlebih dahulu.');
+					router.push(`/course/${courseId}`);
 					return;
 				}
-
-				const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
-				const response = await fetch(`${baseUrl}/learn/learning-paths/${courseId}`, {
-					headers: {
-						'Authorization': `Bearer ${token}`
-					}
-				});
-
-				if (!response.ok) {
-					if (response.status === 403) {
-						// User belum beli kelas
-						alert('Anda belum terdaftar di kelas ini. Silakan beli kelas terlebih dahulu.');
-						router.push(`/course/${courseId}`);
-						return;
-					}
-					throw new Error(`Failed to fetch: ${response.status}`);
-				}
-
-				const data = await response.json();
-				setLearningPathData(data);
-
-				// Auto-expand first course dan set first video module
-				if (data.courses && data.courses.length > 0) {
-					const firstCourse = data.courses[0];
-					setExpandedSections({ [firstCourse.course_id]: true });
-
-					// Find first video module (all modules unlocked)
-					for (const course of data.courses) {
-						const firstVideo = course.modules?.find((m: Module) => m.type === 'video');
-						if (firstVideo) {
-							setCurrentModule(firstVideo);
-							setVideoSrc(firstVideo.video_url || '');
-							break;
-						}
-					}
-				}
-			} catch (err: any) {
-				console.error('Error fetching learning content:', err);
-				setError(err.message || 'Failed to load learning content');
-			} finally {
-				setIsLoading(false);
+				throw new Error(`Failed to fetch: ${response.status}`);
 			}
-		};
 
+			const data = await response.json();
+			setLearningPathData(data);
+
+			// Auto-expand first course dan set first video module
+			if (data.courses && data.courses.length > 0) {
+				const firstCourse = data.courses[0];
+				setExpandedSections({ [firstCourse.course_id]: true });
+
+				// Find first video module (all modules unlocked)
+				for (const course of data.courses) {
+					const firstVideo = course.modules?.find((m: Module) => m.type === 'video');
+					if (firstVideo) {
+						setCurrentModule(firstVideo);
+						setVideoSrc(firstVideo.video_url || '');
+						break;
+					}
+				}
+			}
+		} catch (err: any) {
+			console.error('Error fetching learning content:', err);
+			setError(err.message || 'Failed to load learning content');
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	useEffect(() => {
 		if (courseId) {
 			fetchLearningContent();
 		}
@@ -142,6 +145,28 @@ export default function CourseLearnPage() {
 			return `${hrs}:${mins.toString().padStart(2, '0')}`;
 		}
 		return `${mins}:00`;
+	};
+
+	const savePartialAnswer = async (questionId: string, optionId: string) => {
+		try {
+			const token = localStorage.getItem('token');
+			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+			
+			await fetch(`${baseUrl}/learn/attempts/${currentAttemptId}/answer`, {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					question_id: questionId,
+					selected_option_id: optionId
+				})
+			});
+		} catch (err) {
+			console.error('[Quiz] Error saving partial answer:', err);
+			// Don't show error to user, it's background save
+		}
 	};
 
 	const handleModuleClick = async (module: Module) => {
@@ -183,7 +208,10 @@ export default function CourseLearnPage() {
 				const data = await response.json();
 				console.log('[Quiz] Loaded quiz data:', data);
 				setCurrentQuiz(data.quiz);
-				setQuizAnswers({}); // Reset answers
+				setCurrentAttemptId(data.attempt_id);
+				setQuizAnswers(data.partial_answers || {}); // Load saved answers if resuming
+				setQuizBestScore(data.best_score);
+				setQuizHasPassed(data.has_passed || false);
 			} catch (err: any) {
 				console.error('[Quiz] Error loading quiz:', err);
 				alert(err.message || 'Gagal memuat quiz. Silakan coba lagi.');
@@ -523,203 +551,74 @@ export default function CourseLearnPage() {
 						) : (
 							/* Quiz Content */
 							<div className="bg-white rounded-xl shadow-lg p-8">
-								<h2 className="text-3xl font-bold text-gray-900 mb-8">Final Quiz</h2>
-								
-								<div className="space-y-8">
-									{/* Question 1 */}
-									<div className="space-y-4">
-										<div className="flex gap-2">
-											<span className="text-gray-900 font-medium">1.</span>
-											<p className="text-gray-900 font-medium flex-1">
-												Prinsip utama Digital Mindset yang menekankan percepatan dan pengoptimalan bisnis melalui data dalam lingkungan kerja yang selalu cepat adalah:
-											</p>
+								<div className="flex items-center justify-between mb-8">
+									<h2 className="text-3xl font-bold text-gray-900">{currentQuiz?.title || 'Final Quiz'}</h2>
+									{quizHasPassed && (
+										<div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full">
+											<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+												<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+											</svg>
+											<span className="font-semibold">Lulus</span>
 										</div>
-										<div className="space-y-3 ml-6">
-											<div 
-												onClick={() => setQuizAnswers({...quizAnswers, 1: 0})}
-												className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
-													quizAnswers[1] === 0 ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-												}`}
-											>
-												<span className="text-gray-900">Fixed Budget</span>
-											</div>
-											<div 
-												onClick={() => setQuizAnswers({...quizAnswers, 1: 1})}
-												className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
-													quizAnswers[1] === 1 ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-												}`}
-											>
-												<span className="text-gray-900">Top-Down Hierarchy</span>
-											</div>
-											<div 
-												onClick={() => setQuizAnswers({...quizAnswers, 1: 2})}
-												className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
-													quizAnswers[1] === 2 ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-												}`}
-											>
-												<span className="text-gray-900">Agility (Ketangkasan)</span>
-											</div>
-											<div 
-												onClick={() => setQuizAnswers({...quizAnswers, 1: 3})}
-												className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
-													quizAnswers[1] === 3 ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-												}`}
-											>
-												<span className="text-gray-900">Waterfall Method</span>
-											</div>
-										</div>
-									</div>
-
-									{/* Question 2 */}
-									<div className="space-y-4">
-										<div className="flex gap-2">
-											<span className="text-gray-900 font-medium">2.</span>
-											<p className="text-gray-900 font-medium flex-1">
-												Aktivitas yang termasuk dalam kategori 'Off-Page SEO' adalah:
-											</p>
-										</div>
-										<div className="space-y-3 ml-6">
-											<div 
-												onClick={() => setQuizAnswers({...quizAnswers, 2: 0})}
-												className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
-													quizAnswers[2] === 0 ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-												}`}
-											>
-												<span className="text-gray-900">Pembuatan backlink berkualitas dari situs otoratif</span>
-											</div>
-											<div 
-												onClick={() => setQuizAnswers({...quizAnswers, 2: 1})}
-												className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
-													quizAnswers[2] === 1 ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-												}`}
-											>
-												<span className="text-gray-900">Optimasi kecepatan website</span>
-											</div>
-											<div 
-												onClick={() => setQuizAnswers({...quizAnswers, 2: 2})}
-												className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
-													quizAnswers[2] === 2 ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-												}`}
-											>
-												<span className="text-gray-900">Perbaikan struktur URL</span>
-											</div>
-											<div 
-												onClick={() => setQuizAnswers({...quizAnswers, 2: 3})}
-												className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
-													quizAnswers[2] === 3 ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-												}`}
-											>
-												<span className="text-gray-900">Penggunaan tag H1 yang relevan</span>
-											</div>
-										</div>
-									</div>
-
-									{/* Question 3 */}
-									<div className="space-y-4">
-										<div className="flex gap-2">
-											<span className="text-gray-900 font-medium">3.</span>
-											<p className="text-gray-900 font-medium flex-1">
-												Call-to-Action (CTA) yang efektif sebaiknya menggunakan bahasa yang dapat membuat audiens tidak merasa terbebani:
-											</p>
-										</div>
-										<div className="space-y-3 ml-6">
-											<div 
-												onClick={() => setQuizAnswers({...quizAnswers, 3: 0})}
-												className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
-													quizAnswers[3] === 0 ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-												}`}
-											>
-												<span className="text-gray-900">TRUE</span>
-											</div>
-											<div 
-												onClick={() => setQuizAnswers({...quizAnswers, 3: 1})}
-												className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
-													quizAnswers[3] === 1 ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-												}`}
-											>
-												<span className="text-gray-900">FALSE</span>
-											</div>
-										</div>
-									</div>
-
-									{/* Question 4 */}
-									<div className="space-y-4">
-										<div className="flex gap-2">
-											<span className="text-gray-900 font-medium">4.</span>
-											<p className="text-gray-900 font-medium flex-1">
-												Organic Traffic adalah pengunjung yang datang ke website melalui tautan iklan berbayar (PPC) di mesin pencari:
-											</p>
-										</div>
-										<div className="space-y-3 ml-6">
-											<div 
-												onClick={() => setQuizAnswers({...quizAnswers, 4: 0})}
-												className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
-													quizAnswers[4] === 0 ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-												}`}
-											>
-												<span className="text-gray-900">TRUE</span>
-											</div>
-											<div 
-												onClick={() => setQuizAnswers({...quizAnswers, 4: 1})}
-												className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
-													quizAnswers[4] === 1 ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-												}`}
-											>
-												<span className="text-gray-900">FALSE</span>
-											</div>
-										</div>
-									</div>
-
-									{/* Question 5 */}
-									<div className="space-y-4">
-										<div className="flex gap-2">
-											<span className="text-gray-900 font-medium">5.</span>
-											<p className="text-gray-900 font-medium flex-1">
-												Mengapa Content pillar (H-1 dan konten) penting dalam strategi media sosial?
-											</p>
-										</div>
-										<div className="space-y-3 ml-6">
-											<div 
-												onClick={() => setQuizAnswers({...quizAnswers, 5: 0})}
-												className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
-													quizAnswers[5] === 0 ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-												}`}
-											>
-												<span className="text-gray-900">Untuk memastikan setiap postingan ditulankan</span>
-											</div>
-											<div 
-												onClick={() => setQuizAnswers({...quizAnswers, 5: 1})}
-												className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
-													quizAnswers[5] === 1 ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-												}`}
-											>
-												<span className="text-gray-900">Untuk membangun user posting tersebut</span>
-											</div>
-											<div 
-												onClick={() => setQuizAnswers({...quizAnswers, 5: 2})}
-												className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
-													quizAnswers[5] === 2 ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-												}`}
-											>
-												<span className="text-gray-900">Untuk memberdakan jumlah platform yang digunakan</span>
-											</div>
-											<div 
-												onClick={() => setQuizAnswers({...quizAnswers, 5: 3})}
-												className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
-													quizAnswers[5] === 3 ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-												}`}
-											>
-												<span className="text-gray-900">Untuk menjaga konsistensi tema dan relevansi konten</span>
-											</div>
-										</div>
-									</div>
+									)}
 								</div>
+								
+								{quizBestScore !== null && (
+									<div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+										<div className="flex items-center gap-2 text-blue-800">
+											<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+												<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+											</svg>
+											<span className="font-semibold">Nilai Terbaik Kamu: {Math.round(quizBestScore * 100)}%</span>
+										</div>
+									</div>
+								)}
+								
+								{!currentQuiz ? (
+									<div className="text-center py-12">
+										<p className="text-gray-600">Memuat quiz...</p>
+									</div>
+								) : (
+									<div className="space-y-8">
+										{currentQuiz.questions?.map((question: any, qIndex: number) => (
+											<div key={question.id} className="space-y-4">
+												<div className="flex gap-2">
+													<span className="text-gray-900 font-medium">{qIndex + 1}.</span>
+													<p className="text-gray-900 font-medium flex-1">
+														{question.question_text}
+													</p>
+												</div>
+												<div className="space-y-3 ml-6">
+													{question.options?.map((option: any, oIndex: number) => (
+														<div 
+															key={option.id}
+															onClick={() => {
+																setQuizAnswers({...quizAnswers, [question.id]: option.id});
+																savePartialAnswer(question.id, option.id);
+															}}
+															className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${
+																quizAnswers[question.id] === option.id ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
+															}`}
+														>
+															<span className="text-gray-900">{option.option_text}</span>
+														</div>
+													))}
+												</div>
+											</div>
+										))}
+									</div>
+								)}
 
 								{/* Submit Button */}
 								<div className="mt-10 flex justify-center">
 									<button 
-										onClick={() => setShowSubmitModal(true)}
-										className="bg-[#661FFF] hover:bg-[#5518dd] text-white px-16 py-3 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
+										onClick={() => {
+											console.log('[Quiz] Current attempt_id:', currentAttemptId);
+											console.log('[Quiz] Current answers:', quizAnswers);
+											setShowSubmitModal(true);
+										}}
+										disabled={!currentQuiz || !currentAttemptId}
+										className="bg-[#661FFF] hover:bg-[#5518dd] text-white px-16 py-3 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 									>
 										Submit
 									</button>
@@ -760,7 +659,14 @@ export default function CourseLearnPage() {
 											>
 												<div className="flex items-center gap-3 flex-1 min-w-0">
 													{/* Module Icon */}
-													{module.type === 'quiz' && (
+													{module.type === 'quiz' && module.is_completed && (
+														<div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+															<svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+																<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+															</svg>
+														</div>
+													)}
+													{module.type === 'quiz' && !module.is_completed && (
 														<div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
 															<svg className="w-3.5 h-3.5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
 																<path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
@@ -828,7 +734,15 @@ export default function CourseLearnPage() {
 						{/* Text */}
 						<h3 className="text-2xl font-bold text-gray-900 text-center mb-3">Selesaikan?</h3>
 						<p className="text-gray-600 text-center mb-8">
-							Anda belum yakin untuk menyelesaikan quiz ini?
+							{Object.keys(quizAnswers).length < (currentQuiz?.questions?.length || 0) ? (
+								<>
+									Anda belum menjawab semua pertanyaan. <br />
+									Jawab: {Object.keys(quizAnswers).length} dari {currentQuiz?.questions?.length || 0} soal. <br />
+									Apakah Anda yakin ingin submit?
+								</>
+							) : (
+								'Anda sudah menjawab semua pertanyaan. Yakin ingin submit?'
+							)}
 						</p>
 
 						{/* Buttons */}
@@ -840,18 +754,36 @@ export default function CourseLearnPage() {
 								Batal
 							</button>
 							<button
-								onClick={() => {
-									// Calculate score (example: correct answers are 0, 0, 0, 1, 3)
-									const correctAnswers: { [key: number]: number } = { 1: 0, 2: 0, 3: 0, 4: 1, 5: 3 };
-									let score = 0;
-									Object.keys(correctAnswers).forEach((key) => {
-										if (quizAnswers[parseInt(key)] === correctAnswers[parseInt(key)]) {
-											score += 20; // 5 questions, each worth 20 points
+								onClick={async () => {
+									try {
+										const token = localStorage.getItem('token');
+										const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+										
+										console.log('[Quiz] Submitting quiz with attempt_id:', currentAttemptId);
+										
+										const response = await fetch(`${baseUrl}/learn/attempts/${currentAttemptId}/submit`, {
+											method: 'POST',
+											headers: {
+												'Authorization': `Bearer ${token}`,
+												'Content-Type': 'application/json'
+											}
+										});
+
+										const result = await response.json();
+										console.log('[Quiz] Submit response:', result);
+
+										if (!response.ok) {
+											throw new Error(result.message || 'Failed to submit quiz');
 										}
-									});
-									setQuizScore(score);
-									setShowSubmitModal(false);
-									setShowResultModal(true);
+
+										setQuizResult(result);
+										setShowSubmitModal(false);
+										setShowResultModal(true);
+									} catch (err: any) {
+										console.error('[Quiz] Submit error:', err);
+										alert(err.message || 'Gagal mengirim quiz. Silakan coba lagi.');
+										setShowSubmitModal(false);
+									}
 								}}
 								className="flex-1 bg-[#661FFF] hover:bg-[#5518dd] text-white py-3 rounded-full font-semibold transition-colors"
 							>
@@ -863,143 +795,86 @@ export default function CourseLearnPage() {
 			)}
 
 			{/* Result Modal */}
-			{showResultModal && (
+			{showResultModal && quizResult && (
 				<div className="fixed inset-0 backdrop-blur-sm bg-gray-900/60 flex items-center justify-center z-50">
 					<div className="bg-white rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-						{/* Success Icon */}
+						{/* Success/Failed Icon */}
 						<div className="flex justify-center mb-6">
-							<div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-								<svg className="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-								</svg>
+							<div className={`w-20 h-20 ${quizResult.is_passed ? 'bg-green-100' : 'bg-red-100'} rounded-full flex items-center justify-center`}>
+								{quizResult.is_passed ? (
+									<svg className="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+									</svg>
+								) : (
+									<svg className="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+									</svg>
+								)}
 							</div>
 						</div>
 
 						{/* Title */}
-						<h3 className="text-2xl font-bold text-gray-900 text-center mb-2">Selamat! Kamu Lulus</h3>
-						<p className="text-center text-gray-600 mb-6">
-							Score kamu <span className="text-green-500 font-semibold">{quizScore}</span> dari KKM 60
+						<h3 className="text-2xl font-bold text-gray-900 text-center mb-2">
+							{quizResult.is_passed ? 'Selamat! Kamu Lulus' : 'Belum Berhasil'}
+						</h3>
+						<p className="text-center text-gray-600 mb-4">
+							Score kamu <span className={`font-semibold ${quizResult.is_passed ? 'text-green-500' : 'text-red-500'}`}>
+								{Math.round(quizResult.score * 100)}%
+							</span> dari {quizResult.correct_count}/{quizResult.total_questions} jawaban benar
+							<br />
+							<span className="text-sm">Passing grade: {Math.round(quizResult.pass_threshold * 100)}%</span>
 						</p>
 
-						{/* Questions Review */}
-						<div className="space-y-4">
-							{/* Question 1 */}
-							<div className="text-sm">
-								<p className="text-gray-700 mb-2">
-									<span className="font-medium">1. Prinsip utama Digital Mindset yang menekankan percepatan dan pengoptimalan bisnis melalui data dalam lingkungan kerja yang selalu cepat adalah:</span>
+						{/* Best Score Info */}
+						{quizResult.best_score !== undefined && quizResult.best_score !== quizResult.score && (
+							<div className="text-center mb-4">
+								<p className="text-sm text-gray-600">
+									{quizResult.is_new_best ? (
+										<span className="text-green-600 font-semibold">
+											🎊 Ini nilai terbaik kamu! (sebelumnya: {Math.round((quizResult.best_score || 0) * 100)}%)
+										</span>
+									) : (
+										<span>
+											Nilai terbaik kamu: <span className="font-semibold text-blue-600">{Math.round((quizResult.best_score || 0) * 100)}%</span>
+										</span>
+									)}
 								</p>
-								<div className="space-y-2 ml-4">
-									<div className={`px-4 py-2 rounded-lg ${quizAnswers[1] === 0 ? 'bg-purple-100 border border-purple-300' : 'bg-gray-50'}`}>
-										<span className="text-gray-700">Fixed Budget</span>
-										{quizAnswers[1] === 0 && <span className="ml-2 text-green-500">✓</span>}
-									</div>
-									<div className={`px-4 py-2 rounded-lg ${quizAnswers[1] === 1 ? 'bg-red-50 border border-red-300' : 'bg-gray-50'}`}>
-										<span className="text-gray-700">Top-Down Hierarchy</span>
-										{quizAnswers[1] === 1 && <span className="ml-2 text-red-500">✗</span>}
-									</div>
-									<div className={`px-4 py-2 rounded-lg ${quizAnswers[1] === 2 ? 'bg-red-50 border border-red-300' : 'bg-gray-50'}`}>
-										<span className="text-gray-700">Agility (Ketangkasan)</span>
-										{quizAnswers[1] === 2 && <span className="ml-2 text-red-500">✗</span>}
-									</div>
-									<div className={`px-4 py-2 rounded-lg ${quizAnswers[1] === 3 ? 'bg-red-50 border border-red-300' : 'bg-gray-50'}`}>
-										<span className="text-gray-700">Waterfall Method</span>
-										{quizAnswers[1] === 3 && <span className="ml-2 text-red-500">✗</span>}
-									</div>
-								</div>
 							</div>
+						)}
 
-							{/* Question 2 */}
-							<div className="text-sm">
-								<p className="text-gray-700 mb-2">
-									<span className="font-medium">2. Aktivitas yang termasuk dalam kategori 'Off-Page SEO' adalah:</span>
-								</p>
-								<div className="space-y-2 ml-4">
-									<div className={`px-4 py-2 rounded-lg ${quizAnswers[2] === 0 ? 'bg-purple-100 border border-purple-300' : 'bg-gray-50'}`}>
-										<span className="text-gray-700">Pembuatan backlink berkualitas dari situs otoratif</span>
-										{quizAnswers[2] === 0 && <span className="ml-2 text-green-500">✓</span>}
-									</div>
-									<div className={`px-4 py-2 rounded-lg ${quizAnswers[2] === 1 ? 'bg-red-50 border border-red-300' : 'bg-gray-50'}`}>
-										<span className="text-gray-700">Optimasi kecepatan website</span>
-										{quizAnswers[2] === 1 && <span className="ml-2 text-red-500">✗</span>}
-									</div>
-									<div className={`px-4 py-2 rounded-lg ${quizAnswers[2] === 2 ? 'bg-red-50 border border-red-300' : 'bg-gray-50'}`}>
-										<span className="text-gray-700">Perbaikan struktur URL</span>
-										{quizAnswers[2] === 2 && <span className="ml-2 text-red-500">✗</span>}
-									</div>
-									<div className={`px-4 py-2 rounded-lg ${quizAnswers[2] === 3 ? 'bg-red-50 border border-red-300' : 'bg-gray-50'}`}>
-										<span className="text-gray-700">Penggunaan tag H1 yang relevan</span>
-										{quizAnswers[2] === 3 && <span className="ml-2 text-red-500">✗</span>}
-									</div>
-								</div>
-							</div>
-
-							{/* Question 3 */}
-							<div className="text-sm">
-								<p className="text-gray-700 mb-2">
-									<span className="font-medium">3. Call-to-Action (CTA) yang efektif sebaiknya menggunakan bahasa yang dapat membuat audiens tidak merasa terbebani:</span>
-								</p>
-								<div className="space-y-2 ml-4">
-									<div className={`px-4 py-2 rounded-lg ${quizAnswers[3] === 0 ? 'bg-purple-100 border border-purple-300' : 'bg-gray-50'}`}>
-										<span className="text-gray-700">TRUE</span>
-										{quizAnswers[3] === 0 && <span className="ml-2 text-green-500">✓</span>}
-									</div>
-									<div className={`px-4 py-2 rounded-lg ${quizAnswers[3] === 1 ? 'bg-red-50 border border-red-300' : 'bg-gray-50'}`}>
-										<span className="text-gray-700">FALSE</span>
-										{quizAnswers[3] === 1 && <span className="ml-2 text-red-500">✗</span>}
-									</div>
-								</div>
-							</div>
-
-							{/* Question 4 */}
-							<div className="text-sm">
-								<p className="text-gray-700 mb-2">
-									<span className="font-medium">4. Organic Traffic adalah pengunjung yang datang ke website melalui tautan iklan berbayar (PPC) di mesin pencari:</span>
-								</p>
-								<div className="space-y-2 ml-4">
-									<div className={`px-4 py-2 rounded-lg ${quizAnswers[4] === 0 ? 'bg-red-50 border border-red-300' : 'bg-gray-50'}`}>
-										<span className="text-gray-700">TRUE</span>
-										{quizAnswers[4] === 0 && <span className="ml-2 text-red-500">✗</span>}
-									</div>
-									<div className={`px-4 py-2 rounded-lg ${quizAnswers[4] === 1 ? 'bg-purple-100 border border-purple-300' : 'bg-gray-50'}`}>
-										<span className="text-gray-700">FALSE</span>
-										{quizAnswers[4] === 1 && <span className="ml-2 text-green-500">✓</span>}
-									</div>
-								</div>
-							</div>
-
-							{/* Question 5 */}
-							<div className="text-sm">
-								<p className="text-gray-700 mb-2">
-									<span className="font-medium">5. Mengapa Content pillar (H-1 dan konten) penting dalam strategi media sosial?</span>
-								</p>
-								<div className="space-y-2 ml-4">
-									<div className={`px-4 py-2 rounded-lg ${quizAnswers[5] === 0 ? 'bg-red-50 border border-red-300' : 'bg-gray-50'}`}>
-										<span className="text-gray-700">Untuk memastikan setiap postingan ditulankan</span>
-										{quizAnswers[5] === 0 && <span className="ml-2 text-red-500">✗</span>}
-									</div>
-									<div className={`px-4 py-2 rounded-lg ${quizAnswers[5] === 1 ? 'bg-red-50 border border-red-300' : 'bg-gray-50'}`}>
-										<span className="text-gray-700">Untuk membangun user posting tersebut</span>
-										{quizAnswers[5] === 1 && <span className="ml-2 text-red-500">✗</span>}
-									</div>
-									<div className={`px-4 py-2 rounded-lg ${quizAnswers[5] === 2 ? 'bg-red-50 border border-red-300' : 'bg-gray-50'}`}>
-										<span className="text-gray-700">Untuk memberdakan jumlah platform yang digunakan</span>
-										{quizAnswers[5] === 2 && <span className="ml-2 text-red-500">✗</span>}
-									</div>
-									<div className={`px-4 py-2 rounded-lg ${quizAnswers[5] === 3 ? 'bg-purple-100 border border-purple-300' : 'bg-gray-50'}`}>
-										<span className="text-gray-700">Untuk menjaga konsistensi tema dan relevansi konten</span>
-										{quizAnswers[5] === 3 && <span className="ml-2 text-green-500">✓</span>}
-									</div>
-								</div>
-							</div>
+						{/* Result Message */}
+						<div className="bg-gray-50 rounded-xl p-6 mb-6">
+							<p className="text-center text-gray-700">
+								{quizResult.is_passed ? (
+									<>
+										🎉 Selamat! Kamu berhasil menyelesaikan quiz ini dengan baik. 
+										<br />
+										Modul quiz telah ditandai sebagai selesai.
+									</>
+								) : (
+									<>
+										Jangan menyerah! Pelajari lagi materinya dan coba kembali. 
+										<br />
+										Kamu bisa mengulang quiz ini kapan saja.
+									</>
+								)}
+							</p>
 						</div>
 
 						{/* Close Button */}
 						<div className="mt-8 flex justify-center">
 							<button
-								onClick={() => {
+								onClick={async () => {
 									setShowResultModal(false);
 									setShowQuiz(false);
 									setQuizAnswers({});
+									setCurrentQuiz(null);
+									setCurrentAttemptId(null);
+									
+									// Refresh learning path data to update module completion status
+									if (quizResult.is_passed) {
+										await fetchLearningContent();
+									}
 								}}
 								className="bg-[#661FFF] hover:bg-[#5518dd] text-white px-12 py-3 rounded-full font-semibold transition-colors"
 							>

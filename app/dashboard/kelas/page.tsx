@@ -6,6 +6,7 @@ import Footer from '../../components/Footer';
 import Toast from '../../components/Toast';
 import { useState, useEffect } from 'react';
 import { DashboardSkeleton } from '../../components/ui/Skeleton';
+import { authenticatedFetch, logout } from '@/lib/auth';
 
 type FilterType = 'all' | 'progress' | 'completed';
 
@@ -22,6 +23,7 @@ interface Course {
 	discount_amount?: number;
 	progress_percent?: number;
 	total_modules?: number;
+	completed_modules?: number;
 }
 
 export default function KelasPage() {
@@ -39,21 +41,15 @@ export default function KelasPage() {
 		try {
 			setIsLoading(true);
 			setToastMessage(null);
-			const token = localStorage.getItem('token');
-			
-			if (!token) {
-				window.location.href = '/sign-in';
-				return;
-			}
 
-			const response = await fetch('http://localhost:3000/api/v1/learn/dashboard', {
-				headers: {
-					'Authorization': `Bearer ${token}`,
-					'Content-Type': 'application/json'
-				}
-			});
+			// Gunakan authenticatedFetch yang otomatis handle token expiry
+			const response = await authenticatedFetch('http://localhost:3000/api/v1/learn/dashboard');
 
 			if (!response.ok) {
+				// Jika 401, authenticatedFetch sudah handle logout otomatis
+				if (response.status === 401) {
+					return; // Stop execution karena sudah redirect
+				}
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 
@@ -69,7 +65,10 @@ export default function KelasPage() {
 			}
 		} catch (err: any) {
 			console.error('Error fetching courses:', err);
-			setToastMessage({ type: 'error', text: err.message || 'Terjadi kesalahan saat memuat data' });
+			// Jangan tampilkan error jika token expired (sudah logout)
+			if (err.message !== 'Token expired' && err.message !== 'Unauthorized - Token expired or invalid') {
+				setToastMessage({ type: 'error', text: err.message || 'Terjadi kesalahan saat memuat data' });
+			}
 		} finally {
 			setIsLoading(false);
 		}
@@ -79,6 +78,12 @@ export default function KelasPage() {
 
 	console.log('Total courses:', courses.length);
 	console.log('Active filter:', activeFilter);
+	console.log('Courses with progress:', courses.map(c => ({ 
+		title: c.title, 
+		progress: c.progress_percent,
+		completed: c.completed_modules,
+		total: c.total_modules
+	})));
 
 	const filteredCourses = courses.filter(course => {
 		// Search filter
@@ -88,13 +93,14 @@ export default function KelasPage() {
 		const progress = course.progress_percent || 0;
 		const matchesFilter = 
 			activeFilter === 'all' || 
-			(activeFilter === 'progress' && progress > 0 && progress < 100) ||
+			(activeFilter === 'progress' && progress < 100) ||  // Termasuk 0% (belum mulai)
 			(activeFilter === 'completed' && progress === 100);
 		
 		return matchesFilter && matchesSearch;
 	});
 
 	console.log('Filtered courses:', filteredCourses.length);
+	console.log('Completed courses (100%):', courses.filter(c => c.progress_percent === 100).map(c => c.title));
 
 	return (
 		<>
@@ -106,10 +112,9 @@ export default function KelasPage() {
 					onClose={() => setToastMessage(null)}
 				/>
 			)}
-			<div className="min-h-screen flex flex-col pb-18 md:pb-20 lg:pb-22 bg-white">
+			<div className="min-h-screen flex flex-col bg-white">
 				<DashboardNavbar />
-
-			<main className="flex-grow bg-[#E5E1F6]">
+				<main className="flex-grow bg-[#E5E1F6]">
 				{/* Hero Section */}
 				<section className="bg-[#E5E1F6] pt-12 pb-8 md:pt-16 md:pb-12">
 					<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
@@ -268,7 +273,7 @@ export default function KelasPage() {
 				</section>
 			</main>
 			<Footer />
-			</div>
-		</>
+		</div>
+	</>
 	);
 }
