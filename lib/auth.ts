@@ -15,7 +15,7 @@ const supabase = createClient(
  */
 export const getCurrentUser = () => {
   if (typeof window === 'undefined') return null;
-  
+
   const userData = localStorage.getItem('user_data');
   return userData ? JSON.parse(userData) : null;
 };
@@ -25,7 +25,7 @@ export const getCurrentUser = () => {
  */
 export const getAccessToken = () => {
   if (typeof window === 'undefined') return null;
-  
+
   return localStorage.getItem('supabase_token');
 };
 
@@ -67,7 +67,7 @@ export const logout = async () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
   localStorage.removeItem('refresh_token');
-  
+
   // Redirect to sign-in
   if (typeof window !== 'undefined') {
     window.location.href = '/auth/sign-in';
@@ -89,12 +89,17 @@ export const checkTokenBeforeRequest = (): boolean => {
 
 /**
  * Setup interval untuk auto-check token setiap 1 menit
+ * HANYA cek jika user sudah punya token (sudah pernah login)
  */
 export const setupAutoLogoutChecker = (): NodeJS.Timeout | null => {
   if (typeof window === 'undefined') return null;
-  
+
   return setInterval(() => {
-    if (!isTokenValid()) {
+    const token = localStorage.getItem('token');
+
+    // HANYA logout jika user memang punya token tapi sudah expired
+    // Jangan paksa redirect user yang memang belum pernah login
+    if (token && !isTokenValid()) {
       console.log('Token expired detected by interval checker');
       logout();
     }
@@ -110,19 +115,19 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
   if (!checkTokenBeforeRequest()) {
     throw new Error('Token expired');
   }
-  
+
   const token = localStorage.getItem('token') || getAccessToken();
-  
+
   if (!token) {
     throw new Error('Not authenticated');
   }
-  
+
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
     ...options.headers,
   };
-  
+
   const response = await fetch(url, {
     ...options,
     headers,
