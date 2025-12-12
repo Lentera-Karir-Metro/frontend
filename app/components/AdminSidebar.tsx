@@ -79,7 +79,7 @@ export default function AdminSidebar() {
     ];
 
     return (
-        <aside className="w-[220px] min-h-screen bg-[#6B21FF] text-white fixed left-0 top-0 flex flex-col">
+        <aside className="w-[220px] min-h-screen bg-[#6B21FF] text-white fixed left-0 top-0 flex flex-col rounded-r-3xl shadow-2xl">
             {/* Logo */}
             <div className="p-6 pb-8 flex justify-center">
                 <Image
@@ -100,12 +100,12 @@ export default function AdminSidebar() {
                             key={item.href}
                             href={item.href}
                             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
-                                    ? 'bg-white text-[#6B21FF] font-medium'
-                                    : 'text-white/80 hover:bg-white/20 hover:text-white'
+                                ? 'bg-white text-[#6B21FF] font-medium'
+                                : 'text-white/80 hover:bg-white/20 hover:text-white'
                                 }`}
                         >
                             {item.icon}
-                            <span className="text-sm">{item.name}</span>
+                            <span className="text-sm whitespace-nowrap">{item.name}</span>
                         </Link>
                     );
                 })}

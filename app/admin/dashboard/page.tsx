@@ -1,6 +1,7 @@
 "use client";
 import AdminSidebar from '@/app/components/AdminSidebar';
 import { useState } from 'react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface UserRegister {
     no: number;
@@ -101,13 +102,91 @@ export default function AdminDashboard() {
                         </div>
                     </div>
 
+                    {/* Chart Section */}
+                    <div className="mb-8">
+                        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-bold text-gray-900">Pengguna Sepanjang Tahun</h2>
+                                <div className="flex items-center gap-6">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full bg-[#3EB537    ]"></div>
+                                        <span className="text-sm text-gray-600">Aktif</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full bg-[#6B21FF]"></div>
+                                        <span className="text-sm text-gray-600">Terdaftar</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <AreaChart
+                                    data={[
+                                        { year: '2019', aktif: 35, terdaftar: 25 },
+                                        { year: '2020', aktif: 15, terdaftar: 20 },
+                                        { year: '2021', aktif: 25, terdaftar: 15 },
+                                        { year: '2022', aktif: 45, terdaftar: 45 },
+                                        { year: '2023', aktif: 15, terdaftar: 15 },
+                                        { year: '2024', aktif: 50, terdaftar: 40 },
+                                    ]}
+                                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                                >
+                                    <defs>
+                                        <linearGradient id="colorAktif" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#3EB537" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#3EB537" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="colorTerdaftar" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#6B21FF" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#6B21FF" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                    <XAxis
+                                        dataKey="year"
+                                        stroke="#9ca3af"
+                                        style={{ fontSize: '14px' }}
+                                    />
+                                    <YAxis
+                                        stroke="#9ca3af"
+                                        style={{ fontSize: '14px' }}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: '#6B21FF',
+                                            border: 'none',
+                                            borderRadius: '12px',
+                                            color: 'white',
+                                            padding: '8px 12px'
+                                        }}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="aktif"
+                                        stroke="#3EB537"
+                                        strokeWidth={3}
+                                        fillOpacity={1}
+                                        fill="url(#colorAktif)"
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="terdaftar"
+                                        stroke="#6B21FF"
+                                        strokeWidth={3}
+                                        fillOpacity={1}
+                                        fill="url(#colorTerdaftar)"
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
                     {/* Aktivitas Terkini */}
                     <div className="mb-8">
                         <h2 className="text-2xl font-bold text-gray-900 mb-6">Aktivitas Terkini</h2>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                             {/* User Register Table */}
-                            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                            <div className="lg:col-span-3 bg-white rounded-xl border border-gray-200 overflow-hidden">
                                 <div className="p-6 border-b border-gray-200 flex justify-between items-center">
                                     <h3 className="text-lg font-semibold text-gray-900">User Register</h3>
                                     <a href="#" className="text-sm text-[#6B21FF] hover:underline flex items-center gap-1">
@@ -142,7 +221,7 @@ export default function AdminDashboard() {
                             </div>
 
                             {/* Daftar Kelas Table */}
-                            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                            <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 overflow-hidden">
                                 <div className="p-6 border-b border-gray-200 flex justify-between items-center">
                                     <h3 className="text-lg font-semibold text-gray-900">Daftar Kelas</h3>
                                     <a href="#" className="text-sm text-[#6B21FF] hover:underline flex items-center gap-1">
@@ -209,8 +288,8 @@ export default function AdminDashboard() {
                                             <td className="px-6 py-4 text-sm text-gray-600">{transaction.metode}</td>
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${transaction.status === 'Success'
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-yellow-100 text-yellow-700'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-yellow-100 text-yellow-700'
                                                     }`}>
                                                     {transaction.status}
                                                 </span>

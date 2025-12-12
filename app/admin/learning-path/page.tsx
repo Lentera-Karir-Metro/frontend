@@ -129,9 +129,9 @@ export default function LearningPath() {
                                             <td className="px-6 py-4 text-sm text-gray-900">{path.judulPath}</td>
                                             <td className="px-6 py-4 text-sm text-gray-600">{path.jumlahKelas}</td>
                                             <td className="px-6 py-4">
-                                                <span className={`inline-flex px-4 py-1.5 rounded-full text-xs font-semibold ${path.status === 'Active'
-                                                        ? 'bg-green-500 text-white'
-                                                        : 'bg-gray-400 text-white'
+                                                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${path.status === 'Active'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-gray-100 text-gray-700'
                                                     }`}>
                                                     {path.status}
                                                 </span>
@@ -178,8 +178,8 @@ export default function LearningPath() {
                                 key={page}
                                 onClick={() => setCurrentPage(page)}
                                 className={`w-10 h-10 rounded-lg font-semibold transition ${currentPage === page
-                                        ? 'bg-[#6B21FF] text-white'
-                                        : 'bg-white text-gray-700 hover:bg-gray-100'
+                                    ? 'bg-[#6B21FF] text-white'
+                                    : 'bg-white text-gray-700 hover:bg-gray-100'
                                     }`}
                             >
                                 {page}

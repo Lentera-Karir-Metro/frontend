@@ -78,7 +78,7 @@ export default function UserManagement() {
                     {/* Title and Add Button */}
                     <div className="flex justify-between items-center mb-6">
                         <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-                        <button className="bg-[#6B21FF] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#5518CC] transition flex items-center gap-2">
+                        <button className="bg-[#6B21FF] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#5518CC] transition flex items-center gap-2">
                             Tambah User
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -137,9 +137,9 @@ export default function UserManagement() {
                                             <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
                                             <td className="px-6 py-4 text-sm text-gray-600">{user.tanggalRegistrasi}</td>
                                             <td className="px-6 py-4">
-                                                <span className={`inline-flex px-4 py-1.5 rounded-full text-xs font-semibold ${user.status === 'Active'
-                                                        ? 'bg-green-500 text-white'
-                                                        : 'bg-gray-400 text-white'
+                                                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${user.status === 'Active'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-gray-100 text-gray-700'
                                                     }`}>
                                                     {user.status}
                                                 </span>
@@ -175,7 +175,7 @@ export default function UserManagement() {
 
                     {/* Pagination */}
                     <div className="flex justify-center items-center gap-2 mt-8">
-                        <button className="p-2 rounded-lg hover:bg-gray-100 transition">
+                        <button className="p-2 rounded-full hover:bg-gray-100 transition">
                             <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
@@ -185,16 +185,16 @@ export default function UserManagement() {
                             <button
                                 key={page}
                                 onClick={() => setCurrentPage(page)}
-                                className={`w-10 h-10 rounded-lg font-semibold transition ${currentPage === page
-                                        ? 'bg-[#6B21FF] text-white'
-                                        : 'bg-white text-gray-700 hover:bg-gray-100'
+                                className={`w-10 h-10 rounded-full font-semibold transition ${currentPage === page
+                                    ? 'bg-[#6B21FF] text-white'
+                                    : 'bg-white text-gray-700 hover:bg-gray-100'
                                     }`}
                             >
                                 {page}
                             </button>
                         ))}
 
-                        <button className="p-2 rounded-lg hover:bg-gray-100 transition">
+                        <button className="p-2 rounded-full hover:bg-gray-100 transition">
                             <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>

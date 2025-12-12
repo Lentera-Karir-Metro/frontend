@@ -8,13 +8,13 @@ import { AuthSkeleton } from '../components/ui/Skeleton';
 
 export default function SignUp() {
   const router = useRouter();
-  
+
   // Form inputs
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
+
   // UI states
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -87,23 +87,28 @@ export default function SignUp() {
         // Handle specific error messages
         const errorMsg = signUpData?.msg || signUpData?.error_description || signUpData?.message || 'Gagal mendaftar';
         const lowerError = errorMsg.toLowerCase();
-        
+
+        // Handle email sending errors specifically
+        if (lowerError.includes('error sending confirmation email') || (lowerError.includes('email') && lowerError.includes('send'))) {
+          throw new Error('Error Sending Confirmation Email\n\nTerjadi masalah saat mengirim email konfirmasi. Kemungkinan penyebab:\n\n1. Konfigurasi email Supabase belum diatur\n2. Rate limit pengiriman email tercapai\n3. Masalah koneksi SMTP server\n\nSolusi:\n- Hubungi administrator untuk mengkonfigurasi email di Supabase Dashboard\n- Atau tunggu beberapa menit dan coba lagi\n- Atau gunakan email lain');
+        }
+
         if (lowerError.includes('rate limit') || lowerError.includes('email_send_rate_limit')) {
           throw new Error('Batas Pengiriman Email Tercapai\n\nAnda telah mencoba terlalu banyak dalam waktu singkat. Silakan tunggu beberapa menit atau gunakan email lain untuk mendaftar.');
         }
-        
+
         if (lowerError.includes('already registered') || lowerError.includes('already been registered') || lowerError.includes('user already registered')) {
           throw new Error('Email Sudah Terdaftar\n\nEmail ini sudah digunakan. Silakan gunakan email lain atau langsung login jika Anda sudah memiliki akun.');
         }
-        
+
         if (lowerError.includes('invalid email')) {
           throw new Error('Format Email Tidak Valid\n\nSilakan periksa kembali alamat email Anda dan pastikan formatnya benar.');
         }
-        
+
         if (lowerError.includes('password') && (lowerError.includes('weak') || lowerError.includes('short'))) {
           throw new Error('Password Terlalu Lemah\n\nGunakan password yang lebih kuat dengan minimal 6 karakter, kombinasi huruf dan angka.');
         }
-        
+
         // Default error with better formatting
         throw new Error(`Pendaftaran Gagal\n\n${errorMsg}`);
       }
@@ -115,14 +120,14 @@ export default function SignUp() {
         // Email confirmation might be required
         setSuccessMsg('Pendaftaran berhasil! Mengalihkan ke halaman login...');
         setIsSubmitting(false);
-        
+
         // Clear form
         setUsername('');
         setEmail('');
         setPassword('');
         setConfirmPassword('');
         setAgreedToTerms(false);
-        
+
         // Redirect to sign-in with verification message
         setTimeout(() => {
           router.push('/sign-in?verified=false&email=' + encodeURIComponent(email));
@@ -175,7 +180,7 @@ export default function SignUp() {
           />
           {/* Strong purple gradient from bottom to transparent to match reference */}
           <div className="absolute inset-0 z-10 pointer-events-none"
-               style={{ background: 'linear-gradient(to top, rgba(102,31,255,0.92) 18%, rgba(155,92,255,0.70) 45%, rgba(0,0,0,0.0) 85%)' }} />
+            style={{ background: 'linear-gradient(to top, rgba(102,31,255,0.92) 18%, rgba(155,92,255,0.70) 45%, rgba(0,0,0,0.0) 85%)' }} />
         </div>
 
         {/* Branding and copy placed bottom-right */}

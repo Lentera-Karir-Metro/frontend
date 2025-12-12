@@ -90,7 +90,23 @@ export default function TambahModul() {
                 </header>
 
                 {/* Form Content */}
-                <main className="p-8 max-w-4xl">
+                <main className="p-8 max-w-5xl mx-auto">
+                    {/* Back Button */}
+                    <button
+                        onClick={() => router.back()}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-[#6B21FF] text-[#6B21FF] rounded-full font-semibold mb-6 hover:bg-[#6B21FF] hover:text-white hover:scale-105 transition-all duration-300 shadow-sm hover:shadow-lg group"
+                    >
+                        <svg
+                            className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                        </svg>
+                        <span>Kembali</span>
+                    </button>
+
                     {/* Title */}
                     <div className="mb-8">
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">Tambah Modul</h1>
