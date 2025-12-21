@@ -1,14 +1,8 @@
 // File: lib/auth.ts
 /**
  * Authentication helper functions
+ * Backend-only authentication (no Supabase Auth)
  */
-
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 /**
  * Get current user from localStorage
@@ -26,7 +20,7 @@ export const getCurrentUser = () => {
 export const getAccessToken = () => {
   if (typeof window === 'undefined') return null;
 
-  return localStorage.getItem('supabase_token');
+  return localStorage.getItem('token');
 };
 
 /**
@@ -61,16 +55,14 @@ export const isTokenValid = (): boolean => {
  * Logout user
  */
 export const logout = async () => {
-  await supabase.auth.signOut();
-  localStorage.removeItem('supabase_token');
-  localStorage.removeItem('user_data');
+  // Clear all auth-related data from localStorage
   localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('user_data');
 
   // Redirect to sign-in
   if (typeof window !== 'undefined') {
-    window.location.href = '/auth/sign-in';
+    window.location.href = '/sign-in';
   }
 };
 
@@ -116,7 +108,7 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
     throw new Error('Token expired');
   }
 
-  const token = localStorage.getItem('token') || getAccessToken();
+  const token = getAccessToken();
 
   if (!token) {
     throw new Error('Not authenticated');
@@ -142,5 +134,3 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
 
   return response;
 };
-
-export { supabase };

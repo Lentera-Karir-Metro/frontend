@@ -42,9 +42,9 @@ export default function DashboardNavbar() {
 	const handleLogout = () => {
 		// Hapus semua data dari localStorage
 		localStorage.removeItem('token');
-		localStorage.removeItem('supabase_token');
+		localStorage.removeItem('refreshToken');
 		localStorage.removeItem('user_data');
-		
+
 		// Redirect ke halaman sign-in
 		router.push('/sign-in');
 	};
@@ -66,7 +66,7 @@ export default function DashboardNavbar() {
 								src="/images/lenteracolor.png"
 								alt="Lentera Karir Logo"
 								fill
-								style={{objectFit: 'contain'}}
+								style={{ objectFit: 'contain' }}
 								sizes="(max-width: 768px) 5rem, 7rem"
 								priority
 							/>
@@ -100,15 +100,29 @@ export default function DashboardNavbar() {
 
 						{/* User Profile */}
 						<div className="relative profile-dropdown-container">
-							<div 
+							<div
 								className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
 								onClick={() => setIsProfileOpen(!isProfileOpen)}
 							>
 								<span className="hidden sm:block text-gray-900 font-medium text-sm md:text-base">
 									Halo, {userName}
 								</span>
-								<div className="relative w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden bg-gray-200">
-									<Image src="/images/avatar-placeholder.png" alt={userName} fill className="object-cover" />
+								<div className="relative w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden bg-[#661FFF] flex items-center justify-center">
+									<svg className="w-full h-full" viewBox="0 0 40 40">
+										<circle cx="20" cy="20" r="20" fill="#661FFF" />
+										<text
+											x="20"
+											y="20"
+											textAnchor="middle"
+											dominantBaseline="central"
+											fill="white"
+											fontSize="16"
+											fontWeight="600"
+											fontFamily="system-ui, -apple-system, sans-serif"
+										>
+											{userName.charAt(0).toUpperCase()}
+										</text>
+									</svg>
 								</div>
 							</div>
 
@@ -119,22 +133,22 @@ export default function DashboardNavbar() {
 										<p className="text-sm font-semibold text-gray-900">{userName}</p>
 										<p className="text-xs text-gray-500 truncate">{userEmail}</p>
 									</div>
-									<Link 
-										href="/dashboard" 
+									<Link
+										href="/dashboard"
 										className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
 										onClick={() => setIsProfileOpen(false)}
 									>
 										Dashboard
 									</Link>
-									<Link 
-										href="/dashboard/kelas" 
+									<Link
+										href="/dashboard/kelas"
 										className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
 										onClick={() => setIsProfileOpen(false)}
 									>
 										Kelas Saya
 									</Link>
-									<Link 
-										href="/dashboard/sertifikat" 
+									<Link
+										href="/dashboard/sertifikat"
 										className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
 										onClick={() => setIsProfileOpen(false)}
 									>
@@ -153,7 +167,7 @@ export default function DashboardNavbar() {
 						</div>
 
 						{/* Mobile Menu Button */}
-						<button 
+						<button
 							className="md:hidden p-2"
 							onClick={() => setIsMenuOpen(!isMenuOpen)}
 						>

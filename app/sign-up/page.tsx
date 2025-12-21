@@ -62,98 +62,54 @@ export default function SignUp() {
     setIsSubmitting(true);
 
     try {
-      // 1. Sign up to Supabase Auth
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      const signUpResponse = await fetch(`${supabaseUrl}/auth/v1/signup`, {
+      // Registrasi melalui Backend API
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': supabaseAnonKey || '',
         },
         body: JSON.stringify({
+          username,
           email,
           password,
-          data: {
-            username,
-          },
         }),
       });
 
-      const signUpData = await signUpResponse.json();
+      const data = await response.json();
 
-      if (!signUpResponse.ok) {
-        // Handle specific error messages
-        const errorMsg = signUpData?.msg || signUpData?.error_description || signUpData?.message || 'Gagal mendaftar';
-        const lowerError = errorMsg.toLowerCase();
+      if (!response.ok) {
+        // Handle error responses dari backend
+        const errorMessage = data?.message || 'Gagal mendaftar';
 
-        // Handle email sending errors specifically
-        if (lowerError.includes('error sending confirmation email') || (lowerError.includes('email') && lowerError.includes('send'))) {
-          throw new Error('Error Sending Confirmation Email\n\nTerjadi masalah saat mengirim email konfirmasi. Kemungkinan penyebab:\n\n1. Konfigurasi email Supabase belum diatur\n2. Rate limit pengiriman email tercapai\n3. Masalah koneksi SMTP server\n\nSolusi:\n- Hubungi administrator untuk mengkonfigurasi email di Supabase Dashboard\n- Atau tunggu beberapa menit dan coba lagi\n- Atau gunakan email lain');
-        }
-
-        if (lowerError.includes('rate limit') || lowerError.includes('email_send_rate_limit')) {
-          throw new Error('Batas Pengiriman Email Tercapai\n\nAnda telah mencoba terlalu banyak dalam waktu singkat. Silakan tunggu beberapa menit atau gunakan email lain untuk mendaftar.');
-        }
-
-        if (lowerError.includes('already registered') || lowerError.includes('already been registered') || lowerError.includes('user already registered')) {
+        // Customize error messages untuk pengalaman user yang lebih baik
+        if (errorMessage.toLowerCase().includes('already exists')) {
           throw new Error('Email Sudah Terdaftar\n\nEmail ini sudah digunakan. Silakan gunakan email lain atau langsung login jika Anda sudah memiliki akun.');
         }
 
-        if (lowerError.includes('invalid email')) {
-          throw new Error('Format Email Tidak Valid\n\nSilakan periksa kembali alamat email Anda dan pastikan formatnya benar.');
+        if (errorMessage.toLowerCase().includes('wajib diisi')) {
+          throw new Error('Data Tidak Lengkap\n\n' + errorMessage);
         }
 
-        if (lowerError.includes('password') && (lowerError.includes('weak') || lowerError.includes('short'))) {
-          throw new Error('Password Terlalu Lemah\n\nGunakan password yang lebih kuat dengan minimal 6 karakter, kombinasi huruf dan angka.');
-        }
-
-        // Default error with better formatting
-        throw new Error(`Pendaftaran Gagal\n\n${errorMsg}`);
+        throw new Error(errorMessage);
       }
 
-      // Check if we got access token
-      const accessToken = signUpData?.access_token;
+      // Registrasi berhasil
+      setSuccessMsg(
+        data.message ||
+        `Pendaftaran berhasil! Email verifikasi telah dikirim ke ${email}. Silakan cek inbox/spam Anda dan klik link verifikasi.`
+      );
 
-      if (!accessToken) {
-        // Email confirmation might be required
-        setSuccessMsg('Pendaftaran berhasil! Mengalihkan ke halaman login...');
-        setIsSubmitting(false);
+      // Clear form
+      setUsername('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setAgreedToTerms(false);
 
-        // Clear form
-        setUsername('');
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
-        setAgreedToTerms(false);
-
-        // Redirect to sign-in with verification message
-        setTimeout(() => {
-          router.push('/sign-in?verified=false&email=' + encodeURIComponent(email));
-        }, 2000);
-        return;
-      }
-
-      // 2. Sync with backend MySQL
-      const backendResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/auth/sync`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!backendResponse.ok) {
-        const backendError = await backendResponse.json().catch(() => ({}));
-        throw new Error(backendError?.message || 'Gagal menyinkronkan dengan database');
-      }
-
-      // Success - redirect to dashboard
-      setSuccessMsg('Pendaftaran berhasil! Mengalihkan ke dashboard...');
+      // Redirect ke halaman sign-in setelah 3 detik
       setTimeout(() => {
-        router.push('/dashboard');
-      }, 1500);
+        router.push('/sign-in?registered=true&email=' + encodeURIComponent(email));
+      }, 3000);
 
     } catch (err: any) {
       setErrorMsg(err.message || 'Terjadi kesalahan saat mendaftar. Silakan coba lagi.');

@@ -1,81 +1,283 @@
 "use client";
 import AdminSidebar from '@/app/components/AdminSidebar';
-import { useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import HeaderAdmin from '@/app/components/HeaderAdmin';
+import { useState, useEffect } from 'react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-interface UserRegister {
-    no: number;
-    nama: string;
-    email: string;
-    tanggal: string;
+// Interface untuk response API
+interface DashboardStats {
+    users: {
+        total: number;
+        active: number;
+        inactive: number;
+        newLast7Days: number;
+        newLast30Days: number;
+    };
+    content: {
+        totalLearningPaths: number;
+        totalCourses: number;
+        totalModules: number;
+    };
+    enrollments: {
+        total: number;
+        active: number;
+    };
+    certificates: {
+        total: number;
+    };
+    revenue: {
+        total: number;
+    };
 }
 
-interface Course {
-    no: number;
-    judul: string;
-    kategori: string;
-}
-
-interface Transaction {
+interface RecentTransaction {
     id: string;
-    nama: string;
-    kelas: string;
-    total: string;
-    metode: string;
-    status: 'Success' | 'Pending';
+    userName: string;
+    userEmail: string;
+    courseTitle: string;
+    amount: number;
+    date: string;
+    status: string;
+}
+
+interface UserGrowthData {
+    month: string;
+    newUsers: number;
+}
+
+interface RecentUser {
+    id: string;
+    username: string;
+    email: string;
+    createdAt: string;
+}
+
+interface RecentCourse {
+    id: string;
+    title: string;
+    category: string;
 }
 
 export default function AdminDashboard() {
-    // Dummy data
-    const userRegisters: UserRegister[] = [
-        { no: 1, nama: 'Isabella Ben', email: 'isabell@gmail.com', tanggal: '2024-01-15' },
-        { no: 2, nama: 'Owen Carter', email: 'wenn01@gmail.com', tanggal: '2024-01-15' },
-        { no: 3, nama: 'Chloe Foster', email: 'chloe41@gmail.com', tanggal: '2024-01-15' },
-        { no: 4, nama: 'Noah Hughes', email: 'imnoahh@gamil.com', tanggal: '2024-01-15' },
-        { no: 5, nama: 'Emily Jenkins', email: 'melmeil@gmail.com', tanggal: '2024-01-15' },
-    ];
+    const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [transactions, setTransactions] = useState<RecentTransaction[]>([]);
+    const [userGrowth, setUserGrowth] = useState<UserGrowthData[]>([]);
+    const [recentUsers, setRecentUsers] = useState<RecentUser[]>([]);
+    const [recentCourses, setRecentCourses] = useState<RecentCourse[]>([]);
+    
+    const [statsLoading, setStatsLoading] = useState(true);
+    const [transactionsLoading, setTransactionsLoading] = useState(true);
+    const [chartLoading, setChartLoading] = useState(true);
+    const [usersLoading, setUsersLoading] = useState(true);
+    const [coursesLoading, setCoursesLoading] = useState(true);
+    
+    const [statsError, setStatsError] = useState<string | null>(null);
+    const [transactionsError, setTransactionsError] = useState<string | null>(null);
+    const [chartError, setChartError] = useState<string | null>(null);
+    const [usersError, setUsersError] = useState<string | null>(null);
+    const [coursesError, setCoursesError] = useState<string | null>(null);
+    
+    const [isUsersModalOpen, setIsUsersModalOpen] = useState(false);
+    const [isCoursesModalOpen, setIsCoursesModalOpen] = useState(false);
 
-    const courses: Course[] = [
-        { no: 1, judul: 'Merancang User Experience dari Nol', kategori: 'Design' },
-        { no: 2, judul: 'Pemasaran Digital untuk Pemula', kategori: 'Marketing' },
-        { no: 3, judul: 'JavaScript untuk Web Interaktif', kategori: 'Programming' },
-        { no: 4, judul: 'Teknik Jitu saat Wawancara', kategori: 'Interview & CV' },
-        { no: 5, judul: 'Tipografi dan Hierarki Desain', kategori: 'Design' },
-    ];
+    // Fetch Dashboard Stats
+    useEffect(() => {
+        const fetchStats = async () => {
+            setStatsLoading(true);
+            setStatsError(null);
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('Token tidak ditemukan. Silakan login terlebih dahulu.');
+                }
 
-    const transactions: Transaction[] = [
-        { id: 'TXN12345', nama: 'Sarah Chen', kelas: 'Digital Marketing Fundamental', total: 'Rp150.000', metode: 'DANA', status: 'Success' },
-        { id: 'TXN67890', nama: 'David Lee', kelas: 'Javascript untuk Web Interaktif', total: 'Rp250.000', metode: 'QRIS', status: 'Pending' },
-        { id: 'TXN24680', nama: 'Emily Wong', kelas: 'Web Development Bootcamp', total: 'Rp100.000', metode: 'Bank Transfer', status: 'Success' },
-        { id: 'TXN13579', nama: 'Michael Tan', kelas: 'Graphic Design Masterclass', total: 'Rp200.000', metode: 'Bank Transfer', status: 'Pending' },
-        { id: 'TXN98765', nama: 'Olivia Lim', kelas: 'Tips Lancar Wawancara Kerja', total: 'Rp100.000', metode: 'ShopeePay', status: 'Success' },
-    ];
+                const response = await fetch('http://localhost:3000/api/v1/admin/dashboard/stats', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.message || `HTTP Error: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    setStats(result.data);
+                }
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+                setStatsError(error instanceof Error ? error.message : 'Terjadi kesalahan');
+            } finally {
+                setStatsLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, []);
+
+    // Fetch Recent Transactions
+    useEffect(() => {
+        const fetchTransactions = async () => {
+            setTransactionsLoading(true);
+            setTransactionsError(null);
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) throw new Error('Token tidak ditemukan');
+
+                const response = await fetch('http://localhost:3000/api/v1/admin/dashboard/recent-transactions?limit=5', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.message || `HTTP Error: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    setTransactions(result.data);
+                }
+            } catch (error) {
+                console.error('Error fetching transactions:', error);
+                setTransactionsError(error instanceof Error ? error.message : 'Terjadi kesalahan');
+            } finally {
+                setTransactionsLoading(false);
+            }
+        };
+
+        fetchTransactions();
+    }, []);
+
+    // Fetch User Growth Chart
+    useEffect(() => {
+        const fetchUserGrowth = async () => {
+            setChartLoading(true);
+            setChartError(null);
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) throw new Error('Token tidak ditemukan');
+
+                const response = await fetch('http://localhost:3000/api/v1/admin/dashboard/user-growth?months=6', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.message || `HTTP Error: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    setUserGrowth(result.data);
+                }
+            } catch (error) {
+                console.error('Error fetching user growth:', error);
+                setChartError(error instanceof Error ? error.message : 'Terjadi kesalahan');
+            } finally {
+                setChartLoading(false);
+            }
+        };
+
+        fetchUserGrowth();
+    }, []);
+
+    // Fetch Recent Users
+    useEffect(() => {
+        const fetchRecentUsers = async () => {
+            setUsersLoading(true);
+            setUsersError(null);
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) throw new Error('Token tidak ditemukan');
+
+                const response = await fetch('http://localhost:3000/api/v1/admin/dashboard/recent-users?limit=5', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.message || `HTTP Error: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    setRecentUsers(result.data);
+                }
+            } catch (error) {
+                console.error('Error fetching recent users:', error);
+                setUsersError(error instanceof Error ? error.message : 'Terjadi kesalahan');
+            } finally {
+                setUsersLoading(false);
+            }
+        };
+
+        fetchRecentUsers();
+    }, []);
+
+    // Fetch Recent Learning Paths
+    useEffect(() => {
+        const fetchRecentCourses = async () => {
+            setCoursesLoading(true);
+            setCoursesError(null);
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) throw new Error('Token tidak ditemukan');
+
+                const response = await fetch('http://localhost:3000/api/v1/admin/dashboard/recent-learning-paths?limit=5', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.message || `HTTP Error: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    setRecentCourses(result.data);
+                }
+            } catch (error) {
+                console.error('Error fetching recent courses:', error);
+                setCoursesError(error instanceof Error ? error.message : 'Terjadi kesalahan');
+            } finally {
+                setCoursesLoading(false);
+            }
+        };
+
+        fetchRecentCourses();
+    }, []);
+
+    // Format currency
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0
+        }).format(amount);
+    };
 
     return (
         <div className="flex min-h-screen bg-gray-50">
             <AdminSidebar />
 
             {/* Main Content */}
-            <div className="flex-1 ml-[250px]">
-                {/* Header */}
-                <header className="bg-white border-b border-gray-200 px-8 py-4">
-                    <div className="flex justify-end items-center">
-                        <div className="flex items-center gap-3">
-                            <div className="text-right">
-                                <p className="text-sm font-semibold text-gray-900">Budi Budiman</p>
-                                <p className="text-xs text-gray-500">Admin</p>
-                            </div>
-                            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                <svg className="w-6 h-6 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                                </svg>
-                            </div>
-                            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </div>
-                    </div>
-                </header>
+            <div className={`flex-1 ml-[250px] ${isUsersModalOpen || isCoursesModalOpen ? 'blur-sm' : ''}`}>
+                <HeaderAdmin />
 
                 {/* Dashboard Content */}
                 <main className="p-8">
@@ -84,99 +286,98 @@ export default function AdminDashboard() {
 
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <div className="bg-white rounded-xl p-6 border border-gray-200">
-                            <p className="text-sm text-gray-600 mb-2">Total Users</p>
-                            <p className="text-3xl font-bold text-gray-900">1,250</p>
-                        </div>
-                        <div className="bg-white rounded-xl p-6 border border-gray-200">
-                            <p className="text-sm text-gray-600 mb-2">Active Courses</p>
-                            <p className="text-3xl font-bold text-gray-900">75</p>
-                        </div>
-                        <div className="bg-white rounded-xl p-6 border border-gray-200">
-                            <p className="text-sm text-gray-600 mb-2">Total Sales</p>
-                            <p className="text-3xl font-bold text-gray-900">Rp2.800.000</p>
-                        </div>
-                        <div className="bg-white rounded-xl p-6 border border-gray-200">
-                            <p className="text-sm text-gray-600 mb-2">Pending Payments</p>
-                            <p className="text-3xl font-bold text-gray-900">Rp500.000</p>
-                        </div>
+                        {statsLoading ? (
+                            <div className="col-span-4 text-center py-12">
+                                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B21FF]"></div>
+                                <p className="text-gray-500 mt-2">Memuat statistik...</p>
+                            </div>
+                        ) : statsError ? (
+                            <div className="col-span-4 text-center py-12">
+                                <p className="text-red-500">{statsError}</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="bg-white rounded-xl p-6 border border-gray-200">
+                                    <p className="text-sm text-gray-600 mb-2">Total Users</p>
+                                    <p className="text-3xl font-bold text-gray-900">{stats?.users.total.toLocaleString() || 0}</p>
+                                    <p className="text-xs text-gray-500 mt-1">Active: {stats?.users.active || 0}</p>
+                                </div>
+                                <div className="bg-white rounded-xl p-6 border border-gray-200">
+                                    <p className="text-sm text-gray-600 mb-2">Learning Paths</p>
+                                    <p className="text-3xl font-bold text-gray-900">{stats?.content.totalLearningPaths || 0}</p>
+                                    <p className="text-xs text-gray-500 mt-1">Courses: {stats?.content.totalCourses || 0}</p>
+                                </div>
+                                <div className="bg-white rounded-xl p-6 border border-gray-200">
+                                    <p className="text-sm text-gray-600 mb-2">Total Revenue</p>
+                                    <p className="text-3xl font-bold text-gray-900">{formatCurrency(stats?.revenue.total || 0)}</p>
+                                    <p className="text-xs text-gray-500 mt-1">From {stats?.enrollments.active || 0} enrollments</p>
+                                </div>
+                                <div className="bg-white rounded-xl p-6 border border-gray-200">
+                                    <p className="text-sm text-gray-600 mb-2">Total Enrollments</p>
+                                    <p className="text-3xl font-bold text-gray-900">{stats?.enrollments.total || 0}</p>
+                                    <p className="text-xs text-gray-500 mt-1">Active: {stats?.enrollments.active || 0}</p>
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     {/* Chart Section */}
                     <div className="mb-8">
                         <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold text-gray-900">Pengguna Sepanjang Tahun</h2>
-                                <div className="flex items-center gap-6">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 rounded-full bg-[#3EB537    ]"></div>
-                                        <span className="text-sm text-gray-600">Aktif</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 rounded-full bg-[#6B21FF]"></div>
-                                        <span className="text-sm text-gray-600">Terdaftar</span>
-                                    </div>
-                                </div>
+                                <h2 className="text-xl font-bold text-gray-900">Pertumbuhan Pengguna</h2>
                             </div>
-                            <ResponsiveContainer width="100%" height={300}>
-                                <AreaChart
-                                    data={[
-                                        { year: '2019', aktif: 35, terdaftar: 25 },
-                                        { year: '2020', aktif: 15, terdaftar: 20 },
-                                        { year: '2021', aktif: 25, terdaftar: 15 },
-                                        { year: '2022', aktif: 45, terdaftar: 45 },
-                                        { year: '2023', aktif: 15, terdaftar: 15 },
-                                        { year: '2024', aktif: 50, terdaftar: 40 },
-                                    ]}
-                                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                                >
-                                    <defs>
-                                        <linearGradient id="colorAktif" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#3EB537" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#3EB537" stopOpacity={0} />
-                                        </linearGradient>
-                                        <linearGradient id="colorTerdaftar" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#6B21FF" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#6B21FF" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                    <XAxis
-                                        dataKey="year"
-                                        stroke="#9ca3af"
-                                        style={{ fontSize: '14px' }}
-                                    />
-                                    <YAxis
-                                        stroke="#9ca3af"
-                                        style={{ fontSize: '14px' }}
-                                    />
-                                    <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: '#6B21FF',
-                                            border: 'none',
-                                            borderRadius: '12px',
-                                            color: 'white',
-                                            padding: '8px 12px'
-                                        }}
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="aktif"
-                                        stroke="#3EB537"
-                                        strokeWidth={3}
-                                        fillOpacity={1}
-                                        fill="url(#colorAktif)"
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="terdaftar"
-                                        stroke="#6B21FF"
-                                        strokeWidth={3}
-                                        fillOpacity={1}
-                                        fill="url(#colorTerdaftar)"
-                                    />
-                                </AreaChart>
-                            </ResponsiveContainer>
+                            {chartLoading ? (
+                                <div className="text-center py-12">
+                                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B21FF]"></div>
+                                    <p className="text-gray-500 mt-2">Memuat grafik...</p>
+                                </div>
+                            ) : chartError ? (
+                                <div className="text-center py-12">
+                                    <p className="text-red-500">{chartError}</p>
+                                </div>
+                            ) : (
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <AreaChart
+                                        data={userGrowth}
+                                        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                                    >
+                                        <defs>
+                                            <linearGradient id="colorNewUsers" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#6B21FF" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#6B21FF" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                        <XAxis
+                                            dataKey="month"
+                                            stroke="#9ca3af"
+                                            style={{ fontSize: '14px' }}
+                                        />
+                                        <YAxis
+                                            stroke="#9ca3af"
+                                            style={{ fontSize: '14px' }}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: '#6B21FF',
+                                                border: 'none',
+                                                borderRadius: '12px',
+                                                color: 'white',
+                                                padding: '8px 12px'
+                                            }}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="newUsers"
+                                            stroke="#6B21FF"
+                                            strokeWidth={3}
+                                            fillOpacity={1}
+                                            fill="url(#colorNewUsers)"
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            )}
                         </div>
                     </div>
 
@@ -189,13 +390,213 @@ export default function AdminDashboard() {
                             <div className="lg:col-span-3 bg-white rounded-xl border border-gray-200 overflow-hidden">
                                 <div className="p-6 border-b border-gray-200 flex justify-between items-center">
                                     <h3 className="text-lg font-semibold text-gray-900">User Register</h3>
-                                    <a href="#" className="text-sm text-[#6B21FF] hover:underline flex items-center gap-1">
-                                        Go to Users Page
+                                    <button 
+                                        onClick={() => setIsUsersModalOpen(true)}
+                                        className="text-sm text-[#6B21FF] hover:underline flex items-center gap-1"
+                                    >
+                                        Lihat Semua
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                         </svg>
-                                    </a>
+                                    </button>
                                 </div>
+                                
+                                {usersLoading ? (
+                                    <div className="text-center py-12">
+                                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B21FF]"></div>
+                                        <p className="text-gray-500 mt-2">Memuat data...</p>
+                                    </div>
+                                ) : usersError ? (
+                                    <div className="text-center py-12">
+                                        <p className="text-red-500">{usersError}</p>
+                                    </div>
+                                ) : recentUsers.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <p className="text-gray-500">Belum ada user terbaru</p>
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead className="bg-[#E8DEFF]">
+                                                <tr>
+                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">No</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Nama</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Email</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Tanggal Registrasi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200">
+                                                {recentUsers.map((user, index) => (
+                                                    <tr key={user.id} className="hover:bg-gray-50">
+                                                        <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-900">{user.username}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600">
+                                                            {new Date(user.createdAt).toLocaleDateString('id-ID')}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Daftar Kelas Table */}
+                            <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 overflow-hidden">
+                                <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                                    <h3 className="text-lg font-semibold text-gray-900">Daftar Kelas</h3>
+                                    <button 
+                                        onClick={() => setIsCoursesModalOpen(true)}
+                                        className="text-sm text-[#6B21FF] hover:underline flex items-center gap-1"
+                                    >
+                                        Lihat Semua
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                
+                                {coursesLoading ? (
+                                    <div className="text-center py-12">
+                                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B21FF]"></div>
+                                        <p className="text-gray-500 mt-2">Memuat data...</p>
+                                    </div>
+                                ) : coursesError ? (
+                                    <div className="text-center py-12">
+                                        <p className="text-red-500">{coursesError}</p>
+                                    </div>
+                                ) : recentCourses.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <p className="text-gray-500">Belum ada kelas terbaru</p>
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead className="bg-[#E8DEFF]">
+                                                <tr>
+                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">No</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Judul Kelas</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Kategori</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200">
+                                                {recentCourses.map((course, index) => (
+                                                    <tr key={course.id} className="hover:bg-gray-50">
+                                                        <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-900">{course.title}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600">{course.category}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Transaksi Terbaru */}
+                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                            <h3 className="text-2xl font-bold text-gray-900">Transaksi Terbaru</h3>
+                            <a href="/admin/transactions" className="text-sm text-[#6B21FF] hover:underline flex items-center gap-1">
+                                Lihat Semua
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
+                        </div>
+                        
+                        {transactionsLoading ? (
+                            <div className="text-center py-12">
+                                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B21FF]"></div>
+                                <p className="text-gray-500 mt-2">Memuat transaksi...</p>
+                            </div>
+                        ) : transactionsError ? (
+                            <div className="text-center py-12">
+                                <p className="text-red-500\">{transactionsError}</p>
+                            </div>
+                        ) : transactions.length === 0 ? (
+                            <div className="text-center py-12">
+                                <p className="text-gray-500">Belum ada transaksi</p>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-[#E8DEFF]">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">ID</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Nama User</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Email</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Learning Path</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Total</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Tanggal</th>
+                                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200">
+                                        {transactions.map((transaction) => (
+                                            <tr key={transaction.id} className="hover:bg-gray-50">
+                                                <td className="px-6 py-4 text-sm text-gray-800">{transaction.id}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-800">{transaction.userName}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-800">{transaction.userEmail}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-800">{transaction.courseTitle}</td>
+                                                <td className="px-6 py-4 text-sm font-semibold text-gray-800">{formatCurrency(transaction.amount)}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-800">{new Date(transaction.date).toLocaleDateString('id-ID')}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                                                        {transaction.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </main>
+            </div>
+
+            {/* Users Modal */}
+            {isUsersModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pl-[270px]" style={{ animation: 'fadeInOverlay 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
+                    <div 
+                        className="absolute inset-0"
+                        onClick={() => setIsUsersModalOpen(false)}
+                    ></div>
+                    
+                    <div className="relative bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden" style={{ animation: 'slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
+                        {/* Modal Header */}
+                        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                            <h2 className="text-2xl font-bold text-gray-900">Semua User Register</h2>
+                            <button 
+                                onClick={() => setIsUsersModalOpen(false)}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+                            {usersLoading ? (
+                                <div className="text-center py-12">
+                                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B21FF]"></div>
+                                    <p className="text-gray-500 mt-2">Memuat data...</p>
+                                </div>
+                            ) : usersError ? (
+                                <div className="text-center py-12">
+                                    <p className="text-red-500">{usersError}</p>
+                                </div>
+                            ) : recentUsers.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <p className="text-gray-500">Belum ada user terbaru</p>
+                                </div>
+                            ) : (
                                 <div className="overflow-x-auto">
                                     <table className="w-full">
                                         <thead className="bg-[#E8DEFF]">
@@ -207,30 +608,63 @@ export default function AdminDashboard() {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-200">
-                                            {userRegisters.map((user) => (
-                                                <tr key={user.no} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 text-sm text-gray-900">{user.no}</td>
-                                                    <td className="px-6 py-4 text-sm text-gray-900">{user.nama}</td>
+                                            {recentUsers.map((user, index) => (
+                                                <tr key={user.id} className="hover:bg-gray-50">
+                                                    <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+                                                    <td className="px-6 py-4 text-sm text-gray-900">{user.username}</td>
                                                     <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                                                    <td className="px-6 py-4 text-sm text-gray-600">{user.tanggal}</td>
+                                                    <td className="px-6 py-4 text-sm text-gray-600">
+                                                        {new Date(user.createdAt).toLocaleDateString('id-ID')}
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
-                            {/* Daftar Kelas Table */}
-                            <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 overflow-hidden">
-                                <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-                                    <h3 className="text-lg font-semibold text-gray-900">Daftar Kelas</h3>
-                                    <a href="#" className="text-sm text-[#6B21FF] hover:underline flex items-center gap-1">
-                                        Go to Class Page
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </a>
+            {/* Courses Modal */}
+            {isCoursesModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pl-[270px]" style={{ animation: 'fadeInOverlay 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
+                    <div 
+                        className="absolute inset-0"
+                        onClick={() => setIsCoursesModalOpen(false)}
+                    ></div>
+                    
+                    <div className="relative bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden" style={{ animation: 'slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
+                        {/* Modal Header */}
+                        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                            <h2 className="text-2xl font-bold text-gray-900">Semua Daftar Kelas</h2>
+                            <button 
+                                onClick={() => setIsCoursesModalOpen(false)}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+                            {coursesLoading ? (
+                                <div className="text-center py-12">
+                                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B21FF]"></div>
+                                    <p className="text-gray-500 mt-2">Memuat data...</p>
                                 </div>
+                            ) : coursesError ? (
+                                <div className="text-center py-12">
+                                    <p className="text-red-500">{coursesError}</p>
+                                </div>
+                            ) : recentCourses.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <p className="text-gray-500">Belum ada kelas terbaru</p>
+                                </div>
+                            ) : (
                                 <div className="overflow-x-auto">
                                     <table className="w-full">
                                         <thead className="bg-[#E8DEFF]">
@@ -241,67 +675,21 @@ export default function AdminDashboard() {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-200">
-                                            {courses.map((course) => (
-                                                <tr key={course.no} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 text-sm text-gray-900">{course.no}</td>
-                                                    <td className="px-6 py-4 text-sm text-gray-900">{course.judul}</td>
-                                                    <td className="px-6 py-4 text-sm text-gray-600">{course.kategori}</td>
+                                            {recentCourses.map((course, index) => (
+                                                <tr key={course.id} className="hover:bg-gray-50">
+                                                    <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+                                                    <td className="px-6 py-4 text-sm text-gray-900">{course.title}</td>
+                                                    <td className="px-6 py-4 text-sm text-gray-600">{course.category}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
-
-                    {/* Transaksi Table */}
-                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-                            <h3 className="text-2xl font-bold text-gray-900">Transaksi</h3>
-                            <a href="#" className="text-sm text-[#6B21FF] hover:underline flex items-center gap-1">
-                                Go to Transaction Page
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </a>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-[#E8DEFF]">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">ID Transaksi</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Nama</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Kelas yang dibeli</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Total bayar</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Metode bayar</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                    {transactions.map((transaction) => (
-                                        <tr key={transaction.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 text-sm text-gray-900">{transaction.id}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-900">{transaction.nama}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-900">{transaction.kelas}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-900">{transaction.total}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-600">{transaction.metode}</td>
-                                            <td className="px-6 py-4">
-                                                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${transaction.status === 'Success'
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-yellow-100 text-yellow-700'
-                                                    }`}>
-                                                    {transaction.status}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </main>
-            </div>
+                </div>
+            )}
         </div>
     );
 }

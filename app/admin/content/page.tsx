@@ -1,287 +1,416 @@
 "use client";
 import AdminSidebar from '@/app/components/AdminSidebar';
+import HeaderAdmin from '@/app/components/HeaderAdmin';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Course {
-    id: number;
-    judul: string;
-    kategori: string;
-    jumlahModul: number;
-    status: 'Active' | 'Inactive';
+    id: string;
+    title: string;
+    description: string;
+    learning_path_id: string;
+    sequence_order: number;
+    createdAt: string;
+    updatedAt: string;
+    LearningPath?: {
+        id: string;
+        title: string;
+        category?: string;
+    };
+    moduleCount?: number;
 }
 
 export default function LearningContent() {
+    // State management
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    // Filters
     const [searchQuery, setSearchQuery] = useState('');
     const [kategoriFilter, setKategoriFilter] = useState('all');
-    const [statusFilter, setStatusFilter] = useState('all');
-    const [currentPage, setCurrentPage] = useState(1);
-    const [dropdownOpen, setDropdownOpen] = useState(false);
 
-    // Dummy data courses
-    const allCourses: Course[] = [
-        { id: 1, judul: 'Python Dasar untuk Analisis Data', kategori: 'Programming', jumlahModul: 24, status: 'Active' },
-        { id: 2, judul: 'Merancang User Experience (UX) dari Nol', kategori: 'Design', jumlahModul: 12, status: 'Inactive' },
-        { id: 3, judul: 'Pemasaran Digital untuk Pemula', kategori: 'Marketing', jumlahModul: 18, status: 'Active' },
-        { id: 4, judul: 'Wawancara Perilaku (Behavioral Interview STAR) dan Tips Jitu', kategori: 'Interview & CV', jumlahModul: 20, status: 'Inactive' },
-        { id: 5, judul: 'JavaScript Lanjutan untuk Web Interaktif', kategori: 'Programming', jumlahModul: 12, status: 'Active' },
-        { id: 6, judul: 'Social Media Marketing (SMM) untuk Bisnis', kategori: 'Marketing', jumlahModul: 28, status: 'Active' },
-        { id: 7, judul: 'Teknik Menjawab Pertanyaan Sulit Wawancara', kategori: 'Interview & CV', jumlahModul: 17, status: 'Inactive' },
-        { id: 8, judul: 'Membangun Aplikasi Mobile dengan React Native', kategori: 'Programming', jumlahModul: 30, status: 'Active' },
-        { id: 9, judul: 'SEO untuk Menaikkan Peringkat Website', kategori: 'Marketing', jumlahModul: 10, status: 'Inactive' },
-        { id: 10, judul: 'Desain Logo dan Identitas Merek (Branding)', kategori: 'Design', jumlahModul: 26, status: 'Active' },
-    ];
+    // Modal states
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+    const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
-    // Filter courses
-    const filteredCourses = allCourses.filter(course => {
-        const matchesSearch = course.judul.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesKategori = kategoriFilter === 'all' || course.kategori === kategoriFilter;
-        const matchesStatus = statusFilter === 'all' || course.status === statusFilter;
-        return matchesSearch && matchesKategori && matchesStatus;
+    // Notification
+    const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+    // Auto-hide notification
+    useEffect(() => {
+        if (notification) {
+            const timer = setTimeout(() => {
+                setNotification(null);
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [notification]);
+
+    // Show notification helper
+    const showNotification = (type: 'success' | 'error', message: string) => {
+        setNotification({ type, message });
+    };
+
+    // Fetch courses from backend
+    const fetchCourses = async () => {
+        setIsLoading(true);
+        setError('');
+
+        try {
+            const params = new URLSearchParams();
+            if (searchQuery) params.append('search', searchQuery);
+
+            const token = localStorage.getItem('token');
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/admin/courses?${params}`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Failed to fetch courses');
+            }
+
+            const data = await response.json();
+            setCourses(data);
+        } catch (err: any) {
+            console.error('Error fetching courses:', err);
+            setError(err.message || 'Gagal memuat data courses');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Initial fetch and when search changes
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            fetchCourses();
+        }, 300); // Debounce search
+
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery]);
+
+    // Delete course
+    const handleDeleteCourse = async () => {
+        if (!selectedCourse) return;
+
+        // Validate delete confirmation text
+        if (deleteConfirmText !== 'hapus') {
+            showNotification('error', 'Ketik "hapus" untuk konfirmasi');
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/admin/courses/${selectedCourse.id}`,
+                {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setShowDeleteModal(false);
+                setSelectedCourse(null);
+                setDeleteConfirmText('');
+                fetchCourses();
+                showNotification('success', 'Course berhasil dihapus!');
+            } else {
+                showNotification('error', data.message || 'Gagal menghapus course');
+            }
+        } catch (err) {
+            console.error('Error deleting course:', err);
+            showNotification('error', 'Terjadi kesalahan saat menghapus course');
+        }
+    };
+
+    // Open delete modal
+    const handleDelete = (course: Course) => {
+        setSelectedCourse(course);
+        setShowDeleteModal(true);
+    };
+
+    // Filter courses by kategori (client-side)
+    const filteredCourses = courses.filter(course => {
+        if (kategoriFilter === 'all') return true;
+        return course.LearningPath?.category === kategoriFilter || course.LearningPath?.title === kategoriFilter;
     });
 
-    const handleEdit = (courseId: number) => {
-        console.log('Edit course:', courseId);
-    };
+    // Get unique categories for filter
+    const categories = Array.from(new Set(
+        courses.map(c => c.LearningPath?.category || c.LearningPath?.title).filter(Boolean)
+    ));
 
-    const handleDelete = (courseId: number) => {
-        console.log('Delete course:', courseId);
-    };
-
-    const handleLogout = () => {
-        console.log('Logout clicked');
-        // Implement logout functionality
-        alert('Logout functionality');
+    // Format date
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('id-ID', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        });
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
-            <AdminSidebar />
+        <>
+            <style jsx>{`
+                @keyframes scaleUp {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.9);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1);
+                    }
+                }
+                @keyframes slideIn {
+                    from {
+                        opacity: 0;
+                        transform: translateX(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
+                .animate-scale-up {
+                    animation: scaleUp 0.2s ease-out;
+                }
+                .animate-slide-in {
+                    animation: slideIn 0.3s ease-out;
+                }
+            `}</style>
 
-            {/* Main Content */}
-            <div className="flex-1 ml-[250px]">
-                {/* Header */}
-                <header className="bg-white border-b border-gray-200 px-8 py-4">
-                    <div className="flex justify-end items-center">
-                        <div className="relative">
-                            <button
-                                onClick={() => setDropdownOpen(!dropdownOpen)}
-                                className="flex items-center gap-3 hover:bg-gray-50 rounded-lg px-3 py-2 transition-colors"
-                            >
-                                <div className="text-right">
-                                    <p className="text-sm font-semibold text-gray-900">Budi Budiman</p>
-                                    <p className="text-xs text-gray-500">Admin</p>
-                                </div>
-                                <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                    <svg className="w-6 h-6 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            <div className="flex min-h-screen bg-gray-50">
+                <AdminSidebar />
+
+                {/* Main Content */}
+                <div className="flex-1 ml-[250px]">
+                    <HeaderAdmin />
+
+                    {/* Learning Content */}
+                    <main className="p-8">
+                        {/* Title and Add Button */}
+                        <div className="flex justify-between items-center mb-6">
+                            <h1 className="text-3xl font-bold text-gray-900">Learning Content</h1>
+                            <Link href="/admin/content/create">
+                                <button className="bg-[#6B21FF] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#5518CC] transition flex items-center gap-2">
+                                    Buat Kelas Baru
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                </button>
+                            </Link>
+                        </div>
+
+                        {/* Search Bar */}
+                        <div className="mb-6">
+                            <div className="relative max-w-2xl">
+                                <input
+                                    type="text"
+                                    placeholder="Cari judul kelas..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-6 pr-12 py-4 rounded-full border-2 border-gray-300 focus:outline-none focus:border-[#6B21FF] text-gray-900 placeholder-gray-400 transition-all"
+                                />
+                                <div className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                 </div>
-                                <svg
-                                    className={`w-4 h-4 text-gray-600 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-
-                            {/* Dropdown Menu */}
-                            {dropdownOpen && (
-                                <>
-                                    {/* Backdrop to close dropdown */}
-                                    <div
-                                        className="fixed inset-0 z-10"
-                                        onClick={() => setDropdownOpen(false)}
-                                    />
-
-                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-20 animate-fadeIn">
-                                        {/* Profile */}
-                                        <div className="px-4 py-3 border-b border-gray-100">
-                                            <p className="text-sm font-semibold text-gray-900">Budi Budiman</p>
-                                            <p className="text-xs text-gray-500 mt-0.5">budi@lentera.com</p>
-                                        </div>
-
-                                        {/* Menu Items */}
-                                        <button className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
-                                            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                            </svg>
-                                            <span>Profile</span>
-                                        </button>
-
-                                        <button className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors">
-                                            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            </svg>
-                                            <span>Settings</span>
-                                        </button>
-
-                                        <div className="border-t border-gray-100 my-1" />
-
-                                        <button
-                                            onClick={handleLogout}
-                                            className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
-                                        >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                            </svg>
-                                            <span>Logout</span>
-                                        </button>
-                                    </div>
-                                </>
-                            )}
+                            </div>
                         </div>
-                    </div>
-                </header>
 
-                {/* Learning Content */}
-                <main className="p-8">
-                    {/* Title and Add Button */}
-                    <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-3xl font-bold text-gray-900">Learning Content</h1>
-                        <Link href="/admin/content/create">
-                            <button className="bg-[#6B21FF] text-white px-6 py-3 rounded-full font-semibold hover:bg-[#5518CC] transition flex items-center gap-2">
-                                Buat Kelas Baru
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                </svg>
-                            </button>
-                        </Link>
-                    </div>
+                        {/* Filters */}
+                        <div className="flex gap-4 mb-6">
+                            {/* Kategori Filter */}
+                            <select
+                                value={kategoriFilter}
+                                onChange={(e) => setKategoriFilter(e.target.value)}
+                                className="px-6 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-[#6B21FF] text-gray-900 bg-white cursor-pointer"
+                            >
+                                <option value="all">Semua Kategori</option>
+                                {categories.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                        </div>
 
-                    {/* Search Bar */}
-                    <div className="mb-6">
-                        <div className="relative max-w-2xl">
-                            <input
-                                type="text"
-                                placeholder="Cari judul kelas..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-6 pr-12 py-4 rounded-full border-2 border-gray-300 focus:outline-none focus:border-[#6B21FF] text-gray-700 placeholder-gray-400 transition-all"
-                            />
-                            <div className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
+                        {/* Loading State */}
+                        {isLoading && (
+                            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6B21FF] mx-auto"></div>
+                                <p className="mt-4 text-gray-600">Memuat data courses...</p>
+                            </div>
+                        )}
+
+                        {/* Error State */}
+                        {error && !isLoading && (
+                            <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+                                <p className="text-red-800 font-semibold">{error}</p>
+                                <button
+                                    onClick={fetchCourses}
+                                    className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                                >
+                                    Coba Lagi
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Courses Table */}
+                        {!isLoading && !error && (
+                            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead className="bg-[#E8DEFF]">
+                                            <tr>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Judul Kelas</th>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Learning Path</th>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Jumlah Modul</th>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Tanggal Dibuat</th>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {filteredCourses.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                                                        Tidak ada course ditemukan
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                filteredCourses.map((course) => (
+                                                    <tr key={course.id} className="hover:bg-gray-50">
+                                                        <td className="px-6 py-4 text-sm text-gray-900">{course.title}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600">
+                                                            {course.LearningPath?.title || 'Unassigned'}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600">
+                                                            {course.moduleCount || 0}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600">
+                                                            {formatDate(course.createdAt)}
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-3">
+                                                                {/* Edit Button */}
+                                                                <Link href={`/admin/content/edit/${course.id}`}>
+                                                                    <button className="text-[#6B21FF] hover:text-[#5518CC] transition">
+                                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                                        </svg>
+                                                                    </button>
+                                                                </Link>
+                                                                {/* Delete Button */}
+                                                                <button
+                                                                    onClick={() => handleDelete(course)}
+                                                                    className="text-red-500 hover:text-red-700 transition"
+                                                                >
+                                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+                </div>
+
+                {/* Delete Confirmation Modal */}
+                {showDeleteModal && selectedCourse && (
+                    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+                        <div className="bg-white rounded-xl p-8 max-w-md w-full animate-scale-up shadow-2xl">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Konfirmasi Hapus</h2>
+                            <p className="text-gray-600 mb-2">
+                                Apakah Anda yakin ingin menghapus course <strong>{selectedCourse.title}</strong>?
+                            </p>
+                            <p className="text-gray-600 mb-6">
+                                Ketik <span className="font-mono bg-gray-100 px-2 py-1 rounded text-red-600 font-semibold">hapus</span> untuk konfirmasi.
+                            </p>
+                            <div className="mb-6">
+                                <input
+                                    type="text"
+                                    value={deleteConfirmText}
+                                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                                    placeholder="Ketik 'hapus' untuk konfirmasi"
+                                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-red-500 transition-colors text-gray-900"
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowDeleteModal(false);
+                                        setSelectedCourse(null);
+                                        setDeleteConfirmText('');
+                                    }}
+                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    onClick={handleDeleteCourse}
+                                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                                >
+                                    Hapus
+                                </button>
                             </div>
                         </div>
                     </div>
+                )}
 
-                    {/* Filters */}
-                    <div className="flex gap-4 mb-6">
-                        {/* Kategori Filter */}
-                        <select
-                            value={kategoriFilter}
-                            onChange={(e) => setKategoriFilter(e.target.value)}
-                            className="px-6 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-[#6B21FF] text-gray-700 bg-white cursor-pointer"
-                        >
-                            <option value="all">Kategori</option>
-                            <option value="Programming">Programming</option>
-                            <option value="Design">Design</option>
-                            <option value="Marketing">Marketing</option>
-                            <option value="Interview & CV">Interview & CV</option>
-                        </select>
-
-                        {/* Status Kelas Filter */}
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="px-6 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-[#6B21FF] text-gray-700 bg-white cursor-pointer"
-                        >
-                            <option value="all">Status Kelas</option>
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                        </select>
-                    </div>
-
-                    {/* Courses Table */}
-                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-[#E8DEFF]">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Judul Kelas</th>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Kategori</th>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Jumlah Modul</th>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Status</th>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {filteredCourses.map((course) => (
-                                        <tr key={course.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 text-sm text-gray-900">{course.judul}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-600">{course.kategori}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-600">{course.jumlahModul}</td>
-                                            <td className="px-6 py-4">
-                                                <span className={`inline-flex px-4 py-1.5 rounded-full text-xs font-semibold ${course.status === 'Active'
-                                                    ? 'bg-green-500 text-white'
-                                                    : 'bg-gray-400 text-white'
-                                                    }`}>
-                                                    {course.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    {/* Edit Button */}
-                                                    <button
-                                                        onClick={() => handleEdit(course.id)}
-                                                        className="text-[#6B21FF] hover:text-[#5518CC] transition"
-                                                    >
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                        </svg>
-                                                    </button>
-                                                    {/* Delete Button */}
-                                                    <button
-                                                        onClick={() => handleDelete(course.id)}
-                                                        className="text-red-500 hover:text-red-700 transition"
-                                                    >
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                {/* Notification Toast */}
+                {notification && (
+                    <div className="fixed top-4 right-4 z-50 animate-slide-in">
+                        <div className={`rounded-xl px-6 py-4 shadow-2xl border-2 min-w-[300px] max-w-md ${notification.type === 'success'
+                                ? 'bg-green-50 border-green-500 text-green-800'
+                                : 'bg-red-50 border-red-500 text-red-800'
+                            }`}>
+                            <div className="flex items-start gap-3">
+                                {notification.type === 'success' ? (
+                                    <svg className="w-6 h-6 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-6 h-6 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                    </svg>
+                                )}
+                                <div className="flex-1">
+                                    <p className="font-semibold text-sm">{notification.message}</p>
+                                </div>
+                                <button
+                                    onClick={() => setNotification(null)}
+                                    className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
-
-                    {/* Pagination */}
-                    <div className="flex justify-center items-center gap-2 mt-8">
-                        <button className="p-2 rounded-full hover:bg-gray-100 transition">
-                            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
-
-                        {[1, 2, 3, 4, 5].map((page) => (
-                            <button
-                                key={page}
-                                onClick={() => setCurrentPage(page)}
-                                className={`w-10 h-10 rounded-full font-semibold transition ${currentPage === page
-                                    ? 'bg-[#6B21FF] text-white'
-                                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                                    }`}
-                            >
-                                {page}
-                            </button>
-                        ))}
-
-                        <button className="p-2 rounded-full hover:bg-gray-100 transition">
-                            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
-                    </div>
-                </main>
+                )}
             </div>
-        </div>
+        </>
     );
 }

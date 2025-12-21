@@ -1,5 +1,6 @@
 "use client";
 import AdminSidebar from '@/app/components/AdminSidebar';
+import HeaderAdmin from '@/app/components/HeaderAdmin';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -69,25 +70,7 @@ export default function TambahModul() {
 
             {/* Main Content */}
             <div className="flex-1 ml-[250px]">
-                {/* Header */}
-                <header className="bg-white border-b border-gray-200 px-8 py-4">
-                    <div className="flex justify-end items-center">
-                        <div className="flex items-center gap-3">
-                            <div className="text-right">
-                                <p className="text-sm font-semibold text-gray-900">Budi Budiman</p>
-                                <p className="text-xs text-gray-500">Admin</p>
-                            </div>
-                            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                <svg className="w-6 h-6 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                                </svg>
-                            </div>
-                            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </div>
-                    </div>
-                </header>
+                <HeaderAdmin />
 
                 {/* Form Content */}
                 <main className="p-8 max-w-5xl mx-auto">

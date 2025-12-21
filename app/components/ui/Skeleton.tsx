@@ -12,13 +12,13 @@ export function AuthSkeleton() {
         <div className="relative z-20 w-full max-w-lg pb-12 space-y-6">
           {/* Logo Skeleton */}
           <Skeleton className="h-12 w-32" />
-          
+
           {/* Heading Skeleton */}
           <div className="space-y-3">
             <Skeleton className="h-8 w-full" />
             <Skeleton className="h-8 w-4/5" />
           </div>
-          
+
           {/* Description Skeleton */}
           <div className="space-y-2">
             <Skeleton className="h-4 w-full" />
@@ -58,16 +58,6 @@ export function AuthSkeleton() {
             </div>
 
             {/* Button Skeleton */}
-            <Skeleton className="h-12 w-full rounded-xl" />
-
-            {/* Divider */}
-            <div className="flex items-center gap-4">
-              <Skeleton className="h-px flex-1" />
-              <Skeleton className="h-4 w-8" />
-              <Skeleton className="h-px flex-1" />
-            </div>
-
-            {/* Google Button Skeleton */}
             <Skeleton className="h-12 w-full rounded-xl" />
           </div>
         </div>
