@@ -81,8 +81,8 @@ export default function DashboardNavbar() {
 						<Link href="/explore" className={`${isActive('/explore') ? 'text-gray-900' : 'text-gray-600'} hover:text-[#661FFF] transition-colors font-bold`}>
 							Explore
 						</Link>
-						<Link href="/article" className={`${isActive('/article') ? 'text-gray-900' : 'text-gray-600'} hover:text-[#661FFF] transition-colors font-bold`}>
-							Article
+						<Link href="/learning-path" className={`${isActive('/learning-path') ? 'text-gray-900' : 'text-gray-600'} hover:text-[#661FFF] transition-colors font-bold`}>
+							Learning Path
 						</Link>
 						<Link href="/contact" className={`${isActive('/contact') ? 'text-gray-900' : 'text-gray-600'} hover:text-[#661FFF] transition-colors font-bold`}>
 							Contact Us
@@ -192,8 +192,8 @@ export default function DashboardNavbar() {
 							<Link href="/explore" className={`${isActive('/explore') ? 'text-gray-900' : 'text-gray-600'} hover:text-[#661FFF] transition-colors font-medium`}>
 								Explore
 							</Link>
-							<Link href="/article" className={`${isActive('/article') ? 'text-gray-900' : 'text-gray-600'} hover:text-[#661FFF] transition-colors font-medium`}>
-								Article
+							<Link href="/learning-path" className={`${isActive('/learning-path') ? 'text-gray-900' : 'text-gray-600'} hover:text-[#661FFF] transition-colors font-medium`}>
+								Learning Path
 							</Link>
 							<Link href="/contact" className={`${isActive('/contact') ? 'text-gray-900' : 'text-gray-600'} hover:text-[#661FFF] transition-colors font-medium`}>
 								Contact Us

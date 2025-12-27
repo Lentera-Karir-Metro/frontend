@@ -2,8 +2,11 @@
 import AdminSidebar from '@/app/components/AdminSidebar';
 import HeaderAdmin from '@/app/components/HeaderAdmin';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { createLearningPath } from '@/lib/learningPathService';
+import { useRouter, useParams } from 'next/navigation';
+import { 
+    getLearningPathById, 
+    updateLearningPath 
+} from '@/lib/learningPathService';
 import { getAllCourses, type Course } from '@/lib/courseService';
 
 interface PathCourse {
@@ -13,8 +16,11 @@ interface PathCourse {
     order: number;
 }
 
-export default function BuatLearningPath() {
+export default function EditLearningPath() {
     const router = useRouter();
+    const params = useParams();
+    const learningPathId = params.id as string;
+
     const [judulPath, setJudulPath] = useState('');
     const [deskripsi, setDeskripsi] = useState('');
     const [pathCourses, setPathCourses] = useState<PathCourse[]>([]);
@@ -23,6 +29,7 @@ export default function BuatLearningPath() {
     const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState(false);
     const [loadingCourses, setLoadingCourses] = useState(true);
+    const [loadingData, setLoadingData] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
@@ -41,10 +48,42 @@ export default function BuatLearningPath() {
         setNotification({ type, message });
     };
 
-    // Fetch courses dari backend
+    // Fetch learning path data dan courses
     useEffect(() => {
+        fetchData();
         fetchCourses();
-    }, []);
+    }, [learningPathId]);
+
+    const fetchData = async () => {
+        try {
+            setLoadingData(true);
+            const data = await getLearningPathById(learningPathId);
+            setJudulPath(data.title);
+            setDeskripsi(data.description || '');
+            
+            // Convert courses to PathCourse format
+            if (data.courses) {
+                const courses = data.courses
+                    .sort((a, b) => {
+                        const aSeq = a.LearningPathCourse?.sequence_order || 0;
+                        const bSeq = b.LearningPathCourse?.sequence_order || 0;
+                        return aSeq - bSeq;
+                    })
+                    .map((course, index) => ({
+                        id: course.id,
+                        courseId: course.id,
+                        title: course.title,
+                        order: index + 1
+                    }));
+                setPathCourses(courses);
+            }
+        } catch (err: any) {
+            console.error('Error fetching learning path:', err);
+            setError('Gagal memuat data learning path');
+        } finally {
+            setLoadingData(false);
+        }
+    };
 
     const fetchCourses = async () => {
         try {
@@ -53,7 +92,6 @@ export default function BuatLearningPath() {
             setAvailableCourses(courses);
         } catch (err: any) {
             console.error('Error fetching courses:', err);
-            setError('Gagal memuat daftar course');
         } finally {
             setLoadingCourses(false);
         }
@@ -64,7 +102,7 @@ export default function BuatLearningPath() {
             const course = availableCourses.find(c => c.id === selectedCourse);
             if (course && !pathCourses.find(pc => pc.courseId === course.id)) {
                 const newPathCourse: PathCourse = {
-                    id: `temp-${Date.now()}`,
+                    id: course.id,
                     courseId: course.id,
                     title: course.title,
                     order: pathCourses.length + 1,
@@ -127,7 +165,7 @@ export default function BuatLearningPath() {
         setDraggedItem(null);
     };
 
-    const handleSavePath = async () => {
+    const handleUpdatePath = async () => {
         // Validasi
         if (!judulPath.trim()) {
             showNotification('error', 'Judul path harus diisi!');
@@ -148,19 +186,35 @@ export default function BuatLearningPath() {
                 .sort((a, b) => a.order - b.order)
                 .map(pc => pc.courseId);
 
-            await createLearningPath(judulPath, deskripsi, courseIds);
-            showNotification('success', 'Learning Path berhasil disimpan!');
+            await updateLearningPath(learningPathId, judulPath, deskripsi, courseIds);
+            showNotification('success', 'Learning Path berhasil diperbarui!');
             setTimeout(() => {
                 router.push('/admin/learning-path');
             }, 2000);
         } catch (err: any) {
-            console.error('Error saving learning path:', err);
-            setError(err.message || 'Gagal menyimpan learning path');
-            showNotification('error', err.message || 'Gagal menyimpan learning path');
+            console.error('Error updating learning path:', err);
+            setError(err.message || 'Gagal memperbarui learning path');
+            showNotification('error', err.message || 'Gagal memperbarui learning path');
         } finally {
             setLoading(false);
         }
     };
+
+    if (loadingData) {
+        return (
+            <div className="flex min-h-screen bg-gray-50">
+                <AdminSidebar />
+                <div className="flex-1 ml-[250px]">
+                    <HeaderAdmin />
+                    <main className="p-8">
+                        <div className="flex justify-center items-center py-12">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6B21FF]"></div>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen bg-gray-50">
@@ -174,8 +228,8 @@ export default function BuatLearningPath() {
                 <main className="p-8">
                     {/* Title */}
                     <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Buat Learning Path</h1>
-                        <p className="text-gray-500 text-sm">Isi detail dibawah untuk membuat learning path baru</p>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Learning Path</h1>
+                        <p className="text-gray-500 text-sm">Perbarui detail learning path</p>
                     </div>
 
                     {/* Error State */}
@@ -301,7 +355,7 @@ export default function BuatLearningPath() {
 
                                     {pathCourses.length === 0 && (
                                         <p className="text-sm text-gray-500 text-center py-8">
-                                            Belum ada kelas ditambahkan
+                                            Belum ada course ditambahkan
                                         </p>
                                     )}
                                 </div>
@@ -310,19 +364,26 @@ export default function BuatLearningPath() {
                     </div>
 
                     {/* Submit Button */}
-                    <div className="mt-8 flex justify-center">
+                    <div className="mt-8 flex justify-center gap-4">
                         <button
-                            onClick={handleSavePath}
+                            onClick={() => router.push('/admin/learning-path')}
+                            className="px-8 py-4 rounded-full font-bold text-lg border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+                            disabled={loading}
+                        >
+                            Batal
+                        </button>
+                        <button
+                            onClick={handleUpdatePath}
                             disabled={loading || pathCourses.length === 0 || !judulPath.trim()}
-                            className="w-full max-w-2xl bg-[#6B21FF] text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-[#5518CC] transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="px-8 py-4 bg-[#6B21FF] text-white rounded-full font-bold text-lg hover:bg-[#5518CC] transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {loading ? (
                                 <>
                                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                                    Menyimpan...
+                                    Memperbarui...
                                 </>
                             ) : (
-                                'Simpan Learning Path'
+                                'Update Learning Path'
                             )}
                         </button>
                     </div>

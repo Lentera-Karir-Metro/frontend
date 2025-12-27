@@ -1,32 +1,33 @@
 "use client";
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-type LearningPath = {
-  id: string;
-  title: string;
-  description?: string;
-  price?: number;
-  thumbnail_url?: string;
-  discount_amount?: number;
-  rating?: number;
-  review_count?: number;
-  category?: string;
-  level?: string;
-  mentor_name?: string;
-  mentor_title?: string;
-  mentor_avatar_url?: string;
+type Course = {
+	id: string;
+	title: string;
+	description?: string;
+	price?: number;
+	thumbnail_url?: string;
+	discount_amount?: number;
+	rating?: number;
+	review_count?: number;
+	category?: string;
+	level?: string;
+	mentor_name?: string;
+	mentor_title?: string;
+	mentor_avatar_url?: string;
 }
 
 export default function Courses() {
-	const [learningPaths, setLearningPaths] = useState<LearningPath[] | null>(null);
+	const [courses, setCourses] = useState<Course[] | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
 		const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
-		const url = `${base}/catalog/learning-paths`;
+		const url = `${base}/catalog/courses?limit=4`;
 
 		let cancelled = false;
 
@@ -35,8 +36,10 @@ export default function Courses() {
 			try {
 				const res = await fetch(url);
 				if (!res.ok) throw new Error(`Server returned ${res.status}`);
-				const data = await res.json();
-				if (!cancelled) setLearningPaths(data);
+				const json = await res.json();
+				// API returns { data: [...], pagination: {...} }
+				const data = Array.isArray(json) ? json : (json.data || []);
+				if (!cancelled) setCourses(data);
 			} catch (err: any) {
 				if (!cancelled) setError(err.message || 'Failed to load');
 			} finally {
@@ -103,7 +106,7 @@ export default function Courses() {
 						</div>
 					)}
 
-					{!isLoading && !error && learningPaths && learningPaths.length === 0 && (
+					{!isLoading && !error && courses && Array.isArray(courses) && courses.length === 0 && (
 						<div className="col-span-full flex flex-col items-center justify-center py-16">
 							<div className="bg-gray-100 rounded-full p-6 mb-4">
 								<svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,18 +120,20 @@ export default function Courses() {
 						</div>
 					)}
 
-					{!isLoading && !error && learningPaths && learningPaths.slice(0, 4).map((lp) => (
-						<div 
-							key={lp.id} 
-							className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300 border border-gray-100"
+					{!isLoading && !error && courses && Array.isArray(courses) && courses.slice(0, 4).map((course, index) => (
+						<Link
+							key={course.id}
+							href="/sign-in"
+							className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:-translate-y-2 cursor-pointer"
+							style={{ animationDelay: `${index * 100}ms` }}
 						>
 							{/* Course Image */}
-							<div className="relative w-full h-48 md:h-52 bg-gray-200">
+							<div className="relative w-full h-48 md:h-52 bg-gray-200 overflow-hidden">
 								<Image
-									src={lp.thumbnail_url || '/images/courses.png'}
-									alt={lp.title}
+									src={course.thumbnail_url || '/images/courses.png'}
+									alt={course.title}
 									fill
-									className="object-cover"
+									className="object-cover transition-transform duration-500 group-hover:scale-110"
 								/>
 							</div>
 
@@ -137,17 +142,17 @@ export default function Courses() {
 
 								{/* Title */}
 								<h3 className="text-gray-900 font-bold text-base md:text-lg mb-2 leading-snug">
-									{lp.title}
+									{course.title}
 								</h3>
 
 								{/* Price */}
 								<p className="text-[#661FFF] font-semibold text-base md:text-lg mb-4">
-									{lp.price ? `Rp${Number(lp.price).toLocaleString('id-ID')}` : 'Gratis'}
+									{course.price ? `Rp${Number(course.price).toLocaleString('id-ID')}` : 'Gratis'}
 								</p>
 
 								{/* Description intentionally hidden on this list page */}
 							</div>
-						</div>
+						</Link>
 					))}
 				</div>
 			</div>

@@ -47,11 +47,13 @@ export default function ReportMonitoring() {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    throw new Error('Token tidak ditemukan. Silakan login terlebih dahulu.');
+                    // Redirect akan ditangani oleh HeaderAdmin
+                    return;
                 }
 
+                const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
                 const response = await fetch(
-                    `http://localhost:3000/api/v1/admin/reports/class-performance?page=${classPage}&limit=10&search=${searchQuery}`,
+                    `${baseUrl}/admin/reports/class-performance?page=${classPage}&limit=10&search=${searchQuery}`,
                     {
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -73,7 +75,6 @@ export default function ReportMonitoring() {
                     throw new Error(result.message || 'Gagal mengambil data');
                 }
             } catch (error) {
-                console.error('Error fetching class performance:', error);
                 if (error instanceof TypeError && error.message.includes('fetch')) {
                     setClassError('Backend tidak dapat dijangkau. Pastikan server backend sudah running di http://localhost:3000');
                 } else {
@@ -95,11 +96,13 @@ export default function ReportMonitoring() {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    throw new Error('Token tidak ditemukan. Silakan login terlebih dahulu.');
+                    // Redirect akan ditangani oleh HeaderAdmin
+                    return;
                 }
 
+                const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
                 const response = await fetch(
-                    `http://localhost:3000/api/v1/admin/reports/student-performance?page=${studentPage}&limit=10&search=${searchQuery}`,
+                    `${baseUrl}/admin/reports/student-performance?page=${studentPage}&limit=10&search=${searchQuery}`,
                     {
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -121,7 +124,6 @@ export default function ReportMonitoring() {
                     throw new Error(result.message || 'Gagal mengambil data');
                 }
             } catch (error) {
-                console.error('Error fetching student performance:', error);
                 if (error instanceof TypeError && error.message.includes('fetch')) {
                     setStudentError('Backend tidak dapat dijangkau. Pastikan server backend sudah running di http://localhost:3000');
                 } else {
@@ -339,8 +341,8 @@ export default function ReportMonitoring() {
                                                             <td className="px-6 py-4">
                                                                 <div className="flex items-center gap-3">
                                                                     {student.avatar_url ? (
-                                                                        <img 
-                                                                            src={student.avatar_url} 
+                                                                        <img
+                                                                            src={student.avatar_url}
                                                                             alt={student.name}
                                                                             className="w-8 h-8 rounded-full object-cover"
                                                                         />

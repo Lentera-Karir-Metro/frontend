@@ -2,6 +2,7 @@
 import AdminSidebar from '@/app/components/AdminSidebar';
 import HeaderAdmin from '@/app/components/HeaderAdmin';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Interface untuk response API
@@ -64,19 +65,19 @@ export default function AdminDashboard() {
     const [userGrowth, setUserGrowth] = useState<UserGrowthData[]>([]);
     const [recentUsers, setRecentUsers] = useState<RecentUser[]>([]);
     const [recentCourses, setRecentCourses] = useState<RecentCourse[]>([]);
-    
+
     const [statsLoading, setStatsLoading] = useState(true);
     const [transactionsLoading, setTransactionsLoading] = useState(true);
     const [chartLoading, setChartLoading] = useState(true);
     const [usersLoading, setUsersLoading] = useState(true);
     const [coursesLoading, setCoursesLoading] = useState(true);
-    
+
     const [statsError, setStatsError] = useState<string | null>(null);
     const [transactionsError, setTransactionsError] = useState<string | null>(null);
     const [chartError, setChartError] = useState<string | null>(null);
     const [usersError, setUsersError] = useState<string | null>(null);
     const [coursesError, setCoursesError] = useState<string | null>(null);
-    
+
     const [isUsersModalOpen, setIsUsersModalOpen] = useState(false);
     const [isCoursesModalOpen, setIsCoursesModalOpen] = useState(false);
 
@@ -88,10 +89,12 @@ export default function AdminDashboard() {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    throw new Error('Token tidak ditemukan. Silakan login terlebih dahulu.');
+                    // Redirect akan ditangani oleh HeaderAdmin
+                    return;
                 }
 
-                const response = await fetch('http://localhost:3000/api/v1/admin/dashboard/stats', {
+                const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+                const response = await fetch(`${baseUrl}/admin/dashboard/stats`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -125,9 +128,10 @@ export default function AdminDashboard() {
             setTransactionsError(null);
             try {
                 const token = localStorage.getItem('token');
-                if (!token) throw new Error('Token tidak ditemukan');
+                if (!token) return; // Redirect akan ditangani oleh HeaderAdmin
 
-                const response = await fetch('http://localhost:3000/api/v1/admin/dashboard/recent-transactions?limit=5', {
+                const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+                const response = await fetch(`${baseUrl}/admin/dashboard/recent-transactions?limit=5`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -161,9 +165,10 @@ export default function AdminDashboard() {
             setChartError(null);
             try {
                 const token = localStorage.getItem('token');
-                if (!token) throw new Error('Token tidak ditemukan');
+                if (!token) return; // Redirect akan ditangani oleh HeaderAdmin
 
-                const response = await fetch('http://localhost:3000/api/v1/admin/dashboard/user-growth?months=6', {
+                const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+                const response = await fetch(`${baseUrl}/admin/dashboard/user-growth?months=6`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -197,9 +202,10 @@ export default function AdminDashboard() {
             setUsersError(null);
             try {
                 const token = localStorage.getItem('token');
-                if (!token) throw new Error('Token tidak ditemukan');
+                if (!token) return; // Redirect akan ditangani oleh HeaderAdmin
 
-                const response = await fetch('http://localhost:3000/api/v1/admin/dashboard/recent-users?limit=5', {
+                const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+                const response = await fetch(`${baseUrl}/admin/dashboard/recent-users?limit=5`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -233,9 +239,10 @@ export default function AdminDashboard() {
             setCoursesError(null);
             try {
                 const token = localStorage.getItem('token');
-                if (!token) throw new Error('Token tidak ditemukan');
+                if (!token) return; // Redirect akan ditangani oleh HeaderAdmin
 
-                const response = await fetch('http://localhost:3000/api/v1/admin/dashboard/recent-learning-paths?limit=5', {
+                const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+                const response = await fetch(`${baseUrl}/admin/dashboard/recent-learning-paths?limit=5`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -272,15 +279,15 @@ export default function AdminDashboard() {
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
+        <div className="flex h-screen bg-gray-50 overflow-hidden">
             <AdminSidebar />
 
             {/* Main Content */}
-            <div className={`flex-1 ml-[250px] ${isUsersModalOpen || isCoursesModalOpen ? 'blur-sm' : ''}`}>
+            <div className={`flex-1 ml-[220px] flex flex-col h-screen ${isUsersModalOpen || isCoursesModalOpen ? 'blur-sm' : ''}`}>
                 <HeaderAdmin />
 
                 {/* Dashboard Content */}
-                <main className="p-8">
+                <main className="p-8 flex-1 overflow-y-auto">
                     {/* Title */}
                     <h1 className="text-3xl font-bold text-gray-900 mb-6">Dashboard</h1>
 
@@ -390,17 +397,14 @@ export default function AdminDashboard() {
                             <div className="lg:col-span-3 bg-white rounded-xl border border-gray-200 overflow-hidden">
                                 <div className="p-6 border-b border-gray-200 flex justify-between items-center">
                                     <h3 className="text-lg font-semibold text-gray-900">User Register</h3>
-                                    <button 
-                                        onClick={() => setIsUsersModalOpen(true)}
-                                        className="text-sm text-[#6B21FF] hover:underline flex items-center gap-1"
-                                    >
+                                    <Link href="/admin/users" className="text-sm text-[#6B21FF] hover:underline flex items-center gap-1">
                                         Lihat Semua
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                         </svg>
-                                    </button>
+                                    </Link>
                                 </div>
-                                
+
                                 {usersLoading ? (
                                     <div className="text-center py-12">
                                         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B21FF]"></div>
@@ -446,17 +450,14 @@ export default function AdminDashboard() {
                             <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 overflow-hidden">
                                 <div className="p-6 border-b border-gray-200 flex justify-between items-center">
                                     <h3 className="text-lg font-semibold text-gray-900">Daftar Kelas</h3>
-                                    <button 
-                                        onClick={() => setIsCoursesModalOpen(true)}
-                                        className="text-sm text-[#6B21FF] hover:underline flex items-center gap-1"
-                                    >
+                                    <Link href="/admin/content" className="text-sm text-[#6B21FF] hover:underline flex items-center gap-1">
                                         Lihat Semua
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                         </svg>
-                                    </button>
+                                    </Link>
                                 </div>
-                                
+
                                 {coursesLoading ? (
                                     <div className="text-center py-12">
                                         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B21FF]"></div>
@@ -507,7 +508,7 @@ export default function AdminDashboard() {
                                 </svg>
                             </a>
                         </div>
-                        
+
                         {transactionsLoading ? (
                             <div className="text-center py-12">
                                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B21FF]"></div>
@@ -562,16 +563,16 @@ export default function AdminDashboard() {
             {/* Users Modal */}
             {isUsersModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pl-[270px]" style={{ animation: 'fadeInOverlay 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
-                    <div 
+                    <div
                         className="absolute inset-0"
                         onClick={() => setIsUsersModalOpen(false)}
                     ></div>
-                    
+
                     <div className="relative bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden" style={{ animation: 'slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
                         {/* Modal Header */}
                         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
                             <h2 className="text-2xl font-bold text-gray-900">Semua User Register</h2>
-                            <button 
+                            <button
                                 onClick={() => setIsUsersModalOpen(false)}
                                 className="text-gray-400 hover:text-gray-600 transition-colors"
                             >
@@ -630,16 +631,16 @@ export default function AdminDashboard() {
             {/* Courses Modal */}
             {isCoursesModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pl-[270px]" style={{ animation: 'fadeInOverlay 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
-                    <div 
+                    <div
                         className="absolute inset-0"
                         onClick={() => setIsCoursesModalOpen(false)}
                     ></div>
-                    
+
                     <div className="relative bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden" style={{ animation: 'slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
                         {/* Modal Header */}
                         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
                             <h2 className="text-2xl font-bold text-gray-900">Semua Daftar Kelas</h2>
-                            <button 
+                            <button
                                 onClick={() => setIsCoursesModalOpen(false)}
                                 className="text-gray-400 hover:text-gray-600 transition-colors"
                             >

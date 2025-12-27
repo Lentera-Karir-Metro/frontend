@@ -2,15 +2,23 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+
+interface SubMenuItem {
+    name: string;
+    href: string;
+}
 
 interface MenuItem {
     name: string;
-    href: string;
+    href?: string;
     icon: React.ReactNode;
+    subItems?: SubMenuItem[];
 }
 
 export default function AdminSidebar() {
     const pathname = usePathname();
+    const [isManagementOpen, setIsManagementOpen] = useState(true);
 
     const menuItems: MenuItem[] = [
         {
@@ -23,13 +31,16 @@ export default function AdminSidebar() {
             ),
         },
         {
-            name: 'User Management',
-            href: '/admin/users',
+            name: 'Management',
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
             ),
+            subItems: [
+                { name: 'User', href: '/admin/users' },
+                { name: 'Mentor', href: '/admin/mentors' },
+            ],
         },
         {
             name: 'Learning Content',
@@ -79,7 +90,7 @@ export default function AdminSidebar() {
     ];
 
     return (
-        <aside className="w-[220px] min-h-screen bg-[#6B21FF] text-white fixed left-0 top-0 flex flex-col rounded-r-3xl shadow-2xl">
+        <aside className="w-[220px] h-screen bg-[#7C3AED] text-white fixed left-0 top-0 flex flex-col shadow-2xl">
             {/* Logo */}
             <div className="p-6 pb-8 flex justify-center">
                 <Image
@@ -94,20 +105,67 @@ export default function AdminSidebar() {
             {/* Navigation Menu */}
             <nav className="flex-1 px-4 space-y-1">
                 {menuItems.map((item) => {
-                    const isActive = pathname === item.href;
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
-                                ? 'bg-white text-[#6B21FF] font-medium'
-                                : 'text-white/80 hover:bg-white/20 hover:text-white'
-                                }`}
-                        >
-                            {item.icon}
-                            <span className="text-sm whitespace-nowrap">{item.name}</span>
-                        </Link>
-                    );
+                    if (item.subItems) {
+                        // Collapsible menu item with submenu
+                        return (
+                            <div key={item.name}>
+                                <button
+                                    onClick={() => setIsManagementOpen(!isManagementOpen)}
+                                    className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-white/90 hover:bg-white/10 transition-all duration-200"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        {item.icon}
+                                        <span className="text-sm font-medium">{item.name}</span>
+                                    </div>
+                                    <svg
+                                        className={`w-4 h-4 transition-transform duration-200 ${isManagementOpen ? 'rotate-180' : ''}`}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+
+                                {/* Submenu */}
+                                {isManagementOpen && (
+                                    <div className="mt-1 ml-4 space-y-1">
+                                        {item.subItems.map((subItem) => {
+                                            const isActive = pathname === subItem.href;
+                                            return (
+                                                <Link
+                                                    key={subItem.href}
+                                                    href={subItem.href}
+                                                    className={`block px-4 py-2.5 rounded-lg text-sm transition-all duration-200 ${isActive
+                                                        ? 'bg-white text-[#7C3AED] font-semibold shadow-md'
+                                                        : 'text-white/80 hover:bg-white/10 hover:text-white'
+                                                        }`}
+                                                >
+                                                    {subItem.name}
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    } else {
+                        // Regular menu item
+                        const isActive = pathname === item.href;
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href!}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
+                                    ? 'bg-white/10 text-white font-medium'
+                                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                                    }`}
+                            >
+                                {item.icon}
+                                <span className="text-sm">{item.name}</span>
+                            </Link>
+                        );
+                    }
                 })}
             </nav>
         </aside>

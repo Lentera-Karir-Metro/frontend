@@ -21,7 +21,7 @@ export default function HeaderAdmin() {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    router.push('/auth/login');
+                    router.push('/');
                     return;
                 }
 
@@ -35,7 +35,7 @@ export default function HeaderAdmin() {
                 if (!response.ok) {
                     if (response.status === 401) {
                         localStorage.removeItem('token');
-                        router.push('/auth/login');
+                        router.push('/');
                         return;
                     }
                     throw new Error('Failed to fetch user data');
@@ -69,12 +69,12 @@ export default function HeaderAdmin() {
 
     const handleLogout = () => {
         localStorage.removeItem('token');
-        router.push('/auth/login');
+        router.push('/');
     };
 
     return (
-        <header className="bg-white border-b border-gray-200 px-8 py-4">
-            <div className="flex justify-end items-center">
+        <header className="bg-white border-b border-gray-200 px-8 h-16 flex items-center">
+            <div className="flex justify-end items-center w-full">
                 <div className="relative" ref={dropdownRef}>
                     <button
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -98,10 +98,10 @@ export default function HeaderAdmin() {
                                 {user?.username ? user.username.charAt(0).toUpperCase() : 'A'}
                             </span>
                         </div>
-                        <svg 
-                            className={`w-4 h-4 text-gray-600 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} 
-                            fill="none" 
-                            stroke="currentColor" 
+                        <svg
+                            className={`w-4 h-4 text-gray-600 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
                             viewBox="0 0 24 24"
                         >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

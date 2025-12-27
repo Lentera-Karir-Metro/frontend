@@ -3,22 +3,8 @@ import AdminSidebar from '@/app/components/AdminSidebar';
 import HeaderAdmin from '@/app/components/HeaderAdmin';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-
-interface Course {
-    id: string;
-    title: string;
-    description: string;
-    learning_path_id: string;
-    sequence_order: number;
-    createdAt: string;
-    updatedAt: string;
-    LearningPath?: {
-        id: string;
-        title: string;
-        category?: string;
-    };
-    moduleCount?: number;
-}
+import { getAllCourses, deleteCourse, type Course } from '@/lib/courseService';
+import { COURSE_CATEGORIES } from '@/lib/constants';
 
 export default function LearningContent() {
     // State management
@@ -32,8 +18,18 @@ export default function LearningContent() {
 
     // Modal states
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
     const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
     const [deleteConfirmText, setDeleteConfirmText] = useState('');
+
+    // Edit form state
+    const [editFormData, setEditFormData] = useState({
+        title: '',
+        category: '',
+        price: 0,
+        discount_amount: 0,
+        status: 'draft' as 'draft' | 'published'
+    });
 
     // Notification
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
@@ -59,25 +55,7 @@ export default function LearningContent() {
         setError('');
 
         try {
-            const params = new URLSearchParams();
-            if (searchQuery) params.append('search', searchQuery);
-
-            const token = localStorage.getItem('token');
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/admin/courses?${params}`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Failed to fetch courses');
-            }
-
-            const data = await response.json();
+            const data = await getAllCourses(searchQuery);
             setCourses(data);
         } catch (err: any) {
             console.error('Error fetching courses:', err);
@@ -107,31 +85,15 @@ export default function LearningContent() {
         }
 
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/admin/courses/${selectedCourse.id}`,
-                {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                }
-            );
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setShowDeleteModal(false);
-                setSelectedCourse(null);
-                setDeleteConfirmText('');
-                fetchCourses();
-                showNotification('success', 'Course berhasil dihapus!');
-            } else {
-                showNotification('error', data.message || 'Gagal menghapus course');
-            }
-        } catch (err) {
+            await deleteCourse(selectedCourse.id);
+            setShowDeleteModal(false);
+            setSelectedCourse(null);
+            setDeleteConfirmText('');
+            fetchCourses();
+            showNotification('success', 'Course berhasil dihapus!');
+        } catch (err: any) {
             console.error('Error deleting course:', err);
-            showNotification('error', 'Terjadi kesalahan saat menghapus course');
+            showNotification('error', err.message || 'Terjadi kesalahan saat menghapus course');
         }
     };
 
@@ -141,19 +103,73 @@ export default function LearningContent() {
         setShowDeleteModal(true);
     };
 
+    // Open edit modal
+    const handleEdit = (course: Course) => {
+        setSelectedCourse(course);
+        setEditFormData({
+            title: course.title,
+            category: course.category || '',
+            price: course.price || 0,
+            discount_amount: course.discount_amount || 0,
+            status: (course.status || 'draft') as 'draft' | 'published'
+        });
+        setShowEditModal(true);
+    };
+
+    // Update course
+    const handleUpdateCourse = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedCourse) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/admin/courses/${selectedCourse.id}`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(editFormData),
+                }
+            );
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Update failed:', errorText);
+                throw new Error('Gagal memperbarui course');
+            }
+
+            const data = await response.json();
+
+            // Backend returns course object directly, not { success: true, data: ... }
+            if (data && data.id) {
+                setShowEditModal(false);
+                setSelectedCourse(null);
+                fetchCourses();
+                showNotification('success', 'Course berhasil diperbarui!');
+            } else {
+                showNotification('error', data.message || 'Gagal memperbarui course');
+            }
+        } catch (err: any) {
+            console.error('Error updating course:', err);
+            showNotification('error', err.message || 'Terjadi kesalahan saat memperbarui course');
+        }
+    };
+
     // Filter courses by kategori (client-side)
     const filteredCourses = courses.filter(course => {
         if (kategoriFilter === 'all') return true;
-        return course.LearningPath?.category === kategoriFilter || course.LearningPath?.title === kategoriFilter;
+        return course.category === kategoriFilter;
     });
 
-    // Get unique categories for filter
-    const categories = Array.from(new Set(
-        courses.map(c => c.LearningPath?.category || c.LearningPath?.title).filter(Boolean)
-    ));
+    // Use shared categories from constants
+    const categories = [...COURSE_CATEGORIES];
 
     // Format date
-    const formatDate = (dateString: string) => {
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return 'N/A';
         const date = new Date(dateString);
         return date.toLocaleDateString('id-ID', {
             day: '2-digit',
@@ -277,9 +293,9 @@ export default function LearningContent() {
                                         <thead className="bg-[#E8DEFF]">
                                             <tr>
                                                 <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Judul Kelas</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Learning Path</th>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Kategori</th>
                                                 <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Jumlah Modul</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Tanggal Dibuat</th>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Status</th>
                                                 <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Actions</th>
                                             </tr>
                                         </thead>
@@ -293,30 +309,59 @@ export default function LearningContent() {
                                             ) : (
                                                 filteredCourses.map((course) => (
                                                     <tr key={course.id} className="hover:bg-gray-50">
-                                                        <td className="px-6 py-4 text-sm text-gray-900">{course.title}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-600">
-                                                            {course.LearningPath?.title || 'Unassigned'}
+                                                        <td className="px-6 py-4 text-sm text-gray-900 align-middle">{course.title}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600 align-middle">
+                                                            {course.category || 'All'}
                                                         </td>
-                                                        <td className="px-6 py-4 text-sm text-gray-600">
-                                                            {course.moduleCount || 0}
+                                                        <td className="px-6 py-4 text-sm text-gray-600 align-middle">
+                                                            {course.modules?.length || 0}
                                                         </td>
-                                                        <td className="px-6 py-4 text-sm text-gray-600">
-                                                            {formatDate(course.createdAt)}
+                                                        <td className="px-6 py-4 align-middle">
+                                                            <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
+                                                                course.status === 'published'
+                                                                    ? 'bg-green-100 text-green-700'
+                                                                    : 'bg-gray-100 text-gray-700'
+                                                            }`}>
+                                                                {course.status || 'published'}
+                                                            </span>
                                                         </td>
-                                                        <td className="px-6 py-4">
+                                                        <td className="px-6 py-4 align-middle">
                                                             <div className="flex items-center gap-3">
-                                                                {/* Edit Button */}
-                                                                <Link href={`/admin/content/edit/${course.id}`}>
-                                                                    <button className="text-[#6B21FF] hover:text-[#5518CC] transition">
+                                                                {/* Kelola Modul Button */}
+                                                                <Link href={`/admin/content/${course.id}`}>
+                                                                    <button 
+                                                                        className="text-blue-600 hover:text-white hover:bg-blue-600 transition-all duration-300 flex items-center justify-center p-2 rounded-lg hover:scale-110 hover:shadow-lg"
+                                                                        title="Kelola Modul"
+                                                                    >
                                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                                         </svg>
                                                                     </button>
                                                                 </Link>
+                                                                {/* Tambah Modul Button */}
+                                                                <Link href={`/admin/content/create/module?courseId=${course.id}`}>
+                                                                    <button 
+                                                                        className="text-green-600 hover:text-white hover:bg-green-600 transition-all duration-300 flex items-center justify-center p-2 rounded-lg hover:scale-110 hover:shadow-lg"
+                                                                        title="Tambah Modul"
+                                                                    >
+                                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                                        </svg>
+                                                                    </button>
+                                                                </Link>
+                                                                {/* Edit Button */}
+                                                                <button
+                                                                    onClick={() => handleEdit(course)}
+                                                                    className="text-[#6B21FF] hover:text-white hover:bg-[#6B21FF] transition-all duration-300 flex items-center justify-center p-2 rounded-lg hover:scale-110 hover:shadow-lg"
+                                                                >
+                                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                                    </svg>
+                                                                </button>
                                                                 {/* Delete Button */}
                                                                 <button
                                                                     onClick={() => handleDelete(course)}
-                                                                    className="text-red-500 hover:text-red-700 transition"
+                                                                    className="text-red-500 hover:text-white hover:bg-red-500 transition-all duration-300 flex items-center justify-center p-2 rounded-lg hover:scale-110 hover:shadow-lg hover:rotate-12"
                                                                 >
                                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -334,6 +379,89 @@ export default function LearningContent() {
                         )}
                     </main>
                 </div>
+
+                {/* Edit Course Modal */}
+                {showEditModal && selectedCourse && (
+                    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+                        <div className="bg-white rounded-xl p-8 max-w-md w-full animate-scale-up shadow-2xl">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Edit Course</h2>
+                            <form onSubmit={handleUpdateCourse} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Judul Course</label>
+                                    <input
+                                        type="text"
+                                        value={editFormData.title}
+                                        onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                                        required
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#6B21FF] text-gray-900"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
+                                    <select
+                                        value={editFormData.category}
+                                        onChange={(e) => setEditFormData({ ...editFormData, category: e.target.value })}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#6B21FF] text-gray-900"
+                                    >
+                                        <option value="">Pilih Kategori</option>
+                                        {categories.map(cat => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Harga</label>
+                                    <input
+                                        type="number"
+                                        value={editFormData.price}
+                                        onChange={(e) => setEditFormData({ ...editFormData, price: Number(e.target.value) })}
+                                        min="0"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#6B21FF] text-gray-900"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Diskon</label>
+                                    <input
+                                        type="number"
+                                        value={editFormData.discount_amount}
+                                        onChange={(e) => setEditFormData({ ...editFormData, discount_amount: Number(e.target.value) })}
+                                        min="0"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#6B21FF] text-gray-900"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                                    <select
+                                        value={editFormData.status}
+                                        onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value as 'draft' | 'published' })}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#6B21FF] text-gray-900"
+                                    >
+                                        <option value="draft">Draft</option>
+                                        <option value="published">Published</option>
+                                    </select>
+                                </div>
+                                <div className="flex gap-3 mt-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowEditModal(false);
+                                            setSelectedCourse(null);
+                                        }}
+                                        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 px-4 py-2 bg-[#6B21FF] text-white rounded-lg hover:bg-[#5518CC] transition"
+                                    >
+                                        Simpan
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
 
                 {/* Delete Confirmation Modal */}
                 {showDeleteModal && selectedCourse && (

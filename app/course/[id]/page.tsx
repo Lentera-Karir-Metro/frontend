@@ -9,13 +9,13 @@ import { DashboardSkeleton } from '@/app/components/ui/Skeleton';
 type Module = {
 	id: string;
 	title: string;
-	module_type: 'video' | 'ebook' | 'quiz';
+	module_type?: 'video' | 'ebook' | 'quiz';
 	sequence_order: number;
 	video_url?: string;
 	ebook_url?: string;
 	quiz_id?: string;
 	durasi_video_menit?: number;
-	estimasi_waktu_menit: number;
+	estimasi_waktu_menit?: number;
 }
 
 type Course = {
@@ -39,7 +39,7 @@ type LearningPath = {
 	level?: string;
 	mentor_name?: string;
 	mentor_title?: string;
-	mentor_avatar_url?: string;
+	mentor_photo_profile?: string;
 	courses: Course[];
 }
 
@@ -59,18 +59,27 @@ export default function CourseDetailPage() {
 			try {
 				setIsLoading(true);
 				const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
-				const response = await fetch(`${baseUrl}/catalog/learning-paths/${courseId}`);
+				const response = await fetch(`${baseUrl}/catalog/courses/${courseId}`);
 
 				if (!response.ok) {
 					throw new Error(`Failed to fetch: ${response.status}`);
 				}
 
 				const data = await response.json();
-				setLearningPath(data);
-				
-				// Auto-expand first course
-				if (data.courses && data.courses.length > 0) {
-					setExpandedSections({ [data.courses[0].id]: true });
+				// Map single course to learningPath format for compatibility
+				setLearningPath({
+					...data,
+					courses: data.modules ? [{
+						id: data.id,
+						title: data.title,
+						sequence_order: 1,
+						modules: data.modules
+					}] : []
+				});
+
+				// Auto-expand first section
+				if (data.modules && data.modules.length > 0) {
+					setExpandedSections({ [data.id]: true });
 				}
 			} catch (err: any) {
 				setError(err.message || 'Failed to load course details');
@@ -88,7 +97,7 @@ export default function CourseDetailPage() {
 				}
 
 				const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
-				const response = await fetch(`${baseUrl}/learn/dashboard`, {
+				const response = await fetch(`${baseUrl}/learn/my-courses`, {
 					headers: {
 						'Authorization': `Bearer ${token}`
 					}
@@ -97,7 +106,7 @@ export default function CourseDetailPage() {
 				if (response.ok) {
 					const enrolledCourses = await response.json();
 					// Check if current courseId is in enrolled courses
-					const enrolled = enrolledCourses.some((course: any) => course.id === courseId);
+					const enrolled = Array.isArray(enrolledCourses) && enrolledCourses.some((course: any) => course.id === courseId);
 					setIsEnrolled(enrolled);
 				}
 			} catch (err) {
@@ -129,7 +138,7 @@ export default function CourseDetailPage() {
 		} else if (type === 'ebook') {
 			return (
 				<svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 512 512">
-					<path d="M96 0C43 0 0 43 0 96V416c0 53 43 96 96 96H384h32c17.7 0 32-14.3 32-32s-14.3-32-32-32V384c17.7 0 32-14.3 32-32V32c0-17.7-14.3-32-32-32H384 96zm0 384H352v64H96c-17.7 0-32-14.3-32-32s14.3-32 32-32zm32-240c0-8.8 7.2-16 16-16H336c8.8 0 16 7.2 16 16s-7.2 16-16 16H144c-8.8 0-16-7.2-16-16zm16 48H336c8.8 0 16 7.2 16 16s-7.2 16-16 16H144c-8.8 0-16-7.2-16-16s7.2-16 16-16z"/>
+					<path d="M96 0C43 0 0 43 0 96V416c0 53 43 96 96 96H384h32c17.7 0 32-14.3 32-32s-14.3-32-32-32V384c17.7 0 32-14.3 32-32V32c0-17.7-14.3-32-32-32H384 96zm0 384H352v64H96c-17.7 0-32-14.3-32-32s14.3-32 32-32zm32-240c0-8.8 7.2-16 16-16H336c8.8 0 16 7.2 16 16s-7.2 16-16 16H144c-8.8 0-16-7.2-16-16zm16 48H336c8.8 0 16 7.2 16 16s-7.2 16-16 16H144c-8.8 0-16-7.2-16-16s7.2-16 16-16z" />
 				</svg>
 			);
 		} else {
@@ -151,6 +160,14 @@ export default function CourseDetailPage() {
 		return `${mins}:00`;
 	};
 
+	const getModuleType = (module: Module): 'video' | 'ebook' | 'quiz' => {
+		if (module.module_type) return module.module_type;
+		if (module.video_url) return 'video';
+		if (module.ebook_url) return 'ebook';
+		if (module.quiz_id) return 'quiz';
+		return 'video'; // default
+	};
+
 	const countModulesByType = (modules: Module[]) => {
 		const counts = {
 			video: 0,
@@ -158,7 +175,8 @@ export default function CourseDetailPage() {
 			quiz: 0
 		};
 		modules.forEach(m => {
-			counts[m.module_type]++;
+			const type = getModuleType(m);
+			counts[type]++;
 		});
 		return counts;
 	};
@@ -200,113 +218,76 @@ export default function CourseDetailPage() {
 			<DashboardNavbar />
 
 			{/* Hero Section */}
-			<div className="relative bg-gradient-to-br from-[#661FFF] via-[#8B5CF6] to-[#A78BFA] text-white py-8 md:py-12 overflow-hidden">
-				{/* Animated Background Pattern */}
-				<div className="absolute inset-0 opacity-10">
-					<div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-					<div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+			<section className="relative bg-gradient-to-r from-gray-900 to-gray-800 py-12 md:py-16 lg:py-20">
+				<div className="absolute inset-0 opacity-50">
+					<Image
+						src={learningPath.thumbnail_url || '/images/dashboard.png'}
+						alt={learningPath.title}
+						fill
+						className="object-cover"
+						priority
+					/>
 				</div>
-
-				<div className="relative max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
+				<div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
 					{/* Back Button */}
 					<button
 						onClick={() => router.back()}
-						className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-4 transition-colors group"
+						className="inline-flex items-center gap-2 px-4 py-2.5 bg-transparent border-2 border-white/70 text-white rounded-full font-semibold mb-6 hover:bg-white hover:text-gray-900 hover:scale-105 transition-all duration-300 group"
 					>
-						<svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+						<svg
+							className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
 						</svg>
-						<span className="text-sm font-medium">Kembali</span>
+						<span>Kembali</span>
 					</button>
 
-					<div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-						{/* Left Content */}
-						<div className="flex-1">
-							{isEnrolled && (
-								<div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
-									<div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-									<span className="text-sm font-medium text-white">Sudah Terdaftar</span>
-								</div>
-							)}
-							
-							<h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 text-white drop-shadow-lg">
-								{learningPath.title}
-							</h1>
-
-							{/* Course Info Cards */}
-							<div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
-								<div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20">
-									<div className="flex items-center gap-2 mb-1">
-										<svg className="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-										</svg>
-										<span className="text-xs text-white/80 font-medium">Kategori</span>
-									</div>
-									<p className="text-sm font-semibold text-white">{learningPath.category}</p>
-								</div>
-
-								<div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20">
-									<div className="flex items-center gap-2 mb-1">
-										<svg className="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-										</svg>
-										<span className="text-xs text-white/80 font-medium">Level</span>
-									</div>
-									<p className="text-sm font-semibold text-white">{learningPath.level || 'All Levels'}</p>
-								</div>
-
-								<div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20">
-									<div className="flex items-center gap-2 mb-1">
-										<svg className="w-4 h-4 text-yellow-400 fill-yellow-400" viewBox="0 0 20 20">
-											<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-										</svg>
-										<span className="text-xs text-white/80 font-medium">Rating</span>
-									</div>
-									<p className="text-sm font-semibold text-white">{learningPath.rating} ({learningPath.review_count})</p>
-								</div>
+					<div className="text-center md:text-left">
+						{isEnrolled && (
+							<div className="inline-flex items-center gap-2 bg-green-500/20 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
+								<div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+								<span className="text-sm font-medium text-white">Sudah Terdaftar</span>
 							</div>
+						)}
 
-							{/* Mentor Info */}
+						<h1 className="text-white text-[32px] sm:text-[36px] md:text-[42px] lg:text-[48px] font-bold mb-3 md:mb-4">
+							{learningPath.title}
+						</h1>
+						<p className="text-white text-[14px] sm:text-[15px] md:text-[16px] lg:text-[17px] max-w-2xl">
+							{learningPath.description}
+						</p>
+
+						{/* Course Info - Category Only */}
+						<div className="flex flex-wrap gap-3 mt-6">
+							<span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 text-white text-sm font-medium">
+								<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+								</svg>
+								{learningPath.category}
+							</span>
 							{learningPath.mentor_name && (
-								<div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-									<div className="flex items-center gap-3">
-										{learningPath.mentor_avatar_url ? (
-											<img 
-												src={learningPath.mentor_avatar_url} 
-												alt={learningPath.mentor_name}
-												className="w-12 h-12 rounded-full object-cover border-2 border-white/30"
-											/>
-										) : (
-											<div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-												<svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-													<path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-												</svg>
-											</div>
-										)}
-										<div>
-											<p className="text-xs text-white/80 font-medium">Mentor</p>
-											<p className="font-semibold text-white">{learningPath.mentor_name}</p>
-											{learningPath.mentor_title && (
-												<p className="text-xs text-white/70">{learningPath.mentor_title}</p>
-											)}
-										</div>
-									</div>
-								</div>
+								<span className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 text-white text-sm font-medium">
+									<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+										<path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+									</svg>
+									{learningPath.mentor_name}
+								</span>
 							)}
 						</div>
-
-						{/* Right Content removed per request */}
 					</div>
 				</div>
-			</div>
+			</section>
 
 			{/* Main Content */}
 			<div className="flex-1 max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 md:py-12">
-				<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+				<div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
 					{/* Left Content - Course Details */}
-					<div className="lg:col-span-2 space-y-8">
+					<div className="lg:col-span-3 space-y-8">
 						{/* Tentang Kelas */}
-						<div className="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-300">
+						<div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-gray-200">
 							<h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">Tentang Kelas</h2>
 							<div className="space-y-4 text-gray-700 leading-relaxed">
 								<p>{learningPath.description}</p>
@@ -326,7 +307,7 @@ export default function CourseDetailPage() {
 								<div className="flex items-center gap-3">
 									<div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
 										<svg className="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 512 512">
-											<path d="M96 0C43 0 0 43 0 96V416c0 53 43 96 96 96H384h32c17.7 0 32-14.3 32-32s-14.3-32-32-32V384c17.7 0 32-14.3 32-32V32c0-17.7-14.3-32-32-32H384 96zm0 384H352v64H96c-17.7 0-32-14.3-32-32s14.3-32 32-32zm32-240c0-8.8 7.2-16 16-16H336c8.8 0 16 7.2 16 16s-7.2 16-16 16H144c-8.8 0-16-7.2-16-16zm16 48H336c8.8 0 16 7.2 16 16s-7.2 16-16 16H144c-8.8 0-16-7.2-16-16s7.2-16 16-16z"/>
+											<path d="M96 0C43 0 0 43 0 96V416c0 53 43 96 96 96H384h32c17.7 0 32-14.3 32-32s-14.3-32-32-32V384c17.7 0 32-14.3 32-32V32c0-17.7-14.3-32-32-32H384 96zm0 384H352v64H96c-17.7 0-32-14.3-32-32s14.3-32 32-32zm32-240c0-8.8 7.2-16 16-16H336c8.8 0 16 7.2 16 16s-7.2 16-16 16H144c-8.8 0-16-7.2-16-16zm16 48H336c8.8 0 16 7.2 16 16s-7.2 16-16 16H144c-8.8 0-16-7.2-16-16s7.2-16 16-16z" />
 										</svg>
 									</div>
 									<div>
@@ -360,13 +341,14 @@ export default function CourseDetailPage() {
 						</div>
 
 						{/* Daftar Materi */}
-						<div className="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-300">
+						<div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-gray-200">
 							<h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Daftar Materi</h2>
 
 							{learningPath.courses && learningPath.courses.map((course, index) => {
 								const moduleCounts = countModulesByType(course.modules || []);
+								const isLast = index === (learningPath.courses?.length || 0) - 1;
 								return (
-									<div key={course.id} className="border-b border-gray-200">
+									<div key={course.id} className={isLast ? '' : 'border-b border-gray-200'}>
 										<button
 											onClick={() => toggleSection(course.id)}
 											className="w-full flex items-center justify-between py-4 text-left hover:bg-gray-50 transition-colors text-black"
@@ -394,7 +376,7 @@ export default function CourseDetailPage() {
 												{course.modules && course.modules.map((module) => (
 													<div key={module.id} className="flex items-center justify-between py-2 hover:bg-gray-50 px-3 rounded">
 														<div className="flex items-center gap-3">
-															{getModuleIcon(module.module_type)}
+															{getModuleIcon(getModuleType(module))}
 															<span className="text-gray-700">{module.title}</span>
 														</div>
 														<span className="text-sm text-gray-500">
@@ -407,28 +389,30 @@ export default function CourseDetailPage() {
 									</div>
 								);
 							})}
-						</div>
 
-						{/* Mentor Section */}
-						<div className="bg-white rounded-2xl shadow-md p-6 md:p-8 border border-gray-300">
-							<h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Mentor</h2>
-							<div className="flex items-start gap-4">
-								<img
-									src={learningPath.mentor_avatar_url || 'https://i.pravatar.cc/150?img=12'}
-									alt={learningPath.mentor_name}
-									className="w-16 h-16 rounded-full object-cover"
-								/>
-								<div>
-									<h3 className="font-bold text-gray-900 text-lg">{learningPath.mentor_name}</h3>
-									<p className="text-gray-600">{learningPath.mentor_title}</p>
+							{/* Separator Line */}
+							<hr className="border-gray-200 my-6" />
+
+							{/* Mentor Section */}
+							<div className="pt-2">
+								<h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Mentor</h2>
+								<div className="flex items-center gap-4">
+									<img
+										src={learningPath.mentor_photo_profile || '/images/default-avatar.png'}
+										alt={learningPath.mentor_name}
+										className="w-14 h-14 rounded-full object-cover"
+									/>
+									<div>
+										<h3 className="font-bold text-gray-900">{learningPath.mentor_name}</h3>
+										<p className="text-gray-600 text-sm">{learningPath.mentor_title}</p>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 
-					{/* Right Sidebar - Pricing Card */}
 					<div className="lg:col-span-1">
-						<div className="bg-white rounded-2xl shadow-md p-6 border border-gray-300 top-8">
+						<div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 sticky top-8">
 							<img
 								src={learningPath.thumbnail_url}
 								alt={learningPath.title}
@@ -453,19 +437,19 @@ export default function CourseDetailPage() {
 									)}
 								</div>
 
-							{isEnrolled ? (
-								<button 
-									onClick={() => router.push(`/course/${courseId}/learn`)}
-									className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
-								>
-									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-									</svg>
-									Mulai Kelas
-								</button>
-							) : (
-									<button 
+								{isEnrolled ? (
+									<button
+										onClick={() => router.push(`/course/${courseId}/learn`)}
+										className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+									>
+										<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+										</svg>
+										Lanjutkan Belajar
+									</button>
+								) : (
+									<button
 										onClick={() => router.push(`/checkout/${courseId}`)}
 										className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-lg transition-colors"
 									>

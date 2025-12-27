@@ -74,6 +74,9 @@ export default function UserManagement() {
                 limit: '10',
             });
 
+            // Only request users with role 'user' for this admin view
+            params.append('role', 'user');
+
             if (searchQuery) params.append('search', searchQuery);
             if (statusFilter !== 'all') params.append('status', statusFilter);
 
@@ -100,7 +103,9 @@ export default function UserManagement() {
             const data = await response.json();
 
             if (data.success) {
-                setUsers(data.data);
+                // Ensure only users with role 'user' are shown (fallback in case backend doesn't filter)
+                const filtered = Array.isArray(data.data) ? data.data.filter((u: any) => u.role === 'user') : [];
+                setUsers(filtered);
                 setPagination(data.pagination);
             } else {
                 throw new Error(data.message || 'Unknown error');
@@ -482,7 +487,7 @@ export default function UserManagement() {
                                                                     {/* Edit Button */}
                                                                     <button
                                                                         onClick={() => handleEdit(user)}
-                                                                        className="text-[#6B21FF] hover:text-[#5518CC] transition"
+                                                                        className="text-[#6B21FF] hover:text-white hover:bg-[#6B21FF] transition-all duration-300 flex items-center justify-center p-2 rounded-lg hover:scale-110 hover:shadow-lg"
                                                                         title="Edit User"
                                                                     >
                                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -492,7 +497,7 @@ export default function UserManagement() {
                                                                     {/* Reset Password Button */}
                                                                     <button
                                                                         onClick={() => handleResetPasswordClick(user)}
-                                                                        className="text-orange-500 hover:text-orange-700 transition"
+                                                                        className="text-orange-500 hover:text-white hover:bg-orange-500 transition-all duration-300 flex items-center justify-center p-2 rounded-lg hover:scale-110 hover:shadow-lg"
                                                                         title="Reset Password"
                                                                     >
                                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -502,7 +507,7 @@ export default function UserManagement() {
                                                                     {/* Delete Button */}
                                                                     <button
                                                                         onClick={() => handleDelete(user)}
-                                                                        className="text-red-500 hover:text-red-700 transition"
+                                                                        className="text-red-500 hover:text-white hover:bg-red-500 transition-all duration-300 flex items-center justify-center p-2 rounded-lg hover:scale-110 hover:shadow-lg hover:rotate-12"
                                                                         title="Delete User"
                                                                     >
                                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -519,48 +524,36 @@ export default function UserManagement() {
                                     </div>
                                 </div>
 
-                                {/* Pagination */}
-                                <div className="flex justify-between items-center mt-8">
-                                    <p className="text-sm text-gray-600">
-                                        Menampilkan {users.length} dari {pagination.totalItems} users
-                                    </p>
-                                    <div className="flex items-center gap-2">
+                                {/* Pagination (centered) */}
+                                <div className="flex flex-col items-center gap-3 mt-8">
+                                    <div className="flex items-center gap-6">
                                         <button
                                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                             disabled={currentPage === 1}
                                             className="p-2 rounded-full hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                            aria-label="Previous page"
                                         >
                                             <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                             </svg>
                                         </button>
 
-                                        {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                                            const page = i + 1;
-                                            return (
-                                                <button
-                                                    key={page}
-                                                    onClick={() => setCurrentPage(page)}
-                                                    className={`w-10 h-10 rounded-full font-semibold transition ${currentPage === page
-                                                        ? 'bg-[#6B21FF] text-white'
-                                                        : 'bg-white text-gray-700 hover:bg-gray-100'
-                                                        }`}
-                                                >
-                                                    {page}
-                                                </button>
-                                            );
-                                        })}
+                                        <div className="w-12 h-12 rounded-full bg-[#6B21FF] flex items-center justify-center text-white font-semibold text-lg shadow-xl">
+                                            {currentPage}
+                                        </div>
 
                                         <button
                                             onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
                                             disabled={currentPage === pagination.totalPages}
                                             className="p-2 rounded-full hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                            aria-label="Next page"
                                         >
                                             <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                             </svg>
                                         </button>
                                     </div>
+
                                 </div>
                             </>
                         )}

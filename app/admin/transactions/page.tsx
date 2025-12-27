@@ -58,11 +58,6 @@ export default function TransactionsPage() {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                console.error('API Error:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    error: errorData
-                });
 
                 // Handle specific error codes
                 if (response.status === 401) {
@@ -94,7 +89,6 @@ export default function TransactionsPage() {
                 throw new Error(data.message || 'Unknown error');
             }
         } catch (err: any) {
-            console.error('Error fetching transactions:', err);
             setError(err.message || 'Gagal memuat data transaksi');
             setTransactions([]); // Clear transactions on error
         } finally {
