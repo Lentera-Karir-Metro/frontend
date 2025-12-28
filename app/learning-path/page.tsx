@@ -10,7 +10,7 @@ type LearningPath = {
     title: string;
     description?: string;
     course_count?: number;
-    thumbnail_url?: string;
+    thumbnail?: string;
     category?: string;
     createdAt?: string;
 }
@@ -105,7 +105,7 @@ export default function LearningPathPage() {
                                         {/* Image */}
                                         <div className="relative w-full md:w-[240px] h-[200px] md:h-[160px] flex-shrink-0 rounded-2xl overflow-hidden">
                                             <Image
-                                                src={path.thumbnail_url || '/images/dashboard.png'}
+                                                src={path.thumbnail || '/images/dashboard.png'}
                                                 alt={path.title}
                                                 fill
                                                 className="object-cover transition-transform duration-500 group-hover:scale-110"

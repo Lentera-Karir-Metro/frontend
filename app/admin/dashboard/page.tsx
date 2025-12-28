@@ -44,6 +44,7 @@ interface RecentTransaction {
 interface UserGrowthData {
     month: string;
     newUsers: number;
+    newMentors?: number;
 }
 
 interface RecentUser {
@@ -344,17 +345,32 @@ export default function AdminDashboard() {
                                     <p className="text-red-500">{chartError}</p>
                                 </div>
                             ) : (
-                                <ResponsiveContainer width="100%" height={300}>
+                                <>
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-3 h-3 rounded-sm" style={{ background: '#6B21FF' }}></span>
+                                            <span className="text-sm text-gray-600">Users</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-3 h-3 rounded-sm" style={{ background: '#10B981' }}></span>
+                                            <span className="text-sm text-gray-600">Mentors</span>
+                                        </div>
+                                    </div>
+                                    <ResponsiveContainer width="100%" height={300}>
                                     <AreaChart
                                         data={userGrowth}
                                         margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                                     >
-                                        <defs>
-                                            <linearGradient id="colorNewUsers" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#6B21FF" stopOpacity={0.3} />
-                                                <stop offset="95%" stopColor="#6B21FF" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
+                                            <defs>
+                                                <linearGradient id="colorNewUsers" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#6B21FF" stopOpacity={0.3} />
+                                                    <stop offset="95%" stopColor="#6B21FF" stopOpacity={0} />
+                                                </linearGradient>
+                                                <linearGradient id="colorMentors" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.25} />
+                                                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                                         <XAxis
                                             dataKey="month"
@@ -382,8 +398,17 @@ export default function AdminDashboard() {
                                             fillOpacity={1}
                                             fill="url(#colorNewUsers)"
                                         />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="newMentors"
+                                            stroke="#10B981"
+                                            strokeWidth={3}
+                                            fillOpacity={1}
+                                            fill="url(#colorMentors)"
+                                        />
                                     </AreaChart>
                                 </ResponsiveContainer>
+                                    </>
                             )}
                         </div>
                     </div>

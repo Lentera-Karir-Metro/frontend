@@ -27,6 +27,7 @@ type Course = {
     discount_amount?: number;
     status?: string;
     modules?: Module[];
+    is_completed?: boolean;
     LearningPathCourse?: {
         sequence_order: number;
     };
@@ -36,6 +37,7 @@ type LearningPath = {
     id: string;
     title: string;
     description?: string;
+    thumbnail?: string;
     createdAt?: string;
     courses: Course[];
 }
@@ -44,6 +46,7 @@ export default function LearningPathDetailPage() {
     const params = useParams();
     const [learningPath, setLearningPath] = useState<LearningPath | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [courseProgress, setCourseProgress] = useState<{[key: string]: boolean}>({});
 
     // Fetch learning path detail from backend API
     useEffect(() => {
@@ -51,6 +54,8 @@ export default function LearningPathDetailPage() {
             try {
                 setIsLoading(true);
                 const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+                const token = localStorage.getItem('token');
+                
                 const response = await fetch(`${baseUrl}/catalog/learning-paths/${params.id}`);
 
                 if (!response.ok) {
@@ -59,6 +64,32 @@ export default function LearningPathDetailPage() {
 
                 const result = await response.json();
                 setLearningPath(result);
+
+                // If user is logged in, fetch progress for each course
+                if (token) {
+                    const progressMap: {[key: string]: boolean} = {};
+                    
+                    for (const course of result.courses || []) {
+                        try {
+                            const progressResponse = await fetch(`${baseUrl}/learn/courses/${course.id}`, {
+                                headers: {
+                                    'Authorization': `Bearer ${token}`
+                                }
+                            });
+
+                            if (progressResponse.ok) {
+                                const progressData = await progressResponse.json();
+                                // Check if course is completed (getCourseContent returns courses[0].is_completed)
+                                progressMap[course.id] = progressData.courses?.[0]?.is_completed || false;
+                            }
+                        } catch (err) {
+                            console.error(`Error fetching progress for course ${course.id}:`, err);
+                            progressMap[course.id] = false;
+                        }
+                    }
+                    
+                    setCourseProgress(progressMap);
+                }
             } catch (error) {
                 console.error('Error fetching learning path detail:', error);
                 setLearningPath(null);
@@ -103,8 +134,8 @@ export default function LearningPathDetailPage() {
         );
     }
 
-    // Get first course thumbnail as path thumbnail
-    const pathThumbnail = learningPath.courses?.[0]?.thumbnail_url || '/images/dashboard.png';
+    // Get thumbnail from learning path or fallback to first course or default
+    const pathThumbnail = learningPath.thumbnail || learningPath.courses?.[0]?.thumbnail_url || '/images/dashboard.png';
     // Get category from first course
     const pathCategory = learningPath.courses?.[0]?.category || 'Course';
 
@@ -146,18 +177,30 @@ export default function LearningPathDetailPage() {
                             {/* Right - Details & Button */}
                             <div className="lg:w-[280px] flex-shrink-0 lg:border-l lg:border-gray-200 lg:pl-8">
                                 <h3 className="text-lg font-bold text-gray-900 mb-4">Learning Path Details</h3>
-                                <div className="space-y-3 mb-6">
+                                <div className="space-y-3">
                                     <div className="flex items-center gap-3">
                                         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                         </svg>
                                         <span className="text-gray-700">{learningPath.courses?.length || 0} kelas terkait</span>
                                     </div>
+                                    
+                                    <div className="flex items-center gap-3">
+                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span className="text-gray-700">{Object.values(courseProgress).filter(Boolean).length} kelas selesai</span>
+                                    </div>
 
+                                    <div className="flex items-center gap-3">
+                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                        <span className="text-gray-700">
+                                            {learningPath.courses?.length ? Math.round((Object.values(courseProgress).filter(Boolean).length / learningPath.courses.length) * 100) : 0}% progress
+                                        </span>
+                                    </div>
                                 </div>
-                                <button className="w-full py-3 bg-[#661FFF] text-white font-semibold rounded-xl hover:bg-[#5518d9] transition-colors">
-                                    Ikuti Path
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -175,22 +218,30 @@ export default function LearningPathDetailPage() {
                         {/* Course Cards with Timeline */}
                         <div className="space-y-0">
                             {learningPath.courses.map((course, index) => {
-                                // For demo: only first course is "active" (purple)
-                                // In real app, this would be based on user's progress
-                                const isActive = index === 0;
+                                // Check if course is completed based on fetched progress
+                                const isCompleted = courseProgress[course.id] || false;
+                                
+                                // Check if previous and next courses are completed for line coloring
+                                const isPreviousCompleted = index > 0 ? (courseProgress[learningPath.courses[index - 1].id] || false) : false;
+                                const isNextCompleted = index < learningPath.courses.length - 1 ? (courseProgress[learningPath.courses[index + 1].id] || false) : false;
+                                
+                                // Top line is purple only if both current and previous are completed
+                                const topLineColor = (isCompleted && isPreviousCompleted) ? 'bg-[#661FFF]' : 'bg-gray-300';
+                                // Bottom line is purple only if both current and next are completed
+                                const bottomLineColor = (isCompleted && isNextCompleted) ? 'bg-[#661FFF]' : 'bg-gray-300';
 
                                 return (
                                     <div key={course.id} className="relative flex">
                                         {/* Timeline Column */}
                                         <div className="flex flex-col items-center mr-6">
                                             {/* Top Line (hidden for first item) */}
-                                            <div className={`w-[2px] h-[50%] ${index === 0 ? 'bg-transparent' : 'bg-gray-300'}`} style={{ position: 'absolute', top: 0 }} />
+                                            <div className={`w-1 h-[50%] ${index === 0 ? 'bg-transparent' : topLineColor}`} style={{ position: 'absolute', top: 0 }} />
 
-                                            {/* Dot - Purple if active/current, gray if not - centered */}
-                                            <div className={`w-5 h-5 rounded-full flex-shrink-0 ${isActive ? 'bg-[#661FFF]' : 'bg-gray-300'}`} style={{ marginTop: '60px' }} />
+                                            {/* Dot - Purple if completed, gray if not - centered */}
+                                            <div className={`w-5 h-5 rounded-full flex-shrink-0 ${isCompleted ? 'bg-[#661FFF]' : 'bg-gray-300'}`} style={{ marginTop: '60px' }} />
 
                                             {/* Bottom Line (hidden for last item) */}
-                                            <div className={`w-[2px] flex-1 ${index === learningPath.courses.length - 1 ? 'bg-transparent' : 'bg-gray-300'}`} />
+                                            <div className={`w-1 flex-1 ${index === learningPath.courses.length - 1 ? 'bg-transparent' : bottomLineColor}`} />
                                         </div>
 
                                         {/* Course Card */}

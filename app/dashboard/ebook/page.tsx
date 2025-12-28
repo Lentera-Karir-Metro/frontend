@@ -32,7 +32,8 @@ export default function EbookPage() {
 				return;
 			}
 
-			const response = await fetch('http://localhost:3000/api/v1/learn/ebooks', {
+			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+			const response = await fetch(`${baseUrl}/learn/ebooks`, {
 				method: 'GET',
 				headers: {
 					'Authorization': `Bearer ${token}`,
@@ -45,6 +46,7 @@ export default function EbookPage() {
 			}
 
 			const data = await response.json();
+			console.log('[Ebook Page] Fetched ebooks:', data.data?.length || 0, 'items');
 			setEbooks(data.data || []);
 		} catch (err: any) {
 			console.error('Error fetching ebooks:', err);
@@ -56,6 +58,15 @@ export default function EbookPage() {
 
 	useEffect(() => {
 		fetchEbooks();
+
+		// Refresh data when window gets focus (user comes back from another page)
+		const handleFocus = () => {
+			console.log('[Ebook Page] Window focused, refreshing data...');
+			fetchEbooks();
+		};
+
+		window.addEventListener('focus', handleFocus);
+		return () => window.removeEventListener('focus', handleFocus);
 	}, []);
 
 	const filteredEbooks = ebooks.filter(ebook =>

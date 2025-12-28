@@ -23,6 +23,9 @@ export default function EditLearningPath() {
 
     const [judulPath, setJudulPath] = useState('');
     const [deskripsi, setDeskripsi] = useState('');
+    const [thumbnail, setThumbnail] = useState<File | null>(null);
+    const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+    const [existingThumbnail, setExistingThumbnail] = useState<string | null>(null);
     const [pathCourses, setPathCourses] = useState<PathCourse[]>([]);
     const [selectedCourse, setSelectedCourse] = useState('');
     const [draggedItem, setDraggedItem] = useState<string | null>(null);
@@ -61,6 +64,11 @@ export default function EditLearningPath() {
             setJudulPath(data.title);
             setDeskripsi(data.description || '');
             
+            // Set existing thumbnail
+            if ((data as any).thumbnail) {
+                setExistingThumbnail((data as any).thumbnail);
+            }
+            
             // Convert courses to PathCourse format
             if (data.courses) {
                 const courses = data.courses
@@ -94,6 +102,18 @@ export default function EditLearningPath() {
             console.error('Error fetching courses:', err);
         } finally {
             setLoadingCourses(false);
+        }
+    };
+
+    const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setThumbnail(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setThumbnailPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -186,7 +206,7 @@ export default function EditLearningPath() {
                 .sort((a, b) => a.order - b.order)
                 .map(pc => pc.courseId);
 
-            await updateLearningPath(learningPathId, judulPath, deskripsi, courseIds);
+            await updateLearningPath(learningPathId, judulPath, deskripsi, courseIds, thumbnail);
             showNotification('success', 'Learning Path berhasil diperbarui!');
             setTimeout(() => {
                 router.push('/admin/learning-path');
@@ -273,6 +293,40 @@ export default function EditLearningPath() {
                                         className="w-full px-6 py-4 rounded-xl border-2 border-[#6B21FF] focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:ring-opacity-20 text-gray-700 placeholder-gray-400 resize-none"
                                         disabled={loading}
                                     />
+                                </div>
+
+                                {/* Thumbnail */}
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                        Thumbnail
+                                    </label>
+                                    {existingThumbnail && !thumbnailPreview && (
+                                        <div className="mb-3">
+                                            <img
+                                                src={existingThumbnail}
+                                                alt="Current thumbnail"
+                                                className="w-full h-48 object-cover rounded-lg"
+                                            />
+                                            <p className="text-sm text-gray-500 mt-2">Thumbnail saat ini</p>
+                                        </div>
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleThumbnailChange}
+                                        className="w-full px-6 py-4 rounded-xl border-2 border-[#6B21FF] focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:ring-opacity-20 text-gray-700"
+                                        disabled={loading}
+                                    />
+                                    {thumbnailPreview && (
+                                        <div className="mt-3">
+                                            <img
+                                                src={thumbnailPreview}
+                                                alt="Preview thumbnail"
+                                                className="w-full h-48 object-cover rounded-lg"
+                                            />
+                                            <p className="text-sm text-gray-500 mt-2">Preview thumbnail baru</p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Tambahkan Kelas ke Path */}

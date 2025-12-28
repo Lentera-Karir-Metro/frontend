@@ -30,6 +30,17 @@ export default function SertifikatPage() {
 
 	useEffect(() => {
 		fetchCertificates();
+		
+		// Auto-refresh when window gains focus (user comes back from learn page)
+		const handleFocus = () => {
+			fetchCertificates();
+		};
+		
+		window.addEventListener('focus', handleFocus);
+		
+		return () => {
+			window.removeEventListener('focus', handleFocus);
+		};
 	}, []);
 
 	const fetchCertificates = async () => {
@@ -40,7 +51,8 @@ export default function SertifikatPage() {
 				return;
 			}
 
-			const response = await fetch('http://localhost:3000/api/v1/certificates', {
+			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+			const response = await fetch(`${baseUrl}/certificates`, {
 				headers: {
 					'Authorization': `Bearer ${token}`,
 					'Content-Type': 'application/json'
@@ -195,21 +207,23 @@ export default function SertifikatPage() {
 													<span>{certificate.total_hours || 0} Jam</span>
 												</div>
 												{certificate.certificate_url ? (
-													<a
-														href={certificate.certificate_url}
-														target="_blank"
-														rel="noopener noreferrer"
+													<button
+														onClick={() => {
+															// Download certificate
+															const link = document.createElement('a');
+															link.href = certificate.certificate_url;
+															link.download = `sertifikat-${certificate.Course?.title || 'course'}.pdf`;
+															link.target = '_blank';
+															document.body.appendChild(link);
+															link.click();
+															document.body.removeChild(link);
+														}}
 														className="inline-block text-[14px] md:text-[16px] font-semibold text-[#661FFF] hover:text-[#5518CC] underline transition-colors"
 													>
-														Lihat Sertifikat
-													</a>
+														Download Sertifikat
+													</button>
 												) : (
-													<Link
-														href={`/dashboard/sertifikat/${certificate.id}`}
-														className="inline-block text-[14px] md:text-[16px] font-semibold text-[#661FFF] hover:text-[#5518CC] underline transition-colors"
-													>
-														Lihat Detail
-													</Link>
+													<span className="text-sm text-gray-500">Sertifikat sedang diproses</span>
 												)}
 											</div>
 										</div>

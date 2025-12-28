@@ -228,12 +228,11 @@ export default function TambahModul() {
                         description: quiz.description,
                         questions: quiz.questions.map(q => ({
                             question_text: q.question,
-                            question_type: q.type === 'Pilihan Ganda' ? 'multiple_choice' : 
-                                          q.type === 'Benar/Salah' ? 'true_false' : 'essay',
-                            options: q.type !== 'Essay' ? q.options.map((opt, idx) => ({
+                            question_type: q.type === 'Pilihan Ganda' ? 'multiple_choice' : 'true_false',
+                            options: q.options.map((opt, idx) => ({
                                 option_text: opt,
                                 is_correct: opt === q.correctAnswer || idx.toString() === q.correctAnswer
-                            })) : []
+                            }))
                         }))
                     });
 
@@ -317,8 +316,6 @@ export default function TambahModul() {
                             let newOptions = ['', '', '', ''];
                             if (newType === 'Benar/Salah') {
                                 newOptions = ['Benar', 'Salah'];
-                            } else if (newType === 'Essay') {
-                                newOptions = [];
                             }
                             return { ...q, type: newType, options: newOptions, correctAnswer: '' };
                         }
@@ -744,7 +741,6 @@ export default function TambahModul() {
                                                     >
                                                         <option>Pilihan Ganda</option>
                                                         <option>Benar/Salah</option>
-                                                        <option>Essay</option>
                                                     </select>
                                                     <button
                                                         type="button"
@@ -779,74 +775,70 @@ export default function TambahModul() {
                                             {/* Divider */}
                                             <div className="border-t border-gray-200"></div>
 
-                                            {/* Options Section - Conditional based on question type */}
-                                            {question.type !== 'Essay' && (
-                                                <>
-                                                    <div>
-                                                        <label className="block text-sm font-semibold text-gray-900 mb-3">
-                                                            {question.type === 'Benar/Salah' ? 'Pilihan' : 'Pilihan Jawaban'}
-                                                        </label>
-                                                        <div className="space-y-3">
-                                                            {question.type === 'Benar/Salah' ? (
-                                                                // True/False Options
-                                                                ['Benar', 'Salah'].map((option, idx) => (
-                                                                    <div key={idx} className="flex items-center gap-3 group">
-                                                                        <div className="flex items-center justify-center">
-                                                                            <input
-                                                                                type="radio"
-                                                                                name={`correct-answer-${quiz.id}-${question.id}`}
-                                                                                id={`option-${quiz.id}-${question.id}-${idx}`}
-                                                                                checked={question.correctAnswer === option}
-                                                                                onChange={() => handleCorrectAnswerChange(quiz.id, question.id, option)}
-                                                                                className="w-5 h-5 text-[#6B21FF] focus:ring-[#6B21FF] cursor-pointer"
-                                                                            />
-                                                                        </div>
-                                                                        <div className="flex-1">
-                                                                            <input
-                                                                                type="text"
-                                                                                value={option}
-                                                                                readOnly
-                                                                                className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 bg-gray-50 text-gray-700 font-medium"
-                                                                            />
-                                                                        </div>
-                                                                    </div>
-                                                                ))
-                                                            ) : (
-                                                                // Multiple Choice Options
-                                                                [0, 1, 2, 3].map((idx) => (
-                                                                    <div key={idx} className="flex items-center gap-3 group">
-                                                                        <div className="flex items-center justify-center">
-                                                                            <input
-                                                                                type="radio"
-                                                                                name={`correct-answer-${quiz.id}-${question.id}`}
-                                                                                id={`option-${quiz.id}-${question.id}-${idx}`}
-                                                                                checked={question.correctAnswer === question.options[idx]}
-                                                                                onChange={() => handleCorrectAnswerChange(quiz.id, question.id, question.options[idx])}
-                                                                                className="w-5 h-5 text-[#6B21FF] focus:ring-[#6B21FF] cursor-pointer"
-                                                                            />
-                                                                        </div>
-                                                                        <div className="flex-1">
-                                                                            <input
-                                                                                type="text"
-                                                                                value={question.options[idx] || ''}
-                                                                                onChange={(e) => handleOptionChange(quiz.id, question.id, idx, e.target.value)}
-                                                                                placeholder={`Opsi ${idx + 1}`}
-                                                                                className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:border-[#6B21FF] text-gray-700 placeholder-gray-400 transition-all"
-                                                                            />
-                                                                        </div>
-                                                                    </div>
-                                                                ))
-                                                            )}
-                                                        </div>
-                                                        <p className="mt-3 text-xs text-gray-500 italic">
-                                                            Pilih opsi yang benar dengan menandai radio button di sebelah kiri
-                                                        </p>
-                                                    </div>
+                                            {/* Options Section */}
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-900 mb-3">
+                                                    {question.type === 'Benar/Salah' ? 'Pilihan' : 'Pilihan Jawaban'}
+                                                </label>
+                                                <div className="space-y-3">
+                                                    {question.type === 'Benar/Salah' ? (
+                                                        // True/False Options
+                                                        ['Benar', 'Salah'].map((option, idx) => (
+                                                            <div key={idx} className="flex items-center gap-3 group">
+                                                                <div className="flex items-center justify-center">
+                                                                    <input
+                                                                        type="radio"
+                                                                        name={`correct-answer-${quiz.id}-${question.id}`}
+                                                                        id={`option-${quiz.id}-${question.id}-${idx}`}
+                                                                        checked={question.correctAnswer === option}
+                                                                        onChange={() => handleCorrectAnswerChange(quiz.id, question.id, option)}
+                                                                        className="w-5 h-5 text-[#6B21FF] focus:ring-[#6B21FF] cursor-pointer"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex-1">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={option}
+                                                                        readOnly
+                                                                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 bg-gray-50 text-gray-700 font-medium"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        // Multiple Choice Options
+                                                        [0, 1, 2, 3].map((idx) => (
+                                                            <div key={idx} className="flex items-center gap-3 group">
+                                                                <div className="flex items-center justify-center">
+                                                                    <input
+                                                                        type="radio"
+                                                                        name={`correct-answer-${quiz.id}-${question.id}`}
+                                                                        id={`option-${quiz.id}-${question.id}-${idx}`}
+                                                                        checked={question.correctAnswer === question.options[idx]}
+                                                                        onChange={() => handleCorrectAnswerChange(quiz.id, question.id, question.options[idx])}
+                                                                        className="w-5 h-5 text-[#6B21FF] focus:ring-[#6B21FF] cursor-pointer"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex-1">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={question.options[idx] || ''}
+                                                                        onChange={(e) => handleOptionChange(quiz.id, question.id, idx, e.target.value)}
+                                                                        placeholder={`Opsi ${idx + 1}`}
+                                                                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:border-[#6B21FF] text-gray-700 placeholder-gray-400 transition-all"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    )}
+                                                </div>
+                                                <p className="mt-3 text-xs text-gray-500 italic">
+                                                    Pilih opsi yang benar dengan menandai radio button di sebelah kiri
+                                                </p>
+                                            </div>
 
-                                                    {/* Divider */}
-                                                    <div className="border-t border-gray-200"></div>
-                                                </>
-                                            )}
+                                            {/* Divider */}
+                                            <div className="border-t border-gray-200"></div>
 
                                             {/* Correct Answer Section */}
                                             <div className="bg-green-50 rounded-xl p-4 border-2 border-green-200">
@@ -854,25 +846,15 @@ export default function TambahModul() {
                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
-                                                    Jawaban yang Benar {question.type !== 'Essay' && '(otomatis terisi saat pilih radio button)'}
+                                                    Jawaban yang Benar (otomatis terisi saat pilih radio button)
                                                 </label>
-                                                {question.type === 'Essay' ? (
-                                                    <textarea
-                                                        value={question.correctAnswer}
-                                                        onChange={(e) => handleCorrectAnswerChange(quiz.id, question.id, e.target.value)}
-                                                        placeholder="Ketik jawaban yang benar untuk essay"
-                                                        rows={4}
-                                                        className="w-full px-4 py-3 rounded-lg border-2 border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-700 placeholder-gray-400 bg-white resize-none"
-                                                    />
-                                                ) : (
-                                                    <input
-                                                        type="text"
-                                                        value={question.correctAnswer}
-                                                        readOnly
-                                                        placeholder={question.type === 'Benar/Salah' ? 'Pilih Benar atau Salah' : 'Pilih jawaban yang benar'}
-                                                        className="w-full px-4 py-3 rounded-lg border-2 border-green-300 bg-white text-gray-700 font-semibold"
-                                                    />
-                                                )}
+                                                <input
+                                                    type="text"
+                                                    value={question.correctAnswer}
+                                                    readOnly
+                                                    placeholder={question.type === 'Benar/Salah' ? 'Pilih Benar atau Salah' : 'Pilih jawaban yang benar'}
+                                                    className="w-full px-4 py-3 rounded-lg border-2 border-green-300 bg-white text-gray-700 font-semibold"
+                                                />
                                             </div>
                                         </div>
                                     </div>

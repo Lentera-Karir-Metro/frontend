@@ -294,7 +294,6 @@ export default function LearningContent() {
                                             <tr>
                                                 <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Judul Kelas</th>
                                                 <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Kategori</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Jumlah Modul</th>
                                                 <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Status</th>
                                                 <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Actions</th>
                                             </tr>
@@ -302,7 +301,7 @@ export default function LearningContent() {
                                         <tbody className="divide-y divide-gray-100">
                                             {filteredCourses.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                                                    <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
                                                         Tidak ada course ditemukan
                                                     </td>
                                                 </tr>
@@ -312,9 +311,6 @@ export default function LearningContent() {
                                                         <td className="px-6 py-4 text-sm text-gray-900 align-middle">{course.title}</td>
                                                         <td className="px-6 py-4 text-sm text-gray-600 align-middle">
                                                             {course.category || 'All'}
-                                                        </td>
-                                                        <td className="px-6 py-4 text-sm text-gray-600 align-middle">
-                                                            {course.modules?.length || 0}
                                                         </td>
                                                         <td className="px-6 py-4 align-middle">
                                                             <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
@@ -327,28 +323,6 @@ export default function LearningContent() {
                                                         </td>
                                                         <td className="px-6 py-4 align-middle">
                                                             <div className="flex items-center gap-3">
-                                                                {/* Kelola Modul Button */}
-                                                                <Link href={`/admin/content/${course.id}`}>
-                                                                    <button 
-                                                                        className="text-blue-600 hover:text-white hover:bg-blue-600 transition-all duration-300 flex items-center justify-center p-2 rounded-lg hover:scale-110 hover:shadow-lg"
-                                                                        title="Kelola Modul"
-                                                                    >
-                                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                                        </svg>
-                                                                    </button>
-                                                                </Link>
-                                                                {/* Tambah Modul Button */}
-                                                                <Link href={`/admin/content/create/module?courseId=${course.id}`}>
-                                                                    <button 
-                                                                        className="text-green-600 hover:text-white hover:bg-green-600 transition-all duration-300 flex items-center justify-center p-2 rounded-lg hover:scale-110 hover:shadow-lg"
-                                                                        title="Tambah Modul"
-                                                                    >
-                                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                                                        </svg>
-                                                                    </button>
-                                                                </Link>
                                                                 {/* Edit Button */}
                                                                 <button
                                                                     onClick={() => handleEdit(course)}

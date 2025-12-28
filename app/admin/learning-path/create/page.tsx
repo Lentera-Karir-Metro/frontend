@@ -17,6 +17,8 @@ export default function BuatLearningPath() {
     const router = useRouter();
     const [judulPath, setJudulPath] = useState('');
     const [deskripsi, setDeskripsi] = useState('');
+    const [thumbnail, setThumbnail] = useState<File | null>(null);
+    const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
     const [pathCourses, setPathCourses] = useState<PathCourse[]>([]);
     const [selectedCourse, setSelectedCourse] = useState('');
     const [draggedItem, setDraggedItem] = useState<string | null>(null);
@@ -56,6 +58,18 @@ export default function BuatLearningPath() {
             setError('Gagal memuat daftar course');
         } finally {
             setLoadingCourses(false);
+        }
+    };
+
+    const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setThumbnail(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setThumbnailPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
@@ -148,7 +162,7 @@ export default function BuatLearningPath() {
                 .sort((a, b) => a.order - b.order)
                 .map(pc => pc.courseId);
 
-            await createLearningPath(judulPath, deskripsi, courseIds);
+            await createLearningPath(judulPath, deskripsi, courseIds, thumbnail);
             showNotification('success', 'Learning Path berhasil disimpan!');
             setTimeout(() => {
                 router.push('/admin/learning-path');
@@ -219,6 +233,29 @@ export default function BuatLearningPath() {
                                         className="w-full px-6 py-4 rounded-xl border-2 border-[#6B21FF] focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:ring-opacity-20 text-gray-700 placeholder-gray-400 resize-none"
                                         disabled={loading}
                                     />
+                                </div>
+
+                                {/* Thumbnail */}
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                        Thumbnail
+                                    </label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleThumbnailChange}
+                                        className="w-full px-6 py-4 rounded-xl border-2 border-[#6B21FF] focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:ring-opacity-20 text-gray-700"
+                                        disabled={loading}
+                                    />
+                                    {thumbnailPreview && (
+                                        <div className="mt-3">
+                                            <img
+                                                src={thumbnailPreview}
+                                                alt="Preview thumbnail"
+                                                className="w-full h-48 object-cover rounded-lg"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Tambahkan Kelas ke Path */}

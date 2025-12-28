@@ -101,13 +101,30 @@ export const getLearningPathById = async (id: string): Promise<LearningPath> => 
 export const createLearningPath = async (
   title: string,
   description: string,
-  courseIds: string[]
+  courseIds: string[],
+  thumbnail?: File | null
 ): Promise<LearningPath> => {
   try {
-    const response = await apiPost(LEARNING_PATH_API, {
-      title,
-      description,
-      course_ids: courseIds,
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('course_ids', JSON.stringify(courseIds));
+    
+    if (thumbnail) {
+      formData.append('thumbnail', thumbnail);
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(LEARNING_PATH_API, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
     });
     
     if (!response.ok) {
@@ -129,13 +146,30 @@ export const updateLearningPath = async (
   id: string,
   title: string,
   description: string,
-  courseIds: string[]
+  courseIds: string[],
+  thumbnail?: File | null
 ): Promise<LearningPath> => {
   try {
-    const response = await apiPut(`${LEARNING_PATH_API}/${id}`, {
-      title,
-      description,
-      courses: courseIds,
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('courses', JSON.stringify(courseIds));
+    
+    if (thumbnail) {
+      formData.append('thumbnail', thumbnail);
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(`${LEARNING_PATH_API}/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
     });
     
     if (!response.ok) {

@@ -7,40 +7,40 @@ export default function Testimonials() {
 	const [isPausedRow2, setIsPausedRow2] = useState(false);
 	const testimonials = [
 		{
-			quote: "Sebelum ikut bootcamp, saya benar-benar bingung mau mulai dari mana. Mentor Lentera Karir bantu saya memahami potensi diri dan sekarang saya berhasil magang di startup impian",
-			name: "Budi, Alumni Bootcamp Batch 3",
-			position: "Intern at Creative Studio",
-			avatar: "/images/avatar-placeholder.png"
+			quote: "Sebelum ikut bootcamp, saya benar-benar bingung mau mulai dari mana. Mentor Lentera Karir bantu saya memahami potensi diri dan sekarang saya berhasil magang di startup impian!",
+			name: "Budi Santoso",
+			position: "Software Engineering Intern at TechStart",
+			avatar: "https://ui-avatars.com/api/?name=Budi+Santoso&background=6B21FF&color=fff&size=128"
 		},
 		{
-			quote: "Sebelum ikut bootcamp, saya benar-benar bingung mau mulai dari mana. Mentor Lentera Karir bantu saya memahami potensi diri dan sekarang saya berhasil magang di startup impian",
-			name: "Budi, Alumni Bootcamp Batch 3",
-			position: "Intern at Creative Studio",
-			avatar: "/images/avatar-placeholder.png"
+			quote: "Materi yang diajarkan sangat aplikatif dan mudah dipahami. Dalam waktu 3 bulan, saya sudah bisa membuat portfolio website sendiri dan diterima kerja sebagai web developer.",
+			name: "Siti Nurhaliza",
+			position: "Junior Web Developer at Digital Agency",
+			avatar: "https://ui-avatars.com/api/?name=Siti+Nurhaliza&background=EC4899&color=fff&size=128"
 		},
 		{
-			quote: "Sebelum ikut bootcamp, saya benar-benar bingung mau mulai dari mana. Mentor Lentera Karir bantu saya memahami potensi diri dan sekarang saya berhasil magang di startup impian",
-			name: "Budi, Alumni Bootcamp Batch 3",
-			position: "Intern at Creative Studio",
-			avatar: "/images/avatar-placeholder.png"
+			quote: "Lentera Karir bukan cuma ngajarin coding, tapi juga soft skills yang penting banget buat dunia kerja. Career coaching-nya membantu saya lolos interview di perusahaan multinasional.",
+			name: "Ahmad Rizki",
+			position: "Data Analyst at FinTech Company",
+			avatar: "https://ui-avatars.com/api/?name=Ahmad+Rizki&background=3B82F6&color=fff&size=128"
 		},
 		{
-			quote: "Sebelum ikut bootcamp, saya benar-benar bingung mau mulai dari mana. Mentor Lentera Karir bantu saya memahami potensi diri dan sekarang saya berhasil magang di startup impian",
-			name: "Budi, Alumni Bootcamp Batch 3",
-			position: "Intern at Creative Studio",
-			avatar: "/images/avatar-placeholder.png"
+			quote: "Sebagai fresh graduate yang gak punya pengalaman, saya merasa terbantu banget dengan program mentoring one-on-one. Sekarang saya udah kerja di bidang yang saya suka!",
+			name: "Putri Andini",
+			position: "UI/UX Designer at Creative Studio",
+			avatar: "https://ui-avatars.com/api/?name=Putri+Andini&background=F59E0B&color=fff&size=128"
 		},
 		{
-			quote: "Sebelum ikut bootcamp, saya benar-benar bingung mau mulai dari mana. Mentor Lentera Karir bantu saya memahami potensi diri dan sekarang saya",
-			name: "Budi, Alumni Bootcamp Batch 3",
-			position: "Intern at Creative Studio",
-			avatar: "/images/avatar-placeholder.png"
+			quote: "Investasi terbaik untuk karir saya! Dari yang tadinya bingung career path, sekarang udah jelas dan confident untuk apply pekerjaan impian. Thank you Lentera Karir!",
+			name: "Dimas Prakoso",
+			position: "Product Manager Intern at E-commerce",
+			avatar: "https://ui-avatars.com/api/?name=Dimas+Prakoso&background=10B981&color=fff&size=128"
 		},
 		{
-			quote: "Sebelum ikut bootcamp, saya benar-benar bingung mau mulai dari mana. Mentor Lentera Karir bantu saya memahami potensi diri dan sekarang saya berhasil magang di startup impian",
-			name: "Budi, Alumni Bootcamp Batch 3",
-			position: "Intern at Creative Studio",
-			avatar: "/images/avatar-placeholder.png"
+			quote: "Kualitas materi pembelajaran dan support dari mentor sangat luar biasa. Saya yang background non-IT bisa switch career jadi programmer dalam 6 bulan. Highly recommended!",
+			name: "Rina Wijaya",
+			position: "Full Stack Developer at Startup",
+			avatar: "https://ui-avatars.com/api/?name=Rina+Wijaya&background=EF4444&color=fff&size=128"
 		}
 	];
 
@@ -175,24 +175,24 @@ export default function Testimonials() {
 											<path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/>
 										</svg>
 									</div>
-									<p className="text-gray-700 text-[13px] sm:text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] 2xl:text-[18px] leading-[1.7] mb-4 sm:mb-5 md:mb-6">
+									<p className="text-gray-700 text-[14px] md:text-[15px] leading-[1.7] mb-6">
 										{testimonial.quote}
 									</p>
-									<div className="flex items-center gap-2 sm:gap-3">
-										<div className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 lg:w-13 lg:h-13 xl:w-14 xl:h-14 2xl:w-16 2xl:h-16 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+									<div className="flex items-center gap-3">
+										<div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
 											<Image 
 												src={testimonial.avatar} 
 												alt={testimonial.name}
-												width={64}
-												height={64}
+												width={48}
+												height={48}
 												className="w-full h-full object-cover"
 											/>
 										</div>
 										<div>
-											<h4 className="text-gray-900 font-semibold text-[13px] sm:text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] 2xl:text-[18px]">
+											<h4 className="text-gray-900 font-semibold text-[14px] md:text-[15px]">
 												{testimonial.name}
 											</h4>
-											<p className="text-gray-600 text-[11px] sm:text-[12px] md:text-[13px] lg:text-[14px] xl:text-[15px] 2xl:text-[16px]">
+											<p className="text-gray-600 text-[12px] md:text-[13px]">
 												{testimonial.position}
 											</p>
 										</div>
@@ -210,24 +210,24 @@ export default function Testimonials() {
 											<path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/>
 										</svg>
 									</div>
-									<p className="text-gray-700 text-[13px] sm:text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] 2xl:text-[18px] leading-[1.7] mb-4 sm:mb-5 md:mb-6">
+									<p className="text-gray-700 text-[14px] md:text-[15px] leading-[1.7] mb-6">
 										{testimonial.quote}
 									</p>
-									<div className="flex items-center gap-2 sm:gap-3">
-										<div className="w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 lg:w-13 lg:h-13 xl:w-14 xl:h-14 2xl:w-16 2xl:h-16 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+									<div className="flex items-center gap-3">
+										<div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
 											<Image 
 												src={testimonial.avatar} 
 												alt={testimonial.name}
-												width={64}
-												height={64}
+												width={48}
+												height={48}
 												className="w-full h-full object-cover"
 											/>
 										</div>
 										<div>
-											<h4 className="text-gray-900 font-semibold text-[13px] sm:text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] 2xl:text-[18px]">
+											<h4 className="text-gray-900 font-semibold text-[14px] md:text-[15px]">
 												{testimonial.name}
 											</h4>
-											<p className="text-gray-600 text-[11px] sm:text-[12px] md:text-[13px] lg:text-[14px] xl:text-[15px] 2xl:text-[16px]">
+											<p className="text-gray-600 text-[12px] md:text-[13px]">
 												{testimonial.position}
 											</p>
 										</div>

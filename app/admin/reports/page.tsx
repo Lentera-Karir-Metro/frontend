@@ -38,6 +38,13 @@ export default function ReportMonitoring() {
     const [studentPagination, setStudentPagination] = useState<Pagination | null>(null);
     const [classPage, setClassPage] = useState(1);
     const [studentPage, setStudentPage] = useState(1);
+    
+    // Modal states
+    const [showClassModal, setShowClassModal] = useState(false);
+    const [showStudentModal, setShowStudentModal] = useState(false);
+    const [allClassData, setAllClassData] = useState<ClassPerformanceAPI[]>([]);
+    const [allStudentData, setAllStudentData] = useState<StudentPerformanceAPI[]>([]);
+    const [modalLoading, setModalLoading] = useState(false);
 
     // Fetch Class Performance
     useEffect(() => {
@@ -137,6 +144,78 @@ export default function ReportMonitoring() {
         fetchStudentPerformance();
     }, [studentPage, searchQuery]);
 
+    // Fetch all class data for modal
+    const fetchAllClassData = async () => {
+        setModalLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+            const response = await fetch(
+                `${baseUrl}/admin/reports/class-performance?page=1&limit=1000`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    setAllClassData(result.data);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching all class data:', error);
+        } finally {
+            setModalLoading(false);
+        }
+    };
+
+    // Fetch all student data for modal
+    const fetchAllStudentData = async () => {
+        setModalLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+            const response = await fetch(
+                `${baseUrl}/admin/reports/student-performance?page=1&limit=1000`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    setAllStudentData(result.data);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching all student data:', error);
+        } finally {
+            setModalLoading(false);
+        }
+    };
+
+    const handleShowClassModal = () => {
+        setShowClassModal(true);
+        fetchAllClassData();
+    };
+
+    const handleShowStudentModal = () => {
+        setShowStudentModal(true);
+        fetchAllStudentData();
+    };
+
     return (
         <div className="flex min-h-screen bg-gray-50">
             <AdminSidebar />
@@ -157,7 +236,7 @@ export default function ReportMonitoring() {
                         <div className="relative">
                             <input
                                 type="text"
-                                placeholder="Cari learning path..."
+                                placeholder="Cari kelas atau siswa..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full pl-6 pr-12 py-4 rounded-full border-2 border-[#6B21FF] focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:ring-opacity-20 text-gray-700 placeholder-gray-400"
@@ -175,9 +254,12 @@ export default function ReportMonitoring() {
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-xl font-bold text-gray-900">Peforma Kelas</h2>
-                                <a href="#" className="text-[#6B21FF] text-sm font-semibold hover:underline">
+                                <button 
+                                    onClick={handleShowClassModal}
+                                    className="text-[#6B21FF] text-sm font-semibold hover:underline cursor-pointer"
+                                >
                                     Lihat Selengkapnya
-                                </a>
+                                </button>
                             </div>
 
                             {/* Loading State */}
@@ -282,9 +364,12 @@ export default function ReportMonitoring() {
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-xl font-bold text-gray-900">Peforma Belajar</h2>
-                                <a href="#" className="text-[#6B21FF] text-sm font-semibold hover:underline">
+                                <button 
+                                    onClick={handleShowStudentModal}
+                                    className="text-[#6B21FF] text-sm font-semibold hover:underline cursor-pointer"
+                                >
                                     Lihat Selengkapnya
-                                </a>
+                                </button>
                             </div>
 
                             {/* Loading State */}
@@ -417,6 +502,147 @@ export default function ReportMonitoring() {
                     </div>
                 </main>
             </div>
+
+            {/* Class Performance Modal */}
+            {showClassModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fadeIn" onClick={() => setShowClassModal(false)}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full mx-4 max-h-[90vh] overflow-hidden animate-slideUp" onClick={(e) => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="flex justify-between items-center p-6 border-b border-gray-200">
+                            <h2 className="text-2xl font-bold text-gray-900">Semua Peforma Kelas</h2>
+                            <button 
+                                onClick={() => setShowClassModal(false)}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                            {modalLoading ? (
+                                <div className="text-center py-12">
+                                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#6B21FF]"></div>
+                                    <p className="text-gray-500 mt-4">Memuat data...</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead className="bg-[#E8DEFF] sticky top-0">
+                                            <tr>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">No</th>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Judul Kelas</th>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Kategori</th>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Jumlah Enroll</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {allClassData.map((item, index) => (
+                                                <tr key={item.id} className="hover:bg-gray-50">
+                                                    <td className="px-6 py-4">
+                                                        <span className="text-sm text-gray-700">{index + 1}</span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <p className="text-sm font-medium text-gray-900">{item.title}</p>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="text-sm text-gray-700">{item.category}</span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="text-sm text-gray-700">{item.total_enrollments}</span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    {allClassData.length === 0 && (
+                                        <div className="text-center py-12">
+                                            <p className="text-gray-500">Tidak ada data yang ditemukan</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Student Performance Modal */}
+            {showStudentModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fadeIn" onClick={() => setShowStudentModal(false)}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full mx-4 max-h-[90vh] overflow-hidden animate-slideUp" onClick={(e) => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="flex justify-between items-center p-6 border-b border-gray-200">
+                            <h2 className="text-2xl font-bold text-gray-900">Semua Peforma Belajar</h2>
+                            <button 
+                                onClick={() => setShowStudentModal(false)}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                            {modalLoading ? (
+                                <div className="text-center py-12">
+                                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#6B21FF]"></div>
+                                    <p className="text-gray-500 mt-4">Memuat data...</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead className="bg-[#E8DEFF] sticky top-0">
+                                            <tr>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">No</th>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Nama Siswa</th>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Kelas Terdaftar</th>
+                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Progress</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            {allStudentData.map((student, index) => (
+                                                <tr key={student.id} className="hover:bg-gray-50">
+                                                    <td className="px-6 py-4">
+                                                        <span className="text-sm text-gray-700">{index + 1}</span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 rounded-full bg-[#6B21FF] flex items-center justify-center text-white font-semibold overflow-hidden">
+                                                                {student.avatar_url ? (
+                                                                    <img src={student.avatar_url} alt={student.name} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    student.name.charAt(0).toUpperCase()
+                                                                )}
+                                                            </div>
+                                                            <span className="text-sm font-medium text-gray-900">{student.name}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="text-sm text-gray-700">{student.enrolled_classes}</span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="text-sm text-gray-700">{student.progress}</span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    {allStudentData.length === 0 && (
+                                        <div className="text-center py-12">
+                                            <p className="text-gray-500">Tidak ada data yang ditemukan</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
