@@ -373,7 +373,20 @@ export default function CourseDetailPage() {
 
 										{expandedSections[course.id] && (
 											<div className="pl-8 pb-4 space-y-2">
-												{course.modules && course.modules.map((module) => (
+												{course.modules && course.modules
+													.slice()
+													.sort((a, b) => {
+														// Urutkan berdasarkan tipe: video -> quiz -> ebook
+														const typeOrder: { [key: string]: number } = {
+															'video': 1,
+															'quiz': 2,
+															'ebook': 3
+														};
+														const typeA = getModuleType(a);
+														const typeB = getModuleType(b);
+														return (typeOrder[typeA] || 999) - (typeOrder[typeB] || 999);
+													})
+													.map((module) => (
 													<div key={module.id} className="flex items-center justify-between py-2 hover:bg-gray-50 px-3 rounded">
 														<div className="flex items-center gap-3">
 															{getModuleIcon(getModuleType(module))}

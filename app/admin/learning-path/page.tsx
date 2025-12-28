@@ -257,15 +257,15 @@ export default function LearningPathPage() {
                                 <h3 className="text-xl font-bold text-gray-900 mb-2">Konfirmasi Hapus</h3>
                                 <p className="text-gray-600 mb-4">Apakah Anda yakin ingin menghapus learning path ini? Tindakan ini tidak dapat dibatalkan.</p>
                                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-                                    <p className="text-sm text-yellow-800">
-                                        Ketik <span className="font-bold">&quot;hapus&quot;</span> untuk mengkonfirmasi
+                                    <p className="text-sm text-gray-600">
+                                        Ketik <span className="font-bold text-gray-600">&quot;hapus&quot;</span> untuk mengkonfirmasi
                                     </p>
                                 </div>
                                 <input
                                     type="text"
                                     value={deleteConfirmText}
                                     onChange={(e) => setDeleteConfirmText(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6B21FF]"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6B21FF] text-gray-800 placeholder-gray-400"
                                     placeholder="Ketik 'hapus' untuk konfirmasi"
                                 />
                             </div>

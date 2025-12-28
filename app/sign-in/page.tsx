@@ -32,8 +32,16 @@ export default function SignIn() {
       const verified = searchParams.get('verified');
       const email = searchParams.get('email');
       const message = searchParams.get('message');
+      const inactive = searchParams.get('inactive');
+      const deleted = searchParams.get('deleted');
 
-      if (verified === 'success' && email) {
+      if (deleted === 'true') {
+        // User was redirected because account was deleted
+        setErrorMsg('Akun Anda telah dihapus oleh administrator. Silakan hubungi administrator jika Anda merasa ini adalah kesalahan.');
+      } else if (inactive === 'true') {
+        // User was redirected because account was deactivated
+        setErrorMsg('Akun Anda telah dinonaktifkan oleh administrator. Silakan hubungi administrator untuk informasi lebih lanjut.');
+      } else if (verified === 'success' && email) {
         // Dari backend verifikasi email berhasil
         setVerificationMsg(`Email berhasil diverifikasi! Silakan login dengan akun Anda.`);
         setEmail(email); // Pre-fill email field
@@ -166,7 +174,13 @@ export default function SignIn() {
 
               if (!response.ok) {
                 // Handle error response from backend
-                setErrorMsg(data.message || 'Login gagal. Silakan coba lagi.');
+                if (data.code === 'USER_DELETED') {
+                  setErrorMsg('Akun Anda telah dihapus oleh administrator. Silakan hubungi administrator jika Anda merasa ini adalah kesalahan.');
+                } else if (data.code === 'USER_INACTIVE') {
+                  setErrorMsg('Akun Anda telah dinonaktifkan oleh administrator. Silakan hubungi administrator untuk informasi lebih lanjut.');
+                } else {
+                  setErrorMsg(data.message || 'Login gagal. Silakan coba lagi.');
+                }
                 setIsSubmitting(false);
                 return;
               }

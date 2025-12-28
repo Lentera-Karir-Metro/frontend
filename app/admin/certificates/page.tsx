@@ -28,6 +28,11 @@ export default function CertificatePage() {
     // Notification
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
+    // Delete Template Modal States
+    const [showDeleteTemplateModal, setShowDeleteTemplateModal] = useState(false);
+    const [selectedTemplateToDelete, setSelectedTemplateToDelete] = useState<CertificateTemplate | null>(null);
+    const [deleteConfirmText, setDeleteConfirmText] = useState('');
+
     // Auto-hide notification
     useEffect(() => {
         if (notification) {
@@ -297,10 +302,10 @@ export default function CertificatePage() {
                                                 {/* Remove Button */}
                                                 <button
                                                     onClick={handleRemoveFile}
-                                                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-gray-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110"
+                                                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-gray-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110 group"
                                                     title="Hapus template"
                                                 >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                                     </svg>
                                                 </button>
@@ -378,7 +383,21 @@ export default function CertificatePage() {
                                 <h2 className="text-xl font-bold text-gray-900 mb-6">Template Sertifikat lainnya</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                     {templates.map((template) => (
-                                        <div key={template.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition">
+                                        <div key={template.id} className="relative bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition">
+                                            {/* Delete template button (top-right) */}
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedTemplateToDelete(template);
+                                                    setShowDeleteTemplateModal(true);
+                                                }}
+                                                title="Hapus template"
+                                                className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-gray-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110 group"
+                                            >
+                                                <svg className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+
                                             <div className="aspect-[3/4] bg-gray-100 flex items-center justify-center p-4">
                                                 {template.preview_url ? (
                                                     <img
@@ -441,6 +460,75 @@ export default function CertificatePage() {
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Delete Template Confirmation Modal */}
+                {showDeleteTemplateModal && selectedTemplateToDelete && (
+                    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+                        <div className="bg-white rounded-xl p-8 max-w-md w-full animate-scale-up shadow-2xl">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Konfirmasi Hapus Template</h2>
+                            <p className="text-gray-600 mb-2">
+                                Apakah Anda yakin ingin menghapus template <strong>{selectedTemplateToDelete.name}</strong>?
+                            </p>
+                            <p className="text-gray-600 mb-6">
+                                Ketik <span className="font-mono bg-gray-100 px-2 py-1 rounded text-red-600 font-semibold">hapus</span> untuk konfirmasi.
+                            </p>
+                            <div className="mb-6">
+                                <input
+                                    type="text"
+                                    value={deleteConfirmText}
+                                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                                    placeholder="Ketik 'hapus' untuk konfirmasi"
+                                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-red-500 transition-colors text-gray-600 placeholder-gray-400"
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowDeleteTemplateModal(false);
+                                        setSelectedTemplateToDelete(null);
+                                        setDeleteConfirmText('');
+                                    }}
+                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        if (deleteConfirmText !== 'hapus') {
+                                            showNotification('error', 'Ketik "hapus" untuk konfirmasi');
+                                            return;
+                                        }
+                                        try {
+                                            const token = localStorage.getItem('token');
+                                            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/certificates/admin/templates/${selectedTemplateToDelete.id}`, {
+                                                method: 'DELETE',
+                                                headers: { 'Authorization': `Bearer ${token}` }
+                                            });
+                                            const json = await res.json().catch(() => ({}));
+                                            if (!res.ok) {
+                                                showNotification('error', json.message || 'Gagal menghapus template');
+                                            } else {
+                                                showNotification('success', json.message || 'Template berhasil dihapus');
+                                                setShowDeleteTemplateModal(false);
+                                                setSelectedTemplateToDelete(null);
+                                                setDeleteConfirmText('');
+                                                fetchData();
+                                            }
+                                        } catch (err: any) {
+                                            console.error('Error deleting template:', err);
+                                            showNotification('error', err.message || 'Gagal menghapus template');
+                                        }
+                                    }}
+                                    disabled={deleteConfirmText !== 'hapus'}
+                                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Hapus
                                 </button>
                             </div>
                         </div>

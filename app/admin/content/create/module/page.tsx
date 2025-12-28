@@ -560,9 +560,9 @@ export default function TambahModul() {
                                                             </span>
                                                             <button
                                                                 onClick={() => handleRemoveVideo(video.id)}
-                                                                className="text-gray-400 hover:text-red-500 transition"
+                                                                className="text-gray-400 hover:text-red-500 transition group"
                                                             >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <svg className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                                                 </svg>
                                                             </button>
@@ -656,9 +656,9 @@ export default function TambahModul() {
                                                             </span>
                                                             <button
                                                                 onClick={() => handleRemoveEbook(ebook.id)}
-                                                                className="text-gray-400 hover:text-red-500 transition"
+                                                                className="text-gray-400 hover:text-red-500 transition group"
                                                             >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <svg className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                                                 </svg>
                                                             </button>

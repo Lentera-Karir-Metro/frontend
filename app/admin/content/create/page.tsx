@@ -352,10 +352,10 @@ export default function BuatKelas() {
                                             <button
                                                 onClick={handleRemoveCover}
                                                 disabled={loading}
-                                                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-gray-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110 disabled:opacity-50"
+                                                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-gray-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110 disabled:opacity-50 group"
                                                 title="Hapus thumbnail"
                                             >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                                 </svg>
                                             </button>
@@ -448,10 +448,10 @@ export default function BuatKelas() {
                                                 <button
                                                     onClick={handleRemoveMentorPhoto}
                                                     disabled={loading}
-                                                    className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-white text-gray-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg hover:scale-110 disabled:opacity-50 border border-gray-100"
+                                                    className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-white text-gray-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg hover:scale-110 disabled:opacity-50 border border-gray-100 group"
                                                     title="Hapus foto mentor"
                                                 >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                                     </svg>
                                                 </button>

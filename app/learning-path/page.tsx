@@ -19,6 +19,7 @@ export default function LearningPathPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [learningPaths, setLearningPaths] = useState<LearningPath[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [visibleCount, setVisibleCount] = useState(4); // Show 4 items initially
 
     // Fetch learning paths from backend API
     useEffect(() => {
@@ -49,6 +50,17 @@ export default function LearningPathPage() {
     const filteredPaths = learningPaths.filter(path =>
         path.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    // Get visible paths based on visibleCount
+    const visiblePaths = filteredPaths.slice(0, visibleCount);
+
+    // Check if there are more items to load
+    const hasMore = visibleCount < filteredPaths.length;
+
+    // Handle load more
+    const handleLoadMore = () => {
+        setVisibleCount(prev => prev + 4);
+    };
 
 
     return (
@@ -90,12 +102,12 @@ export default function LearningPathPage() {
                             <div className="flex justify-center py-12">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#661FFF]"></div>
                             </div>
-                        ) : filteredPaths.length === 0 ? (
+                        ) : visiblePaths.length === 0 ? (
                             <div className="text-center py-12">
                                 <p className="text-gray-500">Tidak ada learning path ditemukan</p>
                             </div>
                         ) : (
-                            filteredPaths.map((path) => (
+                            visiblePaths.map((path) => (
                                 <Link
                                     key={path.id}
                                     href={`/learning-path/${path.id}`}
@@ -137,11 +149,16 @@ export default function LearningPathPage() {
                     </div>
 
                     {/* Load More Button */}
-                    <div className="mt-12 flex justify-center">
-                        <button className="px-8 py-3 border-2 border-[#661FFF] text-[#661FFF] font-semibold rounded-full hover:bg-[#661FFF] hover:text-white transition-colors">
-                            Lihat Path Lainnya
-                        </button>
-                    </div>
+                    {!isLoading && hasMore && (
+                        <div className="mt-12 flex justify-center">
+                            <button 
+                                onClick={handleLoadMore}
+                                className="px-8 py-3 border-2 border-[#661FFF] text-[#661FFF] font-semibold rounded-full hover:bg-[#661FFF] hover:text-white transition-colors"
+                            >
+                                Lihat Path Lainnya
+                            </button>
+                        </div>
+                    )}
                 </div>
             </main>
 

@@ -16,6 +16,7 @@ type Module = {
 	duration: number;
 	is_completed: boolean;
 	is_locked: boolean;
+	is_passed?: boolean;
 }
 
 type Course = {
@@ -501,7 +502,7 @@ export default function CourseLearnPage() {
 								</div>
 
 								{/* Tabs */}
-								<div className="bg-gray-50 rounded-xl shadow-md border-2 border-gray-200 overflow-hidden p-4 h-[550px] flex flex-col">
+								<div className="bg-gray-50 rounded-xl shadow-md border-2 border-gray-200 overflow-hidden p-4 flex flex-col">
 									<div className="flex justify-center gap-4 mb-4 flex-shrink-0">
 										<button
 											onClick={() => setActiveTab('overview')}
@@ -533,7 +534,7 @@ export default function CourseLearnPage() {
 									</div>
 
 									{/* Tab Content */}
-									<div className="text-gray-700 flex-1 overflow-y-auto">
+									<div className="text-gray-700">
 										{activeTab === 'overview' && (
 											<div className="space-y-4 text-gray-700 text-justify px-6 py-4">
 												<p className="leading-relaxed">
@@ -572,9 +573,9 @@ export default function CourseLearnPage() {
 														ebookModules.map((ebook) => (
 															<div key={ebook.module_id} className="bg-purple-100 rounded-2xl p-4 flex items-center justify-between hover:bg-purple-150 transition-colors">
 																<div className="flex items-center gap-3">
-																	<div className="w-8 h-8 flex items-center justify-center">
-																		<svg className="w-8 h-8 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-																			<path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+																	<div className="w-10 h-10 flex items-center justify-center">
+																		<svg className="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+																			<path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
 																		</svg>
 																	</div>
 																	<div>
@@ -584,6 +585,12 @@ export default function CourseLearnPage() {
 																<button
 																	onClick={async (e) => {
 																		e.preventDefault();
+																		
+																		// If already downloaded, do nothing
+																		if (ebook.is_completed) {
+																			return;
+																		}
+																		
 																		try {
 																			const token = localStorage.getItem('token');
 																			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
@@ -625,12 +632,24 @@ export default function CourseLearnPage() {
 																			alert(err.message || 'Gagal menyimpan ebook. Silakan coba lagi.');
 																		}
 																	}}
-																	className="bg-[#661FFF] hover:bg-[#5518dd] text-white rounded-full p-2.5 transition-colors shadow-lg hover:shadow-xl"
-																	title="Download ebook"
+																	className={`${
+																		ebook.is_completed 
+																			? 'bg-green-500 cursor-default' 
+																			: 'bg-[#661FFF] hover:bg-[#5518dd]'
+																	} text-white rounded-full p-2.5 transition-colors shadow-lg hover:shadow-xl`}
+																	title={ebook.is_completed ? 'Ebook sudah di-download' : 'Download ebook'}
 																>
-																	<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-																		<path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-																	</svg>
+																	{ebook.is_completed ? (
+																		// Checkmark icon
+																		<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+																			<path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+																		</svg>
+																	) : (
+																		// Download icon
+																		<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+																			<path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+																		</svg>
+																	)}
 																</button>
 															</div>
 														))
@@ -701,10 +720,10 @@ export default function CourseLearnPage() {
 															</div>
 														</div>
 													) : (
-														// Sertifikat belum tersedia - tampilkan progress
+														// Sertifikat belum tersedia
 														<div className="max-w-2xl mx-auto">
 															{/* Alert Box */}
-															<div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-8">
+															<div className="bg-red-50 border border-red-200 rounded-xl p-6">
 																<div className="flex items-start gap-4">
 																	<div className="flex-shrink-0 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
 																		<svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -715,78 +734,6 @@ export default function CourseLearnPage() {
 																		<h3 className="text-lg font-bold text-red-800 mb-2">Anda belum bisa mengklaim sertifikat</h3>
 																		<p className="text-red-700 text-sm">Selesaikan seluruh tahap kelas lebih dulu!</p>
 																	</div>
-																</div>
-															</div>
-
-															{/* Progress Section */}
-															<div className="bg-white rounded-xl border-2 border-gray-200 p-6">
-																<div className="flex items-center justify-between mb-4">
-																	<h4 className="text-lg font-bold text-gray-900">Progress Pembelajaran</h4>
-																	<span className="text-2xl font-bold text-[#661FFF]">{completionPercentage}%</span>
-																</div>
-
-																{/* Progress Bar */}
-																<div className="w-full bg-gray-200 rounded-full h-4 mb-6 overflow-hidden">
-																	<div
-																		className="bg-gradient-to-r from-[#661FFF] to-[#8b5cf6] h-full rounded-full transition-all duration-500 ease-out relative"
-																		style={{ width: `${completionPercentage}%` }}
-																	>
-																		<div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-																	</div>
-																</div>
-
-																{/* Stats */}
-																<div className="grid grid-cols-2 gap-4 mb-6">
-																	<div className="bg-green-50 rounded-lg p-4 text-center border border-green-200">
-																		<div className="text-3xl font-bold text-green-600 mb-1">{completedModules}</div>
-																		<div className="text-sm text-green-700">Modul Selesai</div>
-																	</div>
-																	<div className="bg-orange-50 rounded-lg p-4 text-center border border-orange-200">
-																		<div className="text-3xl font-bold text-orange-600 mb-1">{totalModules - completedModules}</div>
-																		<div className="text-sm text-orange-700">Modul Tersisa</div>
-																	</div>
-																</div>
-
-																{/* Requirement Checklist */}
-																<div className="space-y-3 pt-4 border-t border-gray-200">
-																	<p className="text-sm font-semibold text-gray-700 mb-3">Yang perlu diselesaikan:</p>
-																	{learningPathData?.courses.map(course => {
-																		const courseModules = course.modules;
-																		const courseCompleted = courseModules.filter(m => m.is_completed).length;
-																		const courseTotal = courseModules.length;
-																		const isCourseDone = courseCompleted === courseTotal;
-
-																		return (
-																			<div key={course.course_id} className="flex items-start gap-3">
-																				<div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${isCourseDone ? 'bg-green-500' : 'bg-gray-300'}`}>
-																					{isCourseDone && (
-																						<svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-																							<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-																						</svg>
-																					)}
-																				</div>
-																				<div className="flex-1">
-																					<p className={`text-sm font-medium ${isCourseDone ? 'text-gray-900 line-through' : 'text-gray-700'}`}>
-																						{course.title}
-																					</p>
-																					<p className="text-xs text-gray-500 mt-0.5">
-																						{courseCompleted}/{courseTotal} modul selesai
-																					</p>
-																				</div>
-																			</div>
-																		);
-																	})}
-																</div>
-
-																{/* Call to Action */}
-																<div className="mt-6 pt-6 border-t border-gray-200 text-center">
-																	<p className="text-sm text-gray-600 mb-4">Selesaikan semua modul untuk mendapatkan sertifikat! 🎓</p>
-																	<button
-																		onClick={() => setActiveTab('overview')}
-																		className="bg-[#661FFF] hover:bg-[#5518dd] text-white px-6 py-2.5 rounded-full font-semibold text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-lg"
-																	>
-																		Lanjutkan Belajar
-																	</button>
 																</div>
 															</div>
 														</div>
@@ -901,7 +848,18 @@ export default function CourseLearnPage() {
 
 									{expandedSections[course.course_id] && course.modules.length > 0 && (
 										<div className="border-t border-gray-200">
-											{course.modules.filter(m => m.type !== 'ebook').map((module) => (
+											{course.modules
+												.filter(m => m.type !== 'ebook')
+												.slice()
+												.sort((a, b) => {
+													// Urutkan berdasarkan tipe: video -> quiz
+													const typeOrder: { [key: string]: number } = {
+														'video': 1,
+														'quiz': 2
+													};
+													return (typeOrder[a.type] || 999) - (typeOrder[b.type] || 999);
+												})
+												.map((module) => (
 												<button
 													key={module.module_id}
 													onClick={() => handleModuleClick(module)}
