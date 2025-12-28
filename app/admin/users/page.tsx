@@ -447,12 +447,12 @@ export default function UserManagement() {
                                         <table className="w-full">
                                             <thead className="bg-[#E8DEFF]">
                                                 <tr>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Username</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Email</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Role</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Tanggal Registrasi</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Status</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Actions</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Username</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Email</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Role</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Tanggal Registrasi</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Status</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
@@ -465,9 +465,9 @@ export default function UserManagement() {
                                                 ) : (
                                                     users.map((user) => (
                                                         <tr key={user.id} className="hover:bg-gray-50">
-                                                            <td className="px-6 py-4 text-sm text-gray-900">{user.username}</td>
-                                                            <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                                                            <td className="px-6 py-4 text-sm">
+                                                            <td className="px-6 py-4 text-sm text-gray-900 text-center">{user.username}</td>
+                                                            <td className="px-6 py-4 text-sm text-gray-600 text-center">{user.email}</td>
+                                                            <td className="px-6 py-4 text-sm text-center">
                                                                 <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${user.role === 'admin'
                                                                     ? 'bg-purple-100 text-purple-700'
                                                                     : 'bg-blue-100 text-blue-700'
@@ -475,8 +475,8 @@ export default function UserManagement() {
                                                                     {user.role}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-6 py-4 text-sm text-gray-600">{formatDate(user.createdAt)}</td>
-                                                            <td className="px-6 py-4">
+                                                            <td className="px-6 py-4 text-sm text-gray-600 text-center">{formatDate(user.createdAt)}</td>
+                                                            <td className="px-6 py-4 text-center">
                                                                 <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${user.status === 'active'
                                                                     ? 'bg-green-100 text-green-700'
                                                                     : 'bg-gray-100 text-gray-700'
@@ -484,8 +484,8 @@ export default function UserManagement() {
                                                                     {user.status}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-6 py-4">
-                                                                <div className="flex items-center gap-3">
+                                                            <td className="px-6 py-4 text-center">
+                                                                <div className="flex items-center justify-center gap-3">
                                                                     {/* Edit Button */}
                                                                     <button
                                                                         onClick={() => handleEdit(user)}

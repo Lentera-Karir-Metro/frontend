@@ -34,6 +34,9 @@ interface RecommendedCourse {
 	category: string;
 	level: string;
 	total_students: number;
+	mentor_name?: string;
+	mentor_title?: string;
+	mentor_photo_profile?: string;
 }
 
 export default function Dashboard() {
@@ -196,7 +199,7 @@ export default function Dashboard() {
 								<Link href={`/dashboard/kelas/${continueLearning.id}`} className="block bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm hover:shadow-md transition-shadow w-full">
 									<div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
 										{/* Course Image */}
-										<div className="relative w-full sm:w-40 md:w-48 h-40 md:h-36 rounded-xl overflow-hidden bg-gray-200 flex-shrink-0">
+										<div className="relative w-full sm:w-48 md:w-56 aspect-video rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
 											<Image
 												src={continueLearning.thumbnail_url || '/images/dashboard.png'}
 												alt={continueLearning.title}
@@ -245,22 +248,48 @@ export default function Dashboard() {
 							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
 								{recommended.length > 0 ? (
 									recommended.map((course) => (
-										<Link key={course.id} href={`/course/${course.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 hover:-translate-y-2">
-											<div className="relative w-full h-48 bg-gray-200 overflow-hidden">
+										<Link key={course.id} href={`/course/${course.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 hover:-translate-y-2 flex flex-col">
+											<div className="relative w-full aspect-video bg-gray-100 overflow-hidden">
 												<Image
 													src={course.thumbnail_url || '/images/dashboard.png'}
 													alt={course.title}
 													fill
-													className="object-cover transition-transform duration-500 group-hover:scale-110"
+													className="object-cover transition-transform duration-500 group-hover:scale-105"
 												/>
 											</div>
-											<div className="p-5">
-												<h3 className="font-bold text-gray-900 mb-3 line-clamp-2">
+											<div className="p-5 flex flex-col flex-grow">
+												<h3 className="font-bold text-gray-900 mb-2 line-clamp-2">
 													{course.title}
 												</h3>
-												<p className="text-[#661FFF] font-bold text-lg">
-													Rp{Number(course.price).toLocaleString('id-ID')}
+												<p className="text-gray-600 text-sm mb-3 line-clamp-2 flex-grow">
+													{course.description || ''}
 												</p>
+												<div className="mt-auto">
+													{course.mentor_name && (
+														<div className="flex items-center gap-2 mb-3">
+															{course.mentor_photo_profile && (
+																<div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+																	<Image
+																		src={course.mentor_photo_profile}
+																		alt={course.mentor_name}
+																		width={32}
+																		height={32}
+																		className="object-cover w-full h-full"
+																	/>
+																</div>
+															)}
+															<div>
+																<p className="text-gray-800 text-sm font-medium">{course.mentor_name}</p>
+																{course.mentor_title && (
+																	<p className="text-gray-500 text-xs">{course.mentor_title}</p>
+																)}
+															</div>
+														</div>
+													)}
+													<p className="text-[#661FFF] font-bold text-lg">
+														Rp{Number(course.price).toLocaleString('id-ID')}
+													</p>
+												</div>
 											</div>
 										</Link>
 									))

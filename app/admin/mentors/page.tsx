@@ -8,7 +8,6 @@ interface Mentor {
     name: string;
     photo: string;
     title: string;
-    status: 'Active' | 'Inactive';
     courseCount?: number;
 }
 
@@ -23,19 +22,17 @@ export default function MentorManagement() {
     const [mentors, setMentors] = useState<Mentor[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
-    
+
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
-    
+
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
-    
+
     const [formData, setFormData] = useState({
         name: '',
-        title: '',
-        status: 'Active' as 'Active' | 'Inactive'
+        title: ''
     });
 
     const [pagination, setPagination] = useState<PaginationInfo>({
@@ -55,7 +52,6 @@ export default function MentorManagement() {
         try {
             const params = new URLSearchParams();
             if (searchQuery) params.append('search', searchQuery);
-            if (statusFilter !== 'all') params.append('status', statusFilter);
 
             const token = localStorage.getItem('token');
             const response = await fetch(
@@ -93,7 +89,7 @@ export default function MentorManagement() {
         }, 300);
 
         return () => clearTimeout(timeoutId);
-    }, [searchQuery, statusFilter, currentPage]);
+    }, [searchQuery, currentPage]);
 
     useEffect(() => {
         if (notification) {
@@ -125,8 +121,7 @@ export default function MentorManagement() {
                     },
                     body: JSON.stringify({
                         name: formData.name,
-                        title: formData.title,
-                        status: formData.status
+                        title: formData.title
                     }),
                 }
             );
@@ -196,18 +191,7 @@ export default function MentorManagement() {
                             </div>
                         </div>
 
-                        {/* Status Filter */}
-                        <div className="mb-6">
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="px-6 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-[#6B21FF] text-gray-700 bg-white cursor-pointer"
-                            >
-                                <option value="all">Status Mentor</option>
-                                <option value="published">Active</option>
-                                <option value="draft">Inactive</option>
-                            </select>
-                        </div>
+
 
                         {/* Error Message */}
                         {error && (
@@ -229,28 +213,27 @@ export default function MentorManagement() {
                                         <table className="w-full">
                                             <thead className="bg-[#E8DEFF]">
                                                 <tr>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">No</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Foto</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Nama Mentor</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Pekerjaan</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Jumlah Kursus</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Status</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Actions</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">No</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Foto</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Nama Mentor</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Pekerjaan</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Jumlah Kursus</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
                                                 {mentors.length === 0 ? (
                                                     <tr>
-                                                        <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                                                        <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                                                             Tidak ada mentor ditemukan
                                                         </td>
                                                     </tr>
                                                 ) : (
                                                     mentors.map((mentor, index) => (
                                                         <tr key={mentor.id} className="hover:bg-gray-50 transition">
-                                                            <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
-                                                            <td className="px-6 py-4">
-                                                                <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
+                                                            <td className="px-6 py-4 text-sm text-gray-900 text-center">{index + 1}</td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 mx-auto">
                                                                     <img
                                                                         src={mentor.photo}
                                                                         alt={mentor.name}
@@ -258,27 +241,18 @@ export default function MentorManagement() {
                                                                     />
                                                                 </div>
                                                             </td>
-                                                            <td className="px-6 py-4 text-sm font-medium text-gray-900">{mentor.name}</td>
-                                                            <td className="px-6 py-4 text-sm text-gray-600">{mentor.title}</td>
-                                                            <td className="px-6 py-4 text-sm text-gray-600">{mentor.courseCount || 0} Kursus</td>
-                                                            <td className="px-6 py-4">
-                                                                <span className={`inline-flex px-4 py-1.5 rounded-full text-xs font-semibold text-white ${mentor.status === 'Active'
-                                                                    ? 'bg-green-500'
-                                                                    : 'bg-gray-500'
-                                                                    }`}>
-                                                                    {mentor.status}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-6 py-4">
-                                                                <div className="flex items-center gap-3">
+                                                            <td className="px-6 py-4 text-sm font-medium text-gray-900 text-center">{mentor.name}</td>
+                                                            <td className="px-6 py-4 text-sm text-gray-600 text-center">{mentor.title}</td>
+                                                            <td className="px-6 py-4 text-sm text-gray-600 text-center">{mentor.courseCount || 0} Kursus</td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                <div className="flex items-center justify-center gap-3">
                                                                     {/* Edit Button */}
                                                                     <button
                                                                         onClick={() => {
                                                                             setSelectedMentor(mentor);
                                                                             setFormData({
                                                                                 name: mentor.name,
-                                                                                title: mentor.title,
-                                                                                status: mentor.status
+                                                                                title: mentor.title
                                                                             });
                                                                             setShowEditModal(true);
                                                                         }}
@@ -361,17 +335,7 @@ export default function MentorManagement() {
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#6B21FF] text-gray-900"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                                    <select
-                                        value={formData.status}
-                                        onChange={(e) => setFormData({ ...formData, status: e.target.value as 'Active' | 'Inactive' })}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#6B21FF] text-gray-900"
-                                    >
-                                        <option value="Active">Active</option>
-                                        <option value="Inactive">Inactive</option>
-                                    </select>
-                                </div>
+
                                 <div className="flex gap-3 mt-6">
                                     <button
                                         type="button"

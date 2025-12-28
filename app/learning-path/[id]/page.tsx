@@ -46,7 +46,7 @@ export default function LearningPathDetailPage() {
     const params = useParams();
     const [learningPath, setLearningPath] = useState<LearningPath | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [courseProgress, setCourseProgress] = useState<{[key: string]: boolean}>({});
+    const [courseProgress, setCourseProgress] = useState<{ [key: string]: boolean }>({});
 
     // Fetch learning path detail from backend API
     useEffect(() => {
@@ -55,7 +55,7 @@ export default function LearningPathDetailPage() {
                 setIsLoading(true);
                 const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
                 const token = localStorage.getItem('token');
-                
+
                 const response = await fetch(`${baseUrl}/catalog/learning-paths/${params.id}`);
 
                 if (!response.ok) {
@@ -67,8 +67,8 @@ export default function LearningPathDetailPage() {
 
                 // If user is logged in, fetch progress for each course
                 if (token) {
-                    const progressMap: {[key: string]: boolean} = {};
-                    
+                    const progressMap: { [key: string]: boolean } = {};
+
                     for (const course of result.courses || []) {
                         try {
                             const progressResponse = await fetch(`${baseUrl}/learn/courses/${course.id}`, {
@@ -87,7 +87,7 @@ export default function LearningPathDetailPage() {
                             progressMap[course.id] = false;
                         }
                     }
-                    
+
                     setCourseProgress(progressMap);
                 }
             } catch (error) {
@@ -184,7 +184,7 @@ export default function LearningPathDetailPage() {
                                         </svg>
                                         <span className="text-gray-700">{learningPath.courses?.length || 0} kelas terkait</span>
                                     </div>
-                                    
+
                                     <div className="flex items-center gap-3">
                                         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -220,11 +220,11 @@ export default function LearningPathDetailPage() {
                             {learningPath.courses.map((course, index) => {
                                 // Check if course is completed based on fetched progress
                                 const isCompleted = courseProgress[course.id] || false;
-                                
+
                                 // Check if previous and next courses are completed for line coloring
                                 const isPreviousCompleted = index > 0 ? (courseProgress[learningPath.courses[index - 1].id] || false) : false;
                                 const isNextCompleted = index < learningPath.courses.length - 1 ? (courseProgress[learningPath.courses[index + 1].id] || false) : false;
-                                
+
                                 // Top line is purple only if both current and previous are completed
                                 const topLineColor = (isCompleted && isPreviousCompleted) ? 'bg-[#661FFF]' : 'bg-gray-300';
                                 // Bottom line is purple only if both current and next are completed
@@ -252,7 +252,7 @@ export default function LearningPathDetailPage() {
                                             >
                                                 <div className="flex gap-4">
                                                     {/* Course Thumbnail */}
-                                                    <div className="relative w-28 h-20 md:w-32 md:h-24 rounded-xl overflow-hidden flex-shrink-0">
+                                                    <div className="relative w-40 md:w-48 aspect-video rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
                                                         <Image
                                                             src={course.thumbnail_url || '/images/dashboard.png'}
                                                             alt={course.title}

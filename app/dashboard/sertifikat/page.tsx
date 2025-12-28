@@ -30,14 +30,14 @@ export default function SertifikatPage() {
 
 	useEffect(() => {
 		fetchCertificates();
-		
+
 		// Auto-refresh when window gains focus (user comes back from learn page)
 		const handleFocus = () => {
 			fetchCertificates();
 		};
-		
+
 		window.addEventListener('focus', handleFocus);
-		
+
 		return () => {
 			window.removeEventListener('focus', handleFocus);
 		};
@@ -203,15 +203,13 @@ export default function SertifikatPage() {
 															year: 'numeric'
 														})}
 													</span>
-													<span>•</span>
-													<span>{certificate.total_hours || 0} Jam</span>
 												</div>
 												{certificate.certificate_url ? (
 													<button
 														onClick={() => {
 															// Download certificate
 															const link = document.createElement('a');
-															link.href = certificate.certificate_url;
+															link.href = certificate.certificate_url || '';
 															link.download = `sertifikat-${certificate.Course?.title || 'course'}.pdf`;
 															link.target = '_blank';
 															document.body.appendChild(link);

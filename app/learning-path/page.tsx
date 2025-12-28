@@ -82,18 +82,13 @@ export default function LearningPathPage() {
 
                     {/* Search Bar */}
                     <div className="mb-10 md:mb-12 flex justify-center">
-                        <div className="flex w-full max-w-2xl">
-                            <input
-                                type="text"
-                                placeholder="Cari Path..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-grow px-6 py-3 border-2 border-gray-200 rounded-l-full focus:outline-none focus:border-[#661FFF] text-gray-700 bg-white"
-                            />
-                            <button className="px-8 py-3 bg-[#661FFF] text-white font-semibold rounded-r-full hover:bg-[#5518d9] transition-colors">
-                                Search
-                            </button>
-                        </div>
+                        <input
+                            type="text"
+                            placeholder="Cari Path..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full max-w-3xl px-6 py-3 border-2 border-[#661FFF] rounded-full focus:outline-none focus:border-[#5518d9] text-gray-700 bg-white"
+                        />
                     </div>
 
                     {/* Learning Path List */}
@@ -115,12 +110,12 @@ export default function LearningPathPage() {
                                 >
                                     <div className="flex flex-col md:flex-row gap-6">
                                         {/* Image */}
-                                        <div className="relative w-full md:w-[240px] h-[200px] md:h-[160px] flex-shrink-0 rounded-2xl overflow-hidden">
+                                        <div className="relative w-full md:w-[240px] aspect-video flex-shrink-0 rounded-2xl overflow-hidden bg-gray-100">
                                             <Image
                                                 src={path.thumbnail || '/images/dashboard.png'}
                                                 alt={path.title}
                                                 fill
-                                                className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                                className="object-cover transition-transform duration-500 group-hover:scale-105"
                                             />
                                         </div>
 
@@ -151,7 +146,7 @@ export default function LearningPathPage() {
                     {/* Load More Button */}
                     {!isLoading && hasMore && (
                         <div className="mt-12 flex justify-center">
-                            <button 
+                            <button
                                 onClick={handleLoadMore}
                                 className="px-8 py-3 border-2 border-[#661FFF] text-[#661FFF] font-semibold rounded-full hover:bg-[#661FFF] hover:text-white transition-colors"
                             >

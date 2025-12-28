@@ -38,7 +38,7 @@ export default function ReportMonitoring() {
     const [studentPagination, setStudentPagination] = useState<Pagination | null>(null);
     const [classPage, setClassPage] = useState(1);
     const [studentPage, setStudentPage] = useState(1);
-    
+
     // Modal states
     const [showClassModal, setShowClassModal] = useState(false);
     const [showStudentModal, setShowStudentModal] = useState(false);
@@ -254,7 +254,7 @@ export default function ReportMonitoring() {
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-xl font-bold text-gray-900">Peforma Kelas</h2>
-                                <button 
+                                <button
                                     onClick={handleShowClassModal}
                                     className="text-[#6B21FF] text-sm font-semibold hover:underline cursor-pointer"
                                 >
@@ -303,21 +303,21 @@ export default function ReportMonitoring() {
                                         <table className="w-full">
                                             <thead className="bg-[#E8DEFF]">
                                                 <tr>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Judul Kelas</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Kategori</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Jumlah Enroll</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Judul Kelas</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Kategori</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Jumlah Enroll</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
                                                 {classPerformance.map((item) => (
                                                     <tr key={item.id} className="hover:bg-gray-50">
-                                                        <td className="px-6 py-4">
+                                                        <td className="px-6 py-4 text-center">
                                                             <p className="text-sm font-medium text-gray-900">{item.title}</p>
                                                         </td>
-                                                        <td className="px-6 py-4">
+                                                        <td className="px-6 py-4 text-center">
                                                             <span className="text-sm text-gray-700">{item.category}</span>
                                                         </td>
-                                                        <td className="px-6 py-4">
+                                                        <td className="px-6 py-4 text-center">
                                                             <span className="text-sm text-gray-700">{item.total_enrollments}</span>
                                                         </td>
                                                     </tr>
@@ -364,7 +364,7 @@ export default function ReportMonitoring() {
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-xl font-bold text-gray-900">Peforma Belajar</h2>
-                                <button 
+                                <button
                                     onClick={handleShowStudentModal}
                                     className="text-[#6B21FF] text-sm font-semibold hover:underline cursor-pointer"
                                 >
@@ -413,9 +413,9 @@ export default function ReportMonitoring() {
                                         <table className="w-full">
                                             <thead className="bg-[#E8DEFF]">
                                                 <tr>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Nama</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Jumlah Kelas yang diambil</th>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Progress Belajar</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Nama</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Jumlah Kelas yang diambil</th>
+                                                    <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Progress Belajar</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
@@ -423,8 +423,8 @@ export default function ReportMonitoring() {
                                                     const progressValue = parseInt(student.progress.replace('%', ''));
                                                     return (
                                                         <tr key={student.id} className="hover:bg-gray-50">
-                                                            <td className="px-6 py-4">
-                                                                <div className="flex items-center gap-3">
+                                                            <td className="px-6 py-4 text-center">
+                                                                <div className="flex items-center justify-center gap-3">
                                                                     {student.avatar_url ? (
                                                                         <img
                                                                             src={student.avatar_url}
@@ -441,11 +441,11 @@ export default function ReportMonitoring() {
                                                                     <p className="text-sm font-medium text-gray-900">{student.name}</p>
                                                                 </div>
                                                             </td>
-                                                            <td className="px-6 py-4">
+                                                            <td className="px-6 py-4 text-center">
                                                                 <span className="text-sm text-gray-700">{student.enrolled_classes} kelas</span>
                                                             </td>
-                                                            <td className="px-6 py-4">
-                                                                <div className="flex items-center gap-3">
+                                                            <td className="px-6 py-4 text-center">
+                                                                <div className="flex items-center justify-center gap-3">
                                                                     {/* Progress Bar */}
                                                                     <div className="flex-1 max-w-[200px]">
                                                                         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -510,7 +510,7 @@ export default function ReportMonitoring() {
                         {/* Header */}
                         <div className="flex justify-between items-center p-6 border-b border-gray-200">
                             <h2 className="text-2xl font-bold text-gray-900">Semua Peforma Kelas</h2>
-                            <button 
+                            <button
                                 onClick={() => setShowClassModal(false)}
                                 className="text-gray-400 hover:text-gray-600 transition-colors"
                             >
@@ -532,25 +532,25 @@ export default function ReportMonitoring() {
                                     <table className="w-full">
                                         <thead className="bg-[#E8DEFF] sticky top-0">
                                             <tr>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">No</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Judul Kelas</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Kategori</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Jumlah Enroll</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">No</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Judul Kelas</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Kategori</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Jumlah Enroll</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
                                             {allClassData.map((item, index) => (
                                                 <tr key={item.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4">
+                                                    <td className="px-6 py-4 text-center">
                                                         <span className="text-sm text-gray-700">{index + 1}</span>
                                                     </td>
-                                                    <td className="px-6 py-4">
+                                                    <td className="px-6 py-4 text-center">
                                                         <p className="text-sm font-medium text-gray-900">{item.title}</p>
                                                     </td>
-                                                    <td className="px-6 py-4">
+                                                    <td className="px-6 py-4 text-center">
                                                         <span className="text-sm text-gray-700">{item.category}</span>
                                                     </td>
-                                                    <td className="px-6 py-4">
+                                                    <td className="px-6 py-4 text-center">
                                                         <span className="text-sm text-gray-700">{item.total_enrollments}</span>
                                                     </td>
                                                 </tr>
@@ -576,7 +576,7 @@ export default function ReportMonitoring() {
                         {/* Header */}
                         <div className="flex justify-between items-center p-6 border-b border-gray-200">
                             <h2 className="text-2xl font-bold text-gray-900">Semua Peforma Belajar</h2>
-                            <button 
+                            <button
                                 onClick={() => setShowStudentModal(false)}
                                 className="text-gray-400 hover:text-gray-600 transition-colors"
                             >
@@ -598,20 +598,20 @@ export default function ReportMonitoring() {
                                     <table className="w-full">
                                         <thead className="bg-[#E8DEFF] sticky top-0">
                                             <tr>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">No</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Nama Siswa</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Kelas Terdaftar</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Progress</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">No</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Nama Siswa</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Kelas Terdaftar</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Progress</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
                                             {allStudentData.map((student, index) => (
                                                 <tr key={student.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4">
+                                                    <td className="px-6 py-4 text-center">
                                                         <span className="text-sm text-gray-700">{index + 1}</span>
                                                     </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-3">
+                                                    <td className="px-6 py-4 text-center">
+                                                        <div className="flex items-center justify-center gap-3">
                                                             <div className="w-10 h-10 rounded-full bg-[#6B21FF] flex items-center justify-center text-white font-semibold overflow-hidden">
                                                                 {student.avatar_url ? (
                                                                     <img src={student.avatar_url} alt={student.name} className="w-full h-full object-cover" />
@@ -622,10 +622,10 @@ export default function ReportMonitoring() {
                                                             <span className="text-sm font-medium text-gray-900">{student.name}</span>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4">
+                                                    <td className="px-6 py-4 text-center">
                                                         <span className="text-sm text-gray-700">{student.enrolled_classes}</span>
                                                     </td>
-                                                    <td className="px-6 py-4">
+                                                    <td className="px-6 py-4 text-center">
                                                         <span className="text-sm text-gray-700">{student.progress}</span>
                                                     </td>
                                                 </tr>

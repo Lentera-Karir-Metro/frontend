@@ -283,9 +283,9 @@ export default function CourseDetailPage() {
 
 			{/* Main Content */}
 			<div className="flex-1 max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 md:py-12">
-				<div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+				<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 					{/* Left Content - Course Details */}
-					<div className="lg:col-span-3 space-y-8">
+					<div className="lg:col-span-2 space-y-8">
 						{/* Tentang Kelas */}
 						<div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-gray-200">
 							<h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">Tentang Kelas</h2>
@@ -387,16 +387,16 @@ export default function CourseDetailPage() {
 														return (typeOrder[typeA] || 999) - (typeOrder[typeB] || 999);
 													})
 													.map((module) => (
-													<div key={module.id} className="flex items-center justify-between py-2 hover:bg-gray-50 px-3 rounded">
-														<div className="flex items-center gap-3">
-															{getModuleIcon(getModuleType(module))}
-															<span className="text-gray-700">{module.title}</span>
+														<div key={module.id} className="flex items-center justify-between py-2 hover:bg-gray-50 px-3 rounded">
+															<div className="flex items-center gap-3">
+																{getModuleIcon(getModuleType(module))}
+																<span className="text-gray-700">{module.title}</span>
+															</div>
+															<span className="text-sm text-gray-500">
+																{formatDuration(module.durasi_video_menit || module.estimasi_waktu_menit)}
+															</span>
 														</div>
-														<span className="text-sm text-gray-500">
-															{formatDuration(module.durasi_video_menit || module.estimasi_waktu_menit)}
-														</span>
-													</div>
-												))}
+													))}
 											</div>
 										)}
 									</div>
@@ -425,26 +425,26 @@ export default function CourseDetailPage() {
 					</div>
 
 					<div className="lg:col-span-1">
-						<div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 sticky top-8">
+						<div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200">
 							<img
 								src={learningPath.thumbnail_url}
 								alt={learningPath.title}
-								className="w-full h-48 object-cover rounded-lg mb-6"
+								className="w-full aspect-video object-cover rounded-lg mb-6"
 							/>
 
 							<div className="space-y-4 mb-6">
-								<div className="flex items-baseline gap-2">
+								<div className="flex flex-wrap items-baseline gap-2">
 									{learningPath.discount_amount && learningPath.discount_amount > 0 ? (
 										<>
-											<span className="text-3xl font-bold text-gray-900">
+											<span className="text-2xl font-bold text-gray-900">
 												Rp{Number(learningPath.price - learningPath.discount_amount).toLocaleString('id-ID')}
 											</span>
-											<span className="text-lg text-gray-500 line-through">
+											<span className="text-base text-gray-500 line-through">
 												Rp{Number(learningPath.price).toLocaleString('id-ID')}
 											</span>
 										</>
 									) : (
-										<span className="text-3xl font-bold text-gray-900">
+										<span className="text-2xl font-bold text-gray-900">
 											Rp{Number(learningPath.price).toLocaleString('id-ID')}
 										</span>
 									)}

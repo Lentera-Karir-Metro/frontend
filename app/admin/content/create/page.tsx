@@ -90,6 +90,18 @@ export default function BuatKelas() {
             return;
         }
 
+        // Validasi harga dan diskon tidak boleh negatif
+        const hargaNum = harga ? parseFloat(harga) : 0;
+        const diskonNum = diskon ? parseFloat(diskon) : 0;
+        if (hargaNum < 0) {
+            showNotification('error', 'Harga tidak boleh bernilai negatif!');
+            return;
+        }
+        if (diskonNum < 0) {
+            showNotification('error', 'Diskon tidak boleh bernilai negatif!');
+            return;
+        }
+
         try {
             setLoading(true);
             setError(null);
@@ -204,9 +216,20 @@ export default function BuatKelas() {
                                     </label>
                                     <input
                                         type="number"
+                                        min="0"
                                         placeholder="150000"
                                         value={harga}
-                                        onChange={(e) => setHarga(e.target.value)}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            if (value === '' || parseFloat(value) >= 0) {
+                                                setHarga(value);
+                                            }
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === '-' || e.key === 'e') {
+                                                e.preventDefault();
+                                            }
+                                        }}
                                         className="w-full px-6 py-4 rounded-xl border-2 border-[#6B21FF] focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:ring-opacity-20 text-gray-700 placeholder-gray-400"
                                         disabled={loading}
                                     />
@@ -220,7 +243,17 @@ export default function BuatKelas() {
                                         min="0"
                                         placeholder="0"
                                         value={diskon}
-                                        onChange={(e) => setDiskon(e.target.value)}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            if (value === '' || parseFloat(value) >= 0) {
+                                                setDiskon(value);
+                                            }
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === '-' || e.key === 'e') {
+                                                e.preventDefault();
+                                            }
+                                        }}
                                         className="w-full px-6 py-4 rounded-xl border-2 border-[#6B21FF] focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:ring-opacity-20 text-gray-700 placeholder-gray-400"
                                         disabled={loading}
                                     />
@@ -233,31 +266,41 @@ export default function BuatKelas() {
                                     <label className="block text-sm font-semibold text-gray-900 mb-2">
                                         Kategori
                                     </label>
-                                    <select
-                                        value={kategori}
-                                        onChange={(e) => setKategori(e.target.value)}
-                                        className="w-full px-6 py-4 rounded-xl border-2 border-[#6B21FF] focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:ring-opacity-20 text-gray-700 bg-white cursor-pointer"
-                                        disabled={loading}
-                                    >
-                                        <option value="">Pilih Kategori</option>
-                                        {COURSE_CATEGORIES.map(cat => (
-                                            <option key={cat} value={cat}>{cat}</option>
-                                        ))}
-                                    </select>
+                                    <div className="relative">
+                                        <select
+                                            value={kategori}
+                                            onChange={(e) => setKategori(e.target.value)}
+                                            className="appearance-none w-full px-6 py-4 pr-12 rounded-xl border-2 border-[#6B21FF] focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:ring-opacity-20 text-gray-700 bg-white cursor-pointer"
+                                            disabled={loading}
+                                        >
+                                            <option value="">Pilih Kategori</option>
+                                            {COURSE_CATEGORIES.map(cat => (
+                                                <option key={cat} value={cat}>{cat}</option>
+                                            ))}
+                                        </select>
+                                        <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-900 mb-2">
                                         Status
                                     </label>
-                                    <select
-                                        value={status}
-                                        onChange={(e) => setStatus(e.target.value)}
-                                        className="w-full px-6 py-4 rounded-xl border-2 border-[#6B21FF] focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:ring-opacity-20 text-gray-700 bg-white cursor-pointer"
-                                        disabled={loading}
-                                    >
-                                        <option value="published">Published</option>
-                                        <option value="draft">Draft</option>
-                                    </select>
+                                    <div className="relative">
+                                        <select
+                                            value={status}
+                                            onChange={(e) => setStatus(e.target.value)}
+                                            className="appearance-none w-full px-6 py-4 pr-12 rounded-xl border-2 border-[#6B21FF] focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:ring-opacity-20 text-gray-700 bg-white cursor-pointer"
+                                            disabled={loading}
+                                        >
+                                            <option value="published">Published</option>
+                                            <option value="draft">Draft</option>
+                                        </select>
+                                        <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
 

@@ -156,10 +156,10 @@ export default function LearningPathPage() {
                                 <table className="w-full">
                                     <thead className="bg-[#E8DEFF]">
                                         <tr>
-                                            <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Judul Path</th>
-                                            <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Jumlah Course</th>
-                                            <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Jumlah Modul</th>
-                                            <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Actions</th>
+                                            <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Judul Path</th>
+                                            <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Jumlah Course</th>
+                                            <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Jumlah Modul</th>
+                                            <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
@@ -172,11 +172,11 @@ export default function LearningPathPage() {
                                         ) : (
                                             learningPaths.map((path) => (
                                                 <tr key={path.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 text-sm text-gray-900">{path.title}</td>
-                                                    <td className="px-6 py-4 text-sm text-gray-600">{path.total_courses || 0}</td>
-                                                    <td className="px-6 py-4 text-sm text-gray-600">{path.total_modules || 0}</td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-3">
+                                                    <td className="px-6 py-4 text-sm text-gray-900 text-center">{path.title}</td>
+                                                    <td className="px-6 py-4 text-sm text-gray-600 text-center">{path.total_courses || 0}</td>
+                                                    <td className="px-6 py-4 text-sm text-gray-600 text-center">{path.total_modules || 0}</td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <div className="flex items-center justify-center gap-3">
                                                             {/* Edit Button */}
                                                             <button
                                                                 onClick={() => handleEdit(path.id)}

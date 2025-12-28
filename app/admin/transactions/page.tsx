@@ -231,13 +231,13 @@ export default function TransactionsPage() {
                                     <table className="w-full">
                                         <thead className="bg-[#E8DEFF]">
                                             <tr>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">ID Transaksi</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Nama</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Kelas yang dibeli</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Total bayar</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Metode bayar</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Tanggal</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Status</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">ID Transaksi</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Nama</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Kelas yang dibeli</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Total bayar</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Metode bayar</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Tanggal</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Status</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
@@ -250,13 +250,13 @@ export default function TransactionsPage() {
                                             ) : (
                                                 transactions.map((transaction) => (
                                                     <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
-                                                        <td className="px-6 py-4 text-sm text-gray-600 font-mono">{transaction.id}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-900 font-medium">{transaction.user_name}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-600">{transaction.class_name}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-900 font-medium">{formatCurrency(transaction.amount)}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-600">{transaction.payment_method || '-'}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-600">{formatDate(transaction.date)}</td>
-                                                        <td className="px-6 py-4">
+                                                        <td className="px-6 py-4 text-sm text-gray-600 font-mono text-center">{transaction.id}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-900 font-medium text-center">{transaction.user_name}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600 text-center">{transaction.class_name}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-900 font-medium text-center">{formatCurrency(transaction.amount)}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600 text-center">{transaction.payment_method || '-'}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600 text-center">{formatDate(transaction.date)}</td>
+                                                        <td className="px-6 py-4 text-center">
                                                             <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold capitalize ${getStatusBadgeClass(transaction.status)}`}>
                                                                 {transaction.status}
                                                             </span>

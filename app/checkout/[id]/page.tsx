@@ -289,7 +289,7 @@ export default function CheckoutPage() {
 							{/* Left Section - Course Card */}
 							<div className="lg:col-span-4">
 								<div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200">
-									<div className="relative w-full h-48 rounded-xl overflow-hidden mb-4">
+									<div className="relative w-full aspect-video rounded-xl overflow-hidden mb-4 bg-gray-100">
 										<Image
 											src={course.thumbnail_url || '/images/dashboard.png'}
 											alt={course.title}
@@ -297,27 +297,38 @@ export default function CheckoutPage() {
 											className="object-cover"
 										/>
 									</div>
-									<h2 className="text-lg font-bold text-gray-900 mb-3">
+									<h2 className="text-lg font-bold text-gray-900 mb-2">
 										{course.title}
 									</h2>
-									<p className="text-purple-600 font-bold text-xl mb-3">
+									{course.description && (
+										<p className="text-gray-600 text-sm mb-3 line-clamp-2">
+											{course.description}
+										</p>
+									)}
+									{course.mentor_name && (
+										<div className="flex items-center gap-2 mb-3">
+											{course.mentor_photo_profile && (
+												<div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+													<Image
+														src={course.mentor_photo_profile}
+														alt={course.mentor_name}
+														width={32}
+														height={32}
+														className="object-cover w-full h-full"
+													/>
+												</div>
+											)}
+											<div>
+												<p className="text-gray-800 text-sm font-medium">{course.mentor_name}</p>
+												{course.mentor_title && (
+													<p className="text-gray-500 text-xs">{course.mentor_title}</p>
+												)}
+											</div>
+										</div>
+									)}
+									<p className="text-purple-600 font-bold text-xl">
 										Rp{originalPrice.toLocaleString('id-ID')}
 									</p>
-									<div className="flex items-center gap-2">
-										<div className="flex items-center gap-0.5">
-											{[1, 2, 3, 4, 5].map((star) => (
-												<svg
-													key={star}
-													className="w-4 h-4"
-													fill={star <= course.rating ? "#f7e84b" : "#e5e7eb"}
-													viewBox="0 0 329.942 329.942"
-												>
-													<path d="M329.208,126.666c-1.765-5.431-6.459-9.389-12.109-10.209l-95.822-13.922l-42.854-86.837 c-2.527-5.12-7.742-8.362-13.451-8.362c-5.71,0-10.925,3.242-13.451,8.362l-42.851,86.836l-95.825,13.922 c-5.65,0.821-10.345,4.779-12.109,10.209c-1.764,5.431-0.293,11.392,3.796,15.377l69.339,67.582L57.496,305.07 c-0.965,5.628,1.348,11.315,5.967,14.671c2.613,1.899,5.708,2.865,8.818,2.865c2.387,0,4.784-0.569,6.979-1.723l85.711-45.059 l85.71,45.059c2.208,1.161,4.626,1.714,7.021,1.723c8.275-0.012,14.979-6.723,14.979-15c0-1.152-0.13-2.275-0.376-3.352 l-16.233-94.629l69.339-67.583C329.501,138.057,330.972,132.096,329.208,126.666z" />
-												</svg>
-											))}
-										</div>
-										<span className="text-sm text-gray-600">({course.review_count})</span>
-									</div>
 								</div>
 							</div>
 
@@ -415,8 +426,8 @@ export default function CheckoutPage() {
 											onClick={handleCheckout}
 											disabled={!agreeToTerms || isProcessing || !snapLoaded}
 											className={`w-full py-4 rounded-full font-semibold text-white text-base transition-all ${!agreeToTerms || isProcessing || !snapLoaded
-													? 'bg-gray-300 cursor-not-allowed'
-													: 'bg-[#5B21D6] hover:bg-[#4C1D95] hover:shadow-lg'
+												? 'bg-gray-300 cursor-not-allowed'
+												: 'bg-[#5B21D6] hover:bg-[#4C1D95] hover:shadow-lg'
 												}`}
 										>
 											{isProcessing ? 'Memproses...' : 'Bayar dan Gabung Kursus'}

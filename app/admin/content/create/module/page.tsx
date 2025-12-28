@@ -469,10 +469,10 @@ export default function TambahModul() {
                         </div>
 
                         {/* Section: Upload Videos */}
-                        <div className="bg-gradient-to-br from-purple-50 to-white rounded-xl p-6 border-2 border-purple-200">
+                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                                    <div className="w-10 h-10 bg-[#6B21FF] rounded-lg flex items-center justify-center">
                                         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                         </svg>
@@ -485,13 +485,13 @@ export default function TambahModul() {
                             </div>
 
                             {/* Upload Area */}
-                            <div className="border-2 border-dashed border-purple-300 rounded-xl p-8 text-center bg-white hover:bg-purple-50 transition">
-                                <svg className="w-12 h-12 text-purple-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50 hover:bg-gray-100 hover:border-[#6B21FF] transition-all duration-300">
+                                <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                 </svg>
                                 <p className="text-sm text-gray-600 mb-4">Drag & drop atau klik untuk upload video</p>
                                 <label htmlFor="video-upload">
-                                    <div className="inline-block bg-purple-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-purple-700 cursor-pointer transition">
+                                    <div className="inline-block bg-[#6B21FF] text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-[#5518CC] cursor-pointer transition">
                                         Pilih Video
                                     </div>
                                     <input
@@ -585,7 +585,7 @@ export default function TambahModul() {
                         </div>
 
                         {/* Section: Upload Ebooks */}
-                        <div className="bg-gradient-to-br from-red-50 to-white rounded-xl p-6 border-2 border-red-200">
+                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
@@ -601,8 +601,8 @@ export default function TambahModul() {
                             </div>
 
                             {/* Upload Area */}
-                            <div className="border-2 border-dashed border-red-300 rounded-xl p-8 text-center bg-white hover:bg-red-50 transition">
-                                <svg className="w-12 h-12 text-red-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50 hover:bg-gray-100 hover:border-red-400 transition-all duration-300">
+                                <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                 </svg>
                                 <p className="text-sm text-gray-600 mb-4">Drag & drop atau klik untuk upload PDF</p>
@@ -681,7 +681,7 @@ export default function TambahModul() {
                         </div>
 
                         {/* Section: Quiz */}
-                        <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-6 border-2 border-blue-200">
+                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -714,42 +714,42 @@ export default function TambahModul() {
                             </div>
 
                             {quizzes.length === 0 ? (
-                                <div className="border-2 border-dashed border-blue-300 rounded-xl p-8 text-center bg-white">
-                                    <svg className="w-12 h-12 text-blue-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50">
+                                    <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     <p className="text-sm text-gray-500">Belum ada quiz. Klik tombol "Tambah Quiz" untuk membuat quiz baru</p>
                                 </div>
                             ) : (
-                                <div className="space-y-6">
+                                <div className="space-y-4">
                                     {quizzes.map((quiz, quizIndex) => (
-                                        <div key={quiz.id} className="bg-white rounded-xl border-2 border-blue-300 overflow-hidden shadow-sm">
-                                            {/* Quiz Header */}
-                                            <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-4">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex-1">
+                                        <div key={quiz.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                                            {/* Quiz Header - Clean Design */}
+                                            <div className="px-6 py-4 border-b border-gray-200">
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <div className="flex-1 space-y-2">
                                                         <input
                                                             type="text"
                                                             value={quiz.title}
                                                             onChange={(e) => handleQuizTitleChange(quiz.id, e.target.value)}
                                                             placeholder="Judul Quiz"
-                                                            className="w-full bg-white/20 backdrop-blur-sm text-white placeholder-white/70 px-4 py-2 rounded-lg font-semibold text-lg focus:outline-none focus:ring-2 focus:ring-white/50"
+                                                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:border-[#6B21FF] font-semibold text-lg text-gray-900 placeholder-gray-400"
                                                         />
                                                         <input
                                                             type="text"
                                                             value={quiz.description}
                                                             onChange={(e) => handleQuizDescriptionChange(quiz.id, e.target.value)}
                                                             placeholder="Deskripsi quiz (opsional)"
-                                                            className="w-full mt-2 bg-white/20 backdrop-blur-sm text-white placeholder-white/70 px-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
+                                                            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:border-[#6B21FF] text-sm text-gray-700 placeholder-gray-400"
                                                         />
                                                     </div>
-                                                    <div className="flex items-center gap-3 ml-4">
-                                                        <span className="bg-white/30 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                                    <div className="flex items-center gap-3 flex-shrink-0">
+                                                        <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-semibold">
                                                             {quiz.questions.length} Soal
                                                         </span>
                                                         <button
                                                             onClick={() => handleDeleteQuiz(quiz.id)}
-                                                            className="p-2 text-white hover:bg-white/20 rounded-lg transition-all duration-300 hover:scale-110"
+                                                            className="p-2 text-red-500 hover:text-white hover:bg-red-500 rounded-lg transition-all duration-300"
                                                             title="Hapus quiz"
                                                         >
                                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -761,13 +761,13 @@ export default function TambahModul() {
                                             </div>
 
                                             {/* Quiz Content */}
-                                            <div className="p-6 bg-blue-50/50">
+                                            <div className="p-6">
                                                 <div className="flex items-center justify-between mb-4">
                                                     <h3 className="text-sm font-semibold text-gray-700">Daftar Pertanyaan</h3>
                                                     <button
                                                         onClick={() => handleAddQuestion(quiz.id)}
                                                         disabled={loading}
-                                                        className="inline-flex items-center gap-2 bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-green-700 hover:scale-105 transition-all duration-300 shadow-sm disabled:bg-gray-400"
+                                                        className="inline-flex items-center gap-2 bg-[#6B21FF] text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-[#5518CC] transition-all duration-300 disabled:bg-gray-400"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -777,7 +777,7 @@ export default function TambahModul() {
                                                 </div>
 
                                                 {quiz.questions.length === 0 ? (
-                                                    <div className="border-2 border-dashed border-blue-300 rounded-xl p-6 text-center bg-white">
+                                                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center bg-gray-50">
                                                         <p className="text-sm text-gray-500">Belum ada soal. Klik "Tambah Soal" untuk menambahkan pertanyaan</p>
                                                     </div>
                                                 ) : (
@@ -789,14 +789,19 @@ export default function TambahModul() {
                                                                     <div className="flex items-center justify-between">
                                                                         <h3 className="text-base font-semibold text-gray-900">Pertanyaan #{index + 1}</h3>
                                                                         <div className="flex items-center gap-3">
-                                                                            <select
-                                                                                value={question.type}
-                                                                                onChange={(e) => handleQuestionTypeChange(quiz.id, question.id, e.target.value)}
-                                                                                className="px-4 py-2 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:border-[#6B21FF] text-sm text-gray-700 bg-white"
-                                                                            >
-                                                                                <option>Pilihan Ganda</option>
-                                                                                <option>Benar/Salah</option>
-                                                                            </select>
+                                                                            <div className="relative">
+                                                                                <select
+                                                                                    value={question.type}
+                                                                                    onChange={(e) => handleQuestionTypeChange(quiz.id, question.id, e.target.value)}
+                                                                                    className="appearance-none px-4 py-2 pr-10 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:border-[#6B21FF] text-sm text-gray-700 bg-white cursor-pointer"
+                                                                                >
+                                                                                    <option>Pilihan Ganda</option>
+                                                                                    <option>Benar/Salah</option>
+                                                                                </select>
+                                                                                <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                                                </svg>
+                                                                            </div>
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() => handleDeleteQuestion(quiz.id, question.id)}

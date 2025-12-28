@@ -292,10 +292,10 @@ export default function LearningContent() {
                                     <table className="w-full">
                                         <thead className="bg-[#E8DEFF]">
                                             <tr>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Judul Kelas</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Kategori</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Status</th>
-                                                <th className="px-6 py-4 text-left text-sm font-semibold text-[#6B21FF]">Actions</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Judul Kelas</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Kategori</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Status</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
@@ -308,21 +308,20 @@ export default function LearningContent() {
                                             ) : (
                                                 filteredCourses.map((course) => (
                                                     <tr key={course.id} className="hover:bg-gray-50">
-                                                        <td className="px-6 py-4 text-sm text-gray-900 align-middle">{course.title}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-600 align-middle">
+                                                        <td className="px-6 py-4 text-sm text-gray-900 text-center">{course.title}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600 text-center">
                                                             {course.category || 'All'}
                                                         </td>
-                                                        <td className="px-6 py-4 align-middle">
-                                                            <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
-                                                                course.status === 'published'
-                                                                    ? 'bg-green-100 text-green-700'
-                                                                    : 'bg-gray-100 text-gray-700'
-                                                            }`}>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${course.status === 'published'
+                                                                ? 'bg-green-100 text-green-700'
+                                                                : 'bg-gray-100 text-gray-700'
+                                                                }`}>
                                                                 {course.status || 'published'}
                                                             </span>
                                                         </td>
-                                                        <td className="px-6 py-4 align-middle">
-                                                            <div className="flex items-center gap-3">
+                                                        <td className="px-6 py-4 text-center">
+                                                            <div className="flex items-center justify-center gap-3">
                                                                 {/* Edit Button */}
                                                                 <button
                                                                     onClick={() => handleEdit(course)}
@@ -484,8 +483,8 @@ export default function LearningContent() {
                 {notification && (
                     <div className="fixed top-4 right-4 z-50 animate-slide-in">
                         <div className={`rounded-xl px-6 py-4 shadow-2xl border-2 min-w-[300px] max-w-md ${notification.type === 'success'
-                                ? 'bg-green-50 border-green-500 text-green-800'
-                                : 'bg-red-50 border-red-500 text-red-800'
+                            ? 'bg-green-50 border-green-500 text-green-800'
+                            : 'bg-red-50 border-red-500 text-red-800'
                             }`}>
                             <div className="flex items-start gap-3">
                                 {notification.type === 'success' ? (

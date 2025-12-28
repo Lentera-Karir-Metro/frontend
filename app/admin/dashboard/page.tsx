@@ -357,10 +357,10 @@ export default function AdminDashboard() {
                                         </div>
                                     </div>
                                     <ResponsiveContainer width="100%" height={300}>
-                                    <AreaChart
-                                        data={userGrowth}
-                                        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                                    >
+                                        <AreaChart
+                                            data={userGrowth}
+                                            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                                        >
                                             <defs>
                                                 <linearGradient id="colorNewUsers" x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="5%" stopColor="#6B21FF" stopOpacity={0.3} />
@@ -371,44 +371,44 @@ export default function AdminDashboard() {
                                                     <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                                                 </linearGradient>
                                             </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                        <XAxis
-                                            dataKey="month"
-                                            stroke="#9ca3af"
-                                            style={{ fontSize: '14px' }}
-                                        />
-                                        <YAxis
-                                            stroke="#9ca3af"
-                                            style={{ fontSize: '14px' }}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: '#6B21FF',
-                                                border: 'none',
-                                                borderRadius: '12px',
-                                                color: 'white',
-                                                padding: '8px 12px'
-                                            }}
-                                        />
-                                        <Area
-                                            type="monotone"
-                                            dataKey="newUsers"
-                                            stroke="#6B21FF"
-                                            strokeWidth={3}
-                                            fillOpacity={1}
-                                            fill="url(#colorNewUsers)"
-                                        />
-                                        <Area
-                                            type="monotone"
-                                            dataKey="newMentors"
-                                            stroke="#10B981"
-                                            strokeWidth={3}
-                                            fillOpacity={1}
-                                            fill="url(#colorMentors)"
-                                        />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                                    </>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                            <XAxis
+                                                dataKey="month"
+                                                stroke="#9ca3af"
+                                                style={{ fontSize: '14px' }}
+                                            />
+                                            <YAxis
+                                                stroke="#9ca3af"
+                                                style={{ fontSize: '14px' }}
+                                            />
+                                            <Tooltip
+                                                contentStyle={{
+                                                    backgroundColor: '#6B21FF',
+                                                    border: 'none',
+                                                    borderRadius: '12px',
+                                                    color: 'white',
+                                                    padding: '8px 12px'
+                                                }}
+                                            />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="newUsers"
+                                                stroke="#6B21FF"
+                                                strokeWidth={3}
+                                                fillOpacity={1}
+                                                fill="url(#colorNewUsers)"
+                                            />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="newMentors"
+                                                stroke="#10B981"
+                                                strokeWidth={3}
+                                                fillOpacity={1}
+                                                fill="url(#colorMentors)"
+                                            />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </>
                             )}
                         </div>
                     </div>
@@ -448,19 +448,19 @@ export default function AdminDashboard() {
                                         <table className="w-full">
                                             <thead className="bg-[#E8DEFF]">
                                                 <tr>
-                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">No</th>
-                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Nama</th>
-                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Email</th>
-                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Tanggal Registrasi</th>
+                                                    <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">No</th>
+                                                    <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">Nama</th>
+                                                    <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">Email</th>
+                                                    <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">Tanggal Registrasi</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-200">
                                                 {recentUsers.map((user, index) => (
                                                     <tr key={user.id} className="hover:bg-gray-50">
-                                                        <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-900">{user.username}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-600">
+                                                        <td className="px-6 py-4 text-sm text-gray-900 text-center">{index + 1}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-900 text-center">{user.username}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600 text-center">{user.email}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600 text-center">
                                                             {new Date(user.createdAt).toLocaleDateString('id-ID')}
                                                         </td>
                                                     </tr>
@@ -501,17 +501,17 @@ export default function AdminDashboard() {
                                         <table className="w-full">
                                             <thead className="bg-[#E8DEFF]">
                                                 <tr>
-                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">No</th>
-                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Judul Kelas</th>
-                                                    <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Kategori</th>
+                                                    <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">No</th>
+                                                    <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">Judul Kelas</th>
+                                                    <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">Kategori</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-200">
                                                 {recentCourses.map((course, index) => (
                                                     <tr key={course.id} className="hover:bg-gray-50">
-                                                        <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-900">{course.title}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-600">{course.category}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-900 text-center">{index + 1}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-900 text-center">{course.title}</td>
+                                                        <td className="px-6 py-4 text-sm text-gray-600 text-center">{course.category}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -552,25 +552,25 @@ export default function AdminDashboard() {
                                 <table className="w-full">
                                     <thead className="bg-[#E8DEFF]">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">ID</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Nama User</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Email</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Learning Path</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Total</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Tanggal</th>
-                                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Status</th>
+                                            <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">ID</th>
+                                            <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">Nama User</th>
+                                            <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">Email</th>
+                                            <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">Learning Path</th>
+                                            <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">Total</th>
+                                            <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">Tanggal</th>
+                                            <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200">
                                         {transactions.map((transaction) => (
                                             <tr key={transaction.id} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4 text-sm text-gray-800">{transaction.id}</td>
-                                                <td className="px-6 py-4 text-sm text-gray-800">{transaction.userName}</td>
-                                                <td className="px-6 py-4 text-sm text-gray-800">{transaction.userEmail}</td>
-                                                <td className="px-6 py-4 text-sm text-gray-800">{transaction.courseTitle}</td>
-                                                <td className="px-6 py-4 text-sm font-semibold text-gray-800">{formatCurrency(transaction.amount)}</td>
-                                                <td className="px-6 py-4 text-sm text-gray-800">{new Date(transaction.date).toLocaleDateString('id-ID')}</td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-4 text-sm text-gray-800 text-center">{transaction.id}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-800 text-center">{transaction.userName}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-800 text-center">{transaction.userEmail}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-800 text-center">{transaction.courseTitle}</td>
+                                                <td className="px-6 py-4 text-sm font-semibold text-gray-800 text-center">{formatCurrency(transaction.amount)}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-800 text-center">{new Date(transaction.date).toLocaleDateString('id-ID')}</td>
+                                                <td className="px-6 py-4 text-center">
                                                     <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
                                                         {transaction.status}
                                                     </span>
@@ -627,19 +627,19 @@ export default function AdminDashboard() {
                                     <table className="w-full">
                                         <thead className="bg-[#E8DEFF]">
                                             <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">No</th>
-                                                <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Nama</th>
-                                                <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Email</th>
-                                                <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Tanggal Registrasi</th>
+                                                <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">No</th>
+                                                <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">Nama</th>
+                                                <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">Email</th>
+                                                <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">Tanggal Registrasi</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-200">
                                             {recentUsers.map((user, index) => (
                                                 <tr key={user.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
-                                                    <td className="px-6 py-4 text-sm text-gray-900">{user.username}</td>
-                                                    <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                                                    <td className="px-6 py-4 text-sm text-gray-600">
+                                                    <td className="px-6 py-4 text-sm text-gray-900 text-center">{index + 1}</td>
+                                                    <td className="px-6 py-4 text-sm text-gray-900 text-center">{user.username}</td>
+                                                    <td className="px-6 py-4 text-sm text-gray-600 text-center">{user.email}</td>
+                                                    <td className="px-6 py-4 text-sm text-gray-600 text-center">
                                                         {new Date(user.createdAt).toLocaleDateString('id-ID')}
                                                     </td>
                                                 </tr>
@@ -695,17 +695,17 @@ export default function AdminDashboard() {
                                     <table className="w-full">
                                         <thead className="bg-[#E8DEFF]">
                                             <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">No</th>
-                                                <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Judul Kelas</th>
-                                                <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B21FF]">Kategori</th>
+                                                <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">No</th>
+                                                <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">Judul Kelas</th>
+                                                <th className="px-6 py-3 text-center text-xs font-semibold text-[#6B21FF]">Kategori</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-200">
                                             {recentCourses.map((course, index) => (
                                                 <tr key={course.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
-                                                    <td className="px-6 py-4 text-sm text-gray-900">{course.title}</td>
-                                                    <td className="px-6 py-4 text-sm text-gray-600">{course.category}</td>
+                                                    <td className="px-6 py-4 text-sm text-gray-900 text-center">{index + 1}</td>
+                                                    <td className="px-6 py-4 text-sm text-gray-900 text-center">{course.title}</td>
+                                                    <td className="px-6 py-4 text-sm text-gray-600 text-center">{course.category}</td>
                                                 </tr>
                                             ))}
                                         </tbody>

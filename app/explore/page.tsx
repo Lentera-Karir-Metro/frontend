@@ -21,7 +21,6 @@ type Course = {
 
 export default function ExplorerPage() {
 	const [selectedCategory, setSelectedCategory] = useState<string>('All');
-	const [sortBy, setSortBy] = useState<string>('Baru Rilis');
 	const [courses, setCourses] = useState<Course[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -149,26 +148,52 @@ export default function ExplorerPage() {
 									<Link
 										key={course.id}
 										href={`/course/${course.id}`}
-										className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 hover:-translate-y-2"
+										className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 hover:-translate-y-2 flex flex-col"
 									>
 										{/* Course Image */}
-										<div className="relative w-full h-48 bg-gray-200 overflow-hidden">
+										<div className="relative w-full aspect-video bg-gray-100 overflow-hidden">
 											<Image
 												src={course.thumbnail_url || '/images/dashboard.png'}
 												alt={course.title}
 												fill
-												className="object-cover transition-transform duration-500 group-hover:scale-110"
+												className="object-cover transition-transform duration-500 group-hover:scale-105"
 											/>
 										</div>
 
 										{/* Course Info */}
-										<div className="p-5">
-											<h3 className="font-bold text-gray-900 mb-3 line-clamp-2">
+										<div className="p-5 flex flex-col flex-grow">
+											<h3 className="font-bold text-gray-900 mb-2 line-clamp-2">
 												{course.title}
 											</h3>
-											<p className="text-[#661FFF] font-bold text-lg">
-												Rp{Number(course.price).toLocaleString('id-ID')}
+											<p className="text-gray-600 text-sm mb-3 line-clamp-2 flex-grow">
+												{course.description || ''}
 											</p>
+											<div className="mt-auto">
+												{course.mentor_name && (
+													<div className="flex items-center gap-2 mb-3">
+														{course.mentor_photo_profile && (
+															<div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+																<Image
+																	src={course.mentor_photo_profile}
+																	alt={course.mentor_name}
+																	width={32}
+																	height={32}
+																	className="object-cover w-full h-full"
+																/>
+															</div>
+														)}
+														<div>
+															<p className="text-gray-800 text-sm font-medium">{course.mentor_name}</p>
+															{course.mentor_title && (
+																<p className="text-gray-500 text-xs">{course.mentor_title}</p>
+															)}
+														</div>
+													</div>
+												)}
+												<p className="text-[#661FFF] font-bold text-lg">
+													Rp{Number(course.price).toLocaleString('id-ID')}
+												</p>
+											</div>
 										</div>
 									</Link>
 								))}
@@ -212,27 +237,6 @@ export default function ExplorerPage() {
 										})}
 									</div>
 								</div>
-
-								{/* Sort Filter */}
-								<div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-									<h3 className="font-bold text-gray-900 mb-4">Sort</h3>
-									<div className="space-y-3">
-										{['Baru Rilis', 'Terpopuler'].map((sort) => (
-											<label
-												key={sort}
-												className="flex items-center gap-3 cursor-pointer"
-											>
-												<input
-													type="checkbox"
-													checked={sortBy === sort}
-													onChange={() => setSortBy(sort)}
-													className="w-4 h-4 text-[#661FFF] border-gray-300 rounded focus:ring-[#661FFF]"
-												/>
-												<span className="text-gray-700">{sort}</span>
-											</label>
-										))}
-									</div>
-								</div>
 							</div>
 
 							{/* Right Content - Course Grid */}
@@ -255,26 +259,52 @@ export default function ExplorerPage() {
 											<Link
 												key={course.id}
 												href={`/course/${course.id}`}
-												className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 hover:-translate-y-2"
+												className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 hover:-translate-y-2 flex flex-col"
 											>
 												{/* Course Image */}
-												<div className="relative w-full h-48 bg-gray-200 overflow-hidden">
+												<div className="relative w-full aspect-video bg-gray-100 overflow-hidden">
 													<Image
 														src={course.thumbnail_url || '/images/dashboard.png'}
 														alt={course.title}
 														fill
-														className="object-cover transition-transform duration-500 group-hover:scale-110"
+														className="object-cover transition-transform duration-500 group-hover:scale-105"
 													/>
 												</div>
 
 												{/* Course Info */}
-												<div className="p-5">
-													<h3 className="font-bold text-gray-900 mb-3 line-clamp-2">
+												<div className="p-5 flex flex-col flex-grow">
+													<h3 className="font-bold text-gray-900 mb-2 line-clamp-2">
 														{course.title}
 													</h3>
-													<p className="text-[#661FFF] font-bold text-lg">
-														Rp{Number(course.price).toLocaleString('id-ID')}
+													<p className="text-gray-600 text-sm mb-3 line-clamp-2 flex-grow">
+														{course.description || ''}
 													</p>
+													<div className="mt-auto">
+														{course.mentor_name && (
+															<div className="flex items-center gap-2 mb-3">
+																{course.mentor_photo_profile && (
+																	<div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+																		<Image
+																			src={course.mentor_photo_profile}
+																			alt={course.mentor_name}
+																			width={32}
+																			height={32}
+																			className="object-cover w-full h-full"
+																		/>
+																	</div>
+																)}
+																<div>
+																	<p className="text-gray-800 text-sm font-medium">{course.mentor_name}</p>
+																	{course.mentor_title && (
+																		<p className="text-gray-500 text-xs">{course.mentor_title}</p>
+																	)}
+																</div>
+															</div>
+														)}
+														<p className="text-[#661FFF] font-bold text-lg">
+															Rp{Number(course.price).toLocaleString('id-ID')}
+														</p>
+													</div>
 												</div>
 											</Link>
 										))}
