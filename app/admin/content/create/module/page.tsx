@@ -37,7 +37,7 @@ export default function TambahModul() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const courseId = searchParams.get('courseId');
-    
+
     const [moduleTitle, setModuleTitle] = useState('');
     const [activeTab, setActiveTab] = useState<'video' | 'ebook' | 'quiz'>('video');
     const [uploadedVideos, setUploadedVideos] = useState<UploadedVideo[]>([]);
@@ -46,6 +46,10 @@ export default function TambahModul() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+    // Preview states
+    const [previewVideo, setPreviewVideo] = useState<{ url: string; name: string } | null>(null);
+    const [previewPdf, setPreviewPdf] = useState<{ url: string; name: string } | null>(null);
 
     // Auto-hide notification
     useEffect(() => {
@@ -66,7 +70,7 @@ export default function TambahModul() {
     const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            
+
             // Validate file size (50MB limit for Supabase free tier)
             const maxSize = 50 * 1024 * 1024; // 50MB in bytes
             if (file.size > maxSize) {
@@ -139,14 +143,14 @@ export default function TambahModul() {
     const handleEbookUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            
+
             // Validate file size (50MB limit for Supabase)
             const maxSize = 50 * 1024 * 1024; // 50MB in bytes
             if (file.size > maxSize) {
                 showNotification('error', `File ${file.name} terlalu besar! Maksimal ukuran file adalah 50MB. Ukuran file saat ini: ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
                 return;
             }
-            
+
             const newEbook: UploadedEbook = {
                 id: Date.now(),
                 file: file,
@@ -158,6 +162,35 @@ export default function TambahModul() {
 
     const handleRemoveEbook = (id: number) => {
         setUploadedEbooks(uploadedEbooks.filter(ebook => ebook.id !== id));
+    };
+
+    // Preview handlers
+    const handlePreviewVideo = (video: UploadedVideo) => {
+        if (video.progress === 100) {
+            const url = URL.createObjectURL(video.file);
+            setPreviewVideo({ url, name: video.file.name });
+        }
+    };
+
+    const handlePreviewEbook = (ebook: UploadedEbook) => {
+        if (ebook.progress === 100) {
+            const url = URL.createObjectURL(ebook.file);
+            setPreviewPdf({ url, name: ebook.file.name });
+        }
+    };
+
+    const handleCloseVideoPreview = () => {
+        if (previewVideo) {
+            URL.revokeObjectURL(previewVideo.url);
+            setPreviewVideo(null);
+        }
+    };
+
+    const handleClosePdfPreview = () => {
+        if (previewPdf) {
+            URL.revokeObjectURL(previewPdf.url);
+            setPreviewPdf(null);
+        }
     };
 
     const formatFileSize = (bytes: number): string => {
@@ -275,13 +308,13 @@ export default function TambahModul() {
     };
 
     const handleQuizTitleChange = (quizId: number, title: string) => {
-        setQuizzes(quizzes.map(q => 
+        setQuizzes(quizzes.map(q =>
             q.id === quizId ? { ...q, title } : q
         ));
     };
 
     const handleQuizDescriptionChange = (quizId: number, description: string) => {
-        setQuizzes(quizzes.map(q => 
+        setQuizzes(quizzes.map(q =>
             q.id === quizId ? { ...q, description } : q
         ));
     };
@@ -294,13 +327,13 @@ export default function TambahModul() {
             options: ['', '', '', ''],
             correctAnswer: ''
         };
-        setQuizzes(quizzes.map(q => 
+        setQuizzes(quizzes.map(q =>
             q.id === quizId ? { ...q, questions: [...q.questions, newQuestion] } : q
         ));
     };
 
     const handleDeleteQuestion = (quizId: number, questionId: number) => {
-        setQuizzes(quizzes.map(q => 
+        setQuizzes(quizzes.map(q =>
             q.id === quizId ? { ...q, questions: q.questions.filter(qu => qu.id !== questionId) } : q
         ));
     };
@@ -332,7 +365,7 @@ export default function TambahModul() {
             if (quiz.id === quizId) {
                 return {
                     ...quiz,
-                    questions: quiz.questions.map(q => 
+                    questions: quiz.questions.map(q =>
                         q.id === questionId ? { ...q, question: text } : q
                     )
                 };
@@ -365,7 +398,7 @@ export default function TambahModul() {
             if (quiz.id === quizId) {
                 return {
                     ...quiz,
-                    questions: quiz.questions.map(q => 
+                    questions: quiz.questions.map(q =>
                         q.id === questionId ? { ...q, correctAnswer: answer } : q
                     )
                 };
@@ -479,8 +512,11 @@ export default function TambahModul() {
                                     {uploadedVideos.map((video) => (
                                         <div key={video.id} className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
                                             <div className="flex items-start gap-3">
-                                                {/* Video Thumbnail */}
-                                                <div className="w-[100px] h-[65px] bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden">
+                                                {/* Video Thumbnail - Clickable when 100% */}
+                                                <div
+                                                    onClick={() => handlePreviewVideo(video)}
+                                                    className={`relative w-[100px] h-[65px] bg-gray-200 rounded-lg flex-shrink-0 overflow-hidden group ${video.progress === 100 ? 'cursor-pointer' : ''}`}
+                                                >
                                                     {video.thumbnail ? (
                                                         <img
                                                             src={video.thumbnail}
@@ -494,45 +530,58 @@ export default function TambahModul() {
                                                             </svg>
                                                         </div>
                                                     )}
-                                                </div>
-
-                                                        {/* Video Info */}
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-start justify-between gap-2 mb-2">
-                                                                <span className="text-sm font-medium text-gray-900 truncate">
-                                                                    {video.file.name}
-                                                                </span>
-                                                                <div className="flex items-center gap-2 flex-shrink-0">
-                                                                    <span className="text-sm text-gray-500">
-                                                                        {formatFileSize(video.file.size)}
-                                                                    </span>
-                                                                    <span className="text-sm font-semibold text-[#6B21FF]">
-                                                                        {video.progress}%
-                                                                    </span>
-                                                                    <button
-                                                                        onClick={() => handleRemoveVideo(video.id)}
-                                                                        className="text-gray-400 hover:text-red-500 transition"
-                                                                    >
-                                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                                        </svg>
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Progress Bar */}
-                                                            <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                                                                <div
-                                                                    className="bg-[#6B21FF] h-full rounded-full transition-all duration-500"
-                                                                    style={{ width: `${video.progress}%` }}
-                                                                />
+                                                    {/* Play overlay when 100% */}
+                                                    {video.progress === 100 && (
+                                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-center justify-center">
+                                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                                                <svg className="w-8 h-8 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                                                                </svg>
                                                             </div>
                                                         </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Video Info */}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-start justify-between gap-2 mb-2">
+                                                        <span
+                                                            onClick={() => handlePreviewVideo(video)}
+                                                            className={`text-sm font-medium text-gray-900 truncate ${video.progress === 100 ? 'cursor-pointer hover:text-[#6B21FF] transition-colors' : ''}`}
+                                                        >
+                                                            {video.file.name}
+                                                        </span>
+                                                        <div className="flex items-center gap-2 flex-shrink-0">
+                                                            <span className="text-sm text-gray-500">
+                                                                {formatFileSize(video.file.size)}
+                                                            </span>
+                                                            <span className={`text-sm font-semibold ${video.progress === 100 ? 'text-green-600' : 'text-[#6B21FF]'}`}>
+                                                                {video.progress}%
+                                                            </span>
+                                                            <button
+                                                                onClick={() => handleRemoveVideo(video.id)}
+                                                                className="text-gray-400 hover:text-red-500 transition"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                </svg>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Progress Bar */}
+                                                    <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                                                        <div
+                                                            className={`h-full rounded-full transition-all duration-500 ${video.progress === 100 ? 'bg-green-500' : 'bg-[#6B21FF]'}`}
+                                                            style={{ width: `${video.progress}%` }}
+                                                        />
                                                     </div>
                                                 </div>
-                                            ))}
+                                            </div>
                                         </div>
-                                    )}
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         {/* Section: Upload Ebooks */}
@@ -579,50 +628,56 @@ export default function TambahModul() {
                                     {uploadedEbooks.map((ebook) => (
                                         <div key={ebook.id} className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
                                             <div className="flex items-start gap-3">
-                                                {/* PDF Icon */}
-                                                <div className="w-12 h-12 bg-red-100 rounded-lg flex-shrink-0 flex items-center justify-center">
-                                                    <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                                {/* PDF Icon - Clickable when 100% */}
+                                                <div
+                                                    onClick={() => handlePreviewEbook(ebook)}
+                                                    className={`w-12 h-12 bg-red-100 rounded-lg flex-shrink-0 flex items-center justify-center group ${ebook.progress === 100 ? 'cursor-pointer hover:bg-red-200 transition-colors' : ''}`}
+                                                >
+                                                    <svg className={`w-6 h-6 text-red-600 ${ebook.progress === 100 ? 'group-hover:scale-110 transition-transform' : ''}`} fill="currentColor" viewBox="0 0 20 20">
                                                         <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
                                                     </svg>
                                                 </div>
 
-                                                        {/* Ebook Info */}
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-start justify-between gap-2 mb-2">
-                                                                <span className="text-sm font-medium text-gray-900 truncate">
-                                                                    {ebook.file.name}
-                                                                </span>
-                                                                <div className="flex items-center gap-2 flex-shrink-0">
-                                                                    <span className="text-sm text-gray-500">
-                                                                        {formatFileSize(ebook.file.size)}
-                                                                    </span>
-                                                                    <span className="text-sm font-semibold text-[#6B21FF]">
-                                                                        {ebook.progress}%
-                                                                    </span>
-                                                                    <button
-                                                                        onClick={() => handleRemoveEbook(ebook.id)}
-                                                                        className="text-gray-400 hover:text-red-500 transition"
-                                                                    >
-                                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                                        </svg>
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Progress Bar */}
-                                                            <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                                                                <div
-                                                                    className="bg-[#6B21FF] h-full rounded-full transition-all duration-500"
-                                                                    style={{ width: `${ebook.progress}%` }}
-                                                                />
-                                                            </div>
+                                                {/* Ebook Info */}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-start justify-between gap-2 mb-2">
+                                                        <span
+                                                            onClick={() => handlePreviewEbook(ebook)}
+                                                            className={`text-sm font-medium text-gray-900 truncate ${ebook.progress === 100 ? 'cursor-pointer hover:text-red-600 transition-colors' : ''}`}
+                                                        >
+                                                            {ebook.file.name}
+                                                        </span>
+                                                        <div className="flex items-center gap-2 flex-shrink-0">
+                                                            <span className="text-sm text-gray-500">
+                                                                {formatFileSize(ebook.file.size)}
+                                                            </span>
+                                                            <span className={`text-sm font-semibold ${ebook.progress === 100 ? 'text-green-600' : 'text-[#6B21FF]'}`}>
+                                                                {ebook.progress}%
+                                                            </span>
+                                                            <button
+                                                                onClick={() => handleRemoveEbook(ebook.id)}
+                                                                className="text-gray-400 hover:text-red-500 transition"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                </svg>
+                                                            </button>
                                                         </div>
                                                     </div>
+
+                                                    {/* Progress Bar */}
+                                                    <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                                                        <div
+                                                            className={`h-full rounded-full transition-all duration-500 ${ebook.progress === 100 ? 'bg-green-500' : 'bg-[#6B21FF]'}`}
+                                                            style={{ width: `${ebook.progress}%` }}
+                                                        />
+                                                    </div>
                                                 </div>
-                                            ))}
+                                            </div>
                                         </div>
-                                    )}
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         {/* Section: Quiz */}
@@ -728,137 +783,137 @@ export default function TambahModul() {
                                                 ) : (
                                                     <div className="space-y-4">
                                                         {quiz.questions.map((question, index) => (
-                                    <div key={question.id} className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden">
-                                        {/* Header Section */}
-                                        <div className="bg-gradient-to-r from-[#6B21FF]/5 to-purple-50 px-6 py-4 border-b border-gray-200">
-                                            <div className="flex items-center justify-between">
-                                                <h3 className="text-base font-semibold text-gray-900">Pertanyaan #{index + 1}</h3>
-                                                <div className="flex items-center gap-3">
-                                                    <select
-                                                        value={question.type}
-                                                        onChange={(e) => handleQuestionTypeChange(quiz.id, question.id, e.target.value)}
-                                                        className="px-4 py-2 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:border-[#6B21FF] text-sm text-gray-700 bg-white"
-                                                    >
-                                                        <option>Pilihan Ganda</option>
-                                                        <option>Benar/Salah</option>
-                                                    </select>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDeleteQuestion(quiz.id, question.id)}
-                                                        className="p-2 text-red-500 hover:text-white hover:bg-red-500 rounded-lg transition-all duration-300 hover:scale-110 hover:shadow-lg flex items-center justify-center"
-                                                        title="Hapus pertanyaan"
-                                                    >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Content Section */}
-                                        <div className="p-6 space-y-6">
-                                            {/* Question Input */}
-                                            <div>
-                                                <label className="block text-sm font-semibold text-gray-900 mb-3">
-                                                    Soal Pertanyaan
-                                                </label>
-                                                <textarea
-                                                    value={question.question}
-                                                    onChange={(e) => handleQuestionTextChange(quiz.id, question.id, e.target.value)}
-                                                    placeholder="Ketik pertanyaan quiz disini..."
-                                                    rows={4}
-                                                    className="w-full px-4 py-3 rounded-xl border-2 border-[#6B21FF] focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:ring-opacity-20 text-gray-700 placeholder-gray-400 resize-none transition-all"
-                                                />
-                                            </div>
-
-                                            {/* Divider */}
-                                            <div className="border-t border-gray-200"></div>
-
-                                            {/* Options Section */}
-                                            <div>
-                                                <label className="block text-sm font-semibold text-gray-900 mb-3">
-                                                    {question.type === 'Benar/Salah' ? 'Pilihan' : 'Pilihan Jawaban'}
-                                                </label>
-                                                <div className="space-y-3">
-                                                    {question.type === 'Benar/Salah' ? (
-                                                        // True/False Options
-                                                        ['Benar', 'Salah'].map((option, idx) => (
-                                                            <div key={idx} className="flex items-center gap-3 group">
-                                                                <div className="flex items-center justify-center">
-                                                                    <input
-                                                                        type="radio"
-                                                                        name={`correct-answer-${quiz.id}-${question.id}`}
-                                                                        id={`option-${quiz.id}-${question.id}-${idx}`}
-                                                                        checked={question.correctAnswer === option}
-                                                                        onChange={() => handleCorrectAnswerChange(quiz.id, question.id, option)}
-                                                                        className="w-5 h-5 text-[#6B21FF] focus:ring-[#6B21FF] cursor-pointer"
-                                                                    />
+                                                            <div key={question.id} className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden">
+                                                                {/* Header Section */}
+                                                                <div className="bg-gradient-to-r from-[#6B21FF]/5 to-purple-50 px-6 py-4 border-b border-gray-200">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <h3 className="text-base font-semibold text-gray-900">Pertanyaan #{index + 1}</h3>
+                                                                        <div className="flex items-center gap-3">
+                                                                            <select
+                                                                                value={question.type}
+                                                                                onChange={(e) => handleQuestionTypeChange(quiz.id, question.id, e.target.value)}
+                                                                                className="px-4 py-2 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:border-[#6B21FF] text-sm text-gray-700 bg-white"
+                                                                            >
+                                                                                <option>Pilihan Ganda</option>
+                                                                                <option>Benar/Salah</option>
+                                                                            </select>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleDeleteQuestion(quiz.id, question.id)}
+                                                                                className="p-2 text-red-500 hover:text-white hover:bg-red-500 rounded-lg transition-all duration-300 hover:scale-110 hover:shadow-lg flex items-center justify-center"
+                                                                                title="Hapus pertanyaan"
+                                                                            >
+                                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                                                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                                                </svg>
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
-                                                                <div className="flex-1">
-                                                                    <input
-                                                                        type="text"
-                                                                        value={option}
-                                                                        readOnly
-                                                                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 bg-gray-50 text-gray-700 font-medium"
-                                                                    />
+
+                                                                {/* Content Section */}
+                                                                <div className="p-6 space-y-6">
+                                                                    {/* Question Input */}
+                                                                    <div>
+                                                                        <label className="block text-sm font-semibold text-gray-900 mb-3">
+                                                                            Soal Pertanyaan
+                                                                        </label>
+                                                                        <textarea
+                                                                            value={question.question}
+                                                                            onChange={(e) => handleQuestionTextChange(quiz.id, question.id, e.target.value)}
+                                                                            placeholder="Ketik pertanyaan quiz disini..."
+                                                                            rows={4}
+                                                                            className="w-full px-4 py-3 rounded-xl border-2 border-[#6B21FF] focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:ring-opacity-20 text-gray-700 placeholder-gray-400 resize-none transition-all"
+                                                                        />
+                                                                    </div>
+
+                                                                    {/* Divider */}
+                                                                    <div className="border-t border-gray-200"></div>
+
+                                                                    {/* Options Section */}
+                                                                    <div>
+                                                                        <label className="block text-sm font-semibold text-gray-900 mb-3">
+                                                                            {question.type === 'Benar/Salah' ? 'Pilihan' : 'Pilihan Jawaban'}
+                                                                        </label>
+                                                                        <div className="space-y-3">
+                                                                            {question.type === 'Benar/Salah' ? (
+                                                                                // True/False Options
+                                                                                ['Benar', 'Salah'].map((option, idx) => (
+                                                                                    <div key={idx} className="flex items-center gap-3 group">
+                                                                                        <div className="flex items-center justify-center">
+                                                                                            <input
+                                                                                                type="radio"
+                                                                                                name={`correct-answer-${quiz.id}-${question.id}`}
+                                                                                                id={`option-${quiz.id}-${question.id}-${idx}`}
+                                                                                                checked={question.correctAnswer === option}
+                                                                                                onChange={() => handleCorrectAnswerChange(quiz.id, question.id, option)}
+                                                                                                className="w-5 h-5 text-[#6B21FF] focus:ring-[#6B21FF] cursor-pointer"
+                                                                                            />
+                                                                                        </div>
+                                                                                        <div className="flex-1">
+                                                                                            <input
+                                                                                                type="text"
+                                                                                                value={option}
+                                                                                                readOnly
+                                                                                                className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 bg-gray-50 text-gray-700 font-medium"
+                                                                                            />
+                                                                                        </div>
+                                                                                    </div>
+                                                                                ))
+                                                                            ) : (
+                                                                                // Multiple Choice Options
+                                                                                [0, 1, 2, 3].map((idx) => (
+                                                                                    <div key={idx} className="flex items-center gap-3 group">
+                                                                                        <div className="flex items-center justify-center">
+                                                                                            <input
+                                                                                                type="radio"
+                                                                                                name={`correct-answer-${quiz.id}-${question.id}`}
+                                                                                                id={`option-${quiz.id}-${question.id}-${idx}`}
+                                                                                                checked={question.correctAnswer === question.options[idx]}
+                                                                                                onChange={() => handleCorrectAnswerChange(quiz.id, question.id, question.options[idx])}
+                                                                                                className="w-5 h-5 text-[#6B21FF] focus:ring-[#6B21FF] cursor-pointer"
+                                                                                            />
+                                                                                        </div>
+                                                                                        <div className="flex-1">
+                                                                                            <input
+                                                                                                type="text"
+                                                                                                value={question.options[idx] || ''}
+                                                                                                onChange={(e) => handleOptionChange(quiz.id, question.id, idx, e.target.value)}
+                                                                                                placeholder={`Opsi ${idx + 1}`}
+                                                                                                className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:border-[#6B21FF] text-gray-700 placeholder-gray-400 transition-all"
+                                                                                            />
+                                                                                        </div>
+                                                                                    </div>
+                                                                                ))
+                                                                            )}
+                                                                        </div>
+                                                                        <p className="mt-3 text-xs text-gray-500 italic">
+                                                                            Pilih opsi yang benar dengan menandai radio button di sebelah kiri
+                                                                        </p>
+                                                                    </div>
+
+                                                                    {/* Divider */}
+                                                                    <div className="border-t border-gray-200"></div>
+
+                                                                    {/* Correct Answer Section */}
+                                                                    <div className="bg-green-50 rounded-xl p-4 border-2 border-green-200">
+                                                                        <label className="block text-sm font-semibold text-green-700 mb-3 flex items-center gap-2">
+                                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                            </svg>
+                                                                            Jawaban yang Benar (otomatis terisi saat pilih radio button)
+                                                                        </label>
+                                                                        <input
+                                                                            type="text"
+                                                                            value={question.correctAnswer}
+                                                                            readOnly
+                                                                            placeholder={question.type === 'Benar/Salah' ? 'Pilih Benar atau Salah' : 'Pilih jawaban yang benar'}
+                                                                            className="w-full px-4 py-3 rounded-lg border-2 border-green-300 bg-white text-gray-700 font-semibold"
+                                                                        />
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        ))
-                                                    ) : (
-                                                        // Multiple Choice Options
-                                                        [0, 1, 2, 3].map((idx) => (
-                                                            <div key={idx} className="flex items-center gap-3 group">
-                                                                <div className="flex items-center justify-center">
-                                                                    <input
-                                                                        type="radio"
-                                                                        name={`correct-answer-${quiz.id}-${question.id}`}
-                                                                        id={`option-${quiz.id}-${question.id}-${idx}`}
-                                                                        checked={question.correctAnswer === question.options[idx]}
-                                                                        onChange={() => handleCorrectAnswerChange(quiz.id, question.id, question.options[idx])}
-                                                                        className="w-5 h-5 text-[#6B21FF] focus:ring-[#6B21FF] cursor-pointer"
-                                                                    />
-                                                                </div>
-                                                                <div className="flex-1">
-                                                                    <input
-                                                                        type="text"
-                                                                        value={question.options[idx] || ''}
-                                                                        onChange={(e) => handleOptionChange(quiz.id, question.id, idx, e.target.value)}
-                                                                        placeholder={`Opsi ${idx + 1}`}
-                                                                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:border-[#6B21FF] text-gray-700 placeholder-gray-400 transition-all"
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                        ))
-                                                    )}
-                                                </div>
-                                                <p className="mt-3 text-xs text-gray-500 italic">
-                                                    Pilih opsi yang benar dengan menandai radio button di sebelah kiri
-                                                </p>
-                                            </div>
-
-                                            {/* Divider */}
-                                            <div className="border-t border-gray-200"></div>
-
-                                            {/* Correct Answer Section */}
-                                            <div className="bg-green-50 rounded-xl p-4 border-2 border-green-200">
-                                                <label className="block text-sm font-semibold text-green-700 mb-3 flex items-center gap-2">
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                    Jawaban yang Benar (otomatis terisi saat pilih radio button)
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={question.correctAnswer}
-                                                    readOnly
-                                                    placeholder={question.type === 'Benar/Salah' ? 'Pilih Benar atau Salah' : 'Pilih jawaban yang benar'}
-                                                    className="w-full px-4 py-3 rounded-lg border-2 border-green-300 bg-white text-gray-700 font-semibold"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                                                        ))}
                                                     </div>
                                                 )}
                                             </div>
@@ -896,8 +951,8 @@ export default function TambahModul() {
             {notification && (
                 <div className="fixed top-4 right-4 z-50 animate-slide-in">
                     <div className={`rounded-xl px-6 py-4 shadow-2xl border-2 min-w-[300px] max-w-md ${notification.type === 'success'
-                            ? 'bg-green-50 border-green-500 text-green-800'
-                            : 'bg-red-50 border-red-500 text-red-800'
+                        ? 'bg-green-50 border-green-500 text-green-800'
+                        : 'bg-red-50 border-red-500 text-red-800'
                         }`}>
                         <div className="flex items-start gap-3">
                             {notification.type === 'success' ? (
@@ -925,6 +980,85 @@ export default function TambahModul() {
                 </div>
             )}
 
+            {/* Video Preview Modal */}
+            {previewVideo && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in"
+                    onClick={handleCloseVideoPreview}
+                >
+                    <div className="absolute inset-0 bg-black/90" />
+
+                    {/* Close Button */}
+                    <button
+                        onClick={handleCloseVideoPreview}
+                        className="absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white hover:text-gray-900 flex items-center justify-center transition-all duration-200"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+
+                    {/* Video Player */}
+                    <div
+                        className="relative z-10 w-full max-w-4xl mx-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <video
+                            src={previewVideo.url}
+                            controls
+                            autoPlay
+                            className="w-full rounded-lg shadow-2xl bg-black"
+                        />
+                    </div>
+
+                    {/* Bottom Info */}
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+                        <div className="bg-white/10 backdrop-blur-md px-5 py-2.5 rounded-full text-white/90 text-sm">
+                            <span className="font-medium truncate max-w-[300px]">{previewVideo.name}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* PDF Preview Modal */}
+            {previewPdf && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center animate-fade-in"
+                    onClick={handleClosePdfPreview}
+                >
+                    <div className="absolute inset-0 bg-black/90" />
+
+                    {/* Close Button */}
+                    <button
+                        onClick={handleClosePdfPreview}
+                        className="absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white hover:text-gray-900 flex items-center justify-center transition-all duration-200"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+
+                    {/* PDF Viewer */}
+                    <div
+                        className="relative z-10 w-full h-[85vh] max-w-5xl mx-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <iframe
+                            src={previewPdf.url}
+                            className="w-full h-full rounded-lg shadow-2xl bg-white"
+                            title="PDF Preview"
+                        />
+                    </div>
+
+                    {/* Bottom Info */}
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+                        <div className="bg-white/10 backdrop-blur-md px-5 py-2.5 rounded-full text-white/90 text-sm">
+                            <span className="font-medium truncate max-w-[300px]">{previewPdf.name}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <style jsx>{`
                 @keyframes slideIn {
                     from {
@@ -938,6 +1072,17 @@ export default function TambahModul() {
                 }
                 .animate-slide-in {
                     animation: slideIn 0.3s ease-out;
+                }
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                    }
+                    to {
+                        opacity: 1;
+                    }
+                }
+                .animate-fade-in {
+                    animation: fadeIn 0.2s ease-out;
                 }
             `}</style>
         </div>

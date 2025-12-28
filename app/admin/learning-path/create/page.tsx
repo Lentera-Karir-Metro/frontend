@@ -1,7 +1,7 @@
 "use client";
 import AdminSidebar from '@/app/components/AdminSidebar';
 import HeaderAdmin from '@/app/components/HeaderAdmin';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createLearningPath } from '@/lib/learningPathService';
 import { getAllCourses, type Course } from '@/lib/courseService';
@@ -15,10 +15,12 @@ interface PathCourse {
 
 export default function BuatLearningPath() {
     const router = useRouter();
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [judulPath, setJudulPath] = useState('');
     const [deskripsi, setDeskripsi] = useState('');
     const [thumbnail, setThumbnail] = useState<File | null>(null);
     const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+    const [showLightbox, setShowLightbox] = useState(false);
     const [pathCourses, setPathCourses] = useState<PathCourse[]>([]);
     const [selectedCourse, setSelectedCourse] = useState('');
     const [draggedItem, setDraggedItem] = useState<string | null>(null);
@@ -237,23 +239,100 @@ export default function BuatLearningPath() {
 
                                 {/* Thumbnail */}
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                    <label className="block text-sm font-semibold text-gray-900 mb-3">
                                         Thumbnail
                                     </label>
+
+                                    {/* Upload Area - Minimalist Design */}
+                                    {!thumbnailPreview && (
+                                        <div
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="w-full py-12 rounded-2xl border border-gray-200 bg-gray-50/50 hover:bg-gray-100/80 hover:border-gray-300 cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-4 group"
+                                        >
+                                            <div className="w-14 h-14 rounded-2xl bg-white border border-gray-200 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300">
+                                                <svg className="w-6 h-6 text-gray-400 group-hover:text-[#6B21FF] transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-gray-600 font-medium text-sm group-hover:text-gray-900 transition-colors">Upload Thumbnail</p>
+                                                <p className="text-gray-400 text-xs mt-1">PNG, JPG hingga 5MB</p>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <input
+                                        ref={fileInputRef}
                                         type="file"
                                         accept="image/*"
                                         onChange={handleThumbnailChange}
-                                        className="w-full px-6 py-4 rounded-xl border-2 border-[#6B21FF] focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:ring-opacity-20 text-gray-700"
+                                        className="hidden"
                                         disabled={loading}
                                     />
+
+                                    {/* Thumbnail Preview - Clean Minimal Design */}
                                     {thumbnailPreview && (
-                                        <div className="mt-3">
-                                            <img
-                                                src={thumbnailPreview}
-                                                alt="Preview thumbnail"
-                                                className="w-full h-48 object-cover rounded-lg"
-                                            />
+                                        <div className="relative rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm hover:shadow-lg transition-shadow duration-300">
+                                            {/* Image Container */}
+                                            <div className="relative aspect-video">
+                                                <img
+                                                    src={thumbnailPreview}
+                                                    alt="Preview"
+                                                    onClick={() => setShowLightbox(true)}
+                                                    className="w-full h-full object-cover cursor-zoom-in"
+                                                />
+
+                                                {/* Hover Overlay - Subtle */}
+                                                <div
+                                                    onClick={() => setShowLightbox(true)}
+                                                    className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 cursor-zoom-in flex items-end justify-center pb-4"
+                                                >
+                                                    <span className="text-white/90 text-xs font-medium flex items-center gap-1.5 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                                        </svg>
+                                                        Lihat Penuh
+                                                    </span>
+                                                </div>
+
+                                                {/* Remove Button - Top Right Corner */}
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setThumbnail(null);
+                                                        setThumbnailPreview(null);
+                                                        if (fileInputRef.current) {
+                                                            fileInputRef.current.value = '';
+                                                        }
+                                                    }}
+                                                    disabled={loading}
+                                                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-gray-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110 disabled:opacity-50"
+                                                    title="Hapus thumbnail"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+
+                                            {/* File Info - Minimal Footer */}
+                                            <div className="px-4 py-3 flex items-center justify-between border-t border-gray-100 bg-gray-50/50">
+                                                <div className="flex items-center gap-2.5 min-w-0">
+                                                    <div className="w-8 h-8 rounded-lg bg-[#6B21FF]/10 flex items-center justify-center flex-shrink-0">
+                                                        <svg className="w-4 h-4 text-[#6B21FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                        </svg>
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-medium text-gray-700 truncate">
+                                                            {thumbnail?.name || 'Thumbnail'}
+                                                        </p>
+                                                        <p className="text-xs text-gray-400">
+                                                            {thumbnail ? `${(thumbnail.size / 1024 / 1024).toFixed(2)} MB` : ''}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -370,8 +449,8 @@ export default function BuatLearningPath() {
             {notification && (
                 <div className="fixed top-4 right-4 z-50 animate-slide-in">
                     <div className={`rounded-xl px-6 py-4 shadow-2xl border-2 min-w-[300px] max-w-md ${notification.type === 'success'
-                            ? 'bg-green-50 border-green-500 text-green-800'
-                            : 'bg-red-50 border-red-500 text-red-800'
+                        ? 'bg-green-50 border-green-500 text-green-800'
+                        : 'bg-red-50 border-red-500 text-red-800'
                         }`}>
                         <div className="flex items-start gap-3">
                             {notification.type === 'success' ? (
@@ -399,6 +478,46 @@ export default function BuatLearningPath() {
                 </div>
             )}
 
+            {/* Lightbox Modal - Clean Minimal Design */}
+            {showLightbox && thumbnailPreview && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center animate-lightbox-in"
+                    onClick={() => setShowLightbox(false)}
+                >
+                    {/* Backdrop - Subtle blur */}
+                    <div className="absolute inset-0 bg-black/90" />
+
+                    {/* Close Button - Fixed Top Right */}
+                    <button
+                        onClick={() => setShowLightbox(false)}
+                        className="absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white hover:text-gray-900 flex items-center justify-center transition-all duration-200"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+
+                    {/* Image Container - Clean without frame */}
+                    <div
+                        className="relative z-10 max-w-[85vw] max-h-[85vh]"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <img
+                            src={thumbnailPreview}
+                            alt="Full size preview"
+                            className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+                        />
+                    </div>
+
+                    {/* Bottom Info - Minimal */}
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+                        <div className="bg-white/10 backdrop-blur-md px-5 py-2.5 rounded-full text-white/90 text-sm">
+                            <span className="font-medium truncate max-w-[250px]">{thumbnail?.name || 'Thumbnail'}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <style jsx>{`
                 @keyframes slideIn {
                     from {
@@ -412,6 +531,19 @@ export default function BuatLearningPath() {
                 }
                 .animate-slide-in {
                     animation: slideIn 0.3s ease-out;
+                }
+                @keyframes lightboxIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.95);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1);
+                    }
+                }
+                .animate-lightbox-in {
+                    animation: lightboxIn 0.2s ease-out;
                 }
             `}</style>
         </div>

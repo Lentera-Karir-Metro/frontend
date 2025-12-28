@@ -102,10 +102,10 @@ export default function CourseLearnPage() {
 			console.log(`[${moduleName}] Marking module as complete:`, moduleId);
 			const token = localStorage.getItem('token');
 			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
-			
+
 			const url = `${baseUrl}/learn/modules/${moduleId}/complete`;
 			console.log(`[${moduleName}] Calling API:`, url);
-			
+
 			const response = await fetch(url, {
 				method: 'POST',
 				headers: {
@@ -113,19 +113,19 @@ export default function CourseLearnPage() {
 					'Content-Type': 'application/json'
 				}
 			});
-			
+
 			const result = await response.json();
 			console.log(`[${moduleName}] API response:`, response.status, result);
-			
+
 			if (!response.ok) {
 				throw new Error(result.message || 'Failed to mark module as complete');
 			}
-			
+
 			// Refresh learning content to update module status
 			console.log(`[${moduleName}] Refreshing content...`);
 			await fetchLearningContent();
 			console.log(`[${moduleName}] Content refreshed successfully`);
-			
+
 			return true;
 		} catch (err) {
 			console.error(`[${moduleName}] Error marking as complete:`, err);
@@ -587,15 +587,15 @@ export default function CourseLearnPage() {
 																		try {
 																			const token = localStorage.getItem('token');
 																			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
-																			
+
 																			console.log('[Ebook Download] Starting download process...');
 																			console.log('[Ebook Download] Module ID:', ebook.module_id);
 																			console.log('[Ebook Download] Module Title:', ebook.title);
-																			
+
 																			// Mark ebook module as complete in database
 																			const url = `${baseUrl}/learn/modules/${ebook.module_id}/complete`;
 																			console.log('[Ebook Download] Calling API:', url);
-																			
+
 																			const response = await fetch(url, {
 																				method: 'POST',
 																				headers: {
@@ -603,21 +603,21 @@ export default function CourseLearnPage() {
 																					'Content-Type': 'application/json'
 																				}
 																			});
-																			
+
 																			const result = await response.json();
 																			console.log('[Ebook Download] API Response Status:', response.status);
 																			console.log('[Ebook Download] API Response Body:', result);
-																			
+
 																			if (!response.ok) {
 																				throw new Error(result.message || 'Gagal menyimpan ebook');
 																			}
-																			
+
 																			console.log('[Ebook Download] Success! Ebook saved to library');
-																			
+
 																			// Show success modal
 																			setDownloadedEbookTitle(ebook.title);
 																			setShowEbookDownloadModal(true);
-																			
+
 																			// Refresh learning content to update module status
 																			await fetchLearningContent();
 																		} catch (err: any) {
@@ -659,7 +659,7 @@ export default function CourseLearnPage() {
 													{courseCertificate ? (
 														// Sertifikat sudah tersedia - bisa diklaim
 														<div className="max-w-2xl mx-auto">
-															<div 
+															<div
 																className="bg-green-100 border border-green-300 rounded-xl p-6 flex items-start gap-4 cursor-pointer hover:bg-green-200 transition-colors"
 																onClick={() => {
 																	if (courseCertificate.certificate_url) {
@@ -724,10 +724,10 @@ export default function CourseLearnPage() {
 																	<h4 className="text-lg font-bold text-gray-900">Progress Pembelajaran</h4>
 																	<span className="text-2xl font-bold text-[#661FFF]">{completionPercentage}%</span>
 																</div>
-																
+
 																{/* Progress Bar */}
 																<div className="w-full bg-gray-200 rounded-full h-4 mb-6 overflow-hidden">
-																	<div 
+																	<div
 																		className="bg-gradient-to-r from-[#661FFF] to-[#8b5cf6] h-full rounded-full transition-all duration-500 ease-out relative"
 																		style={{ width: `${completionPercentage}%` }}
 																	>
@@ -781,7 +781,7 @@ export default function CourseLearnPage() {
 																{/* Call to Action */}
 																<div className="mt-6 pt-6 border-t border-gray-200 text-center">
 																	<p className="text-sm text-gray-600 mb-4">Selesaikan semua modul untuk mendapatkan sertifikat! 🎓</p>
-																	<button 
+																	<button
 																		onClick={() => setActiveTab('overview')}
 																		className="bg-[#661FFF] hover:bg-[#5518dd] text-white px-6 py-2.5 rounded-full font-semibold text-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-lg"
 																	>
@@ -837,7 +837,7 @@ export default function CourseLearnPage() {
 														{question.question_text}
 													</p>
 												</div>
-												
+
 												{/* Soal pilihan ganda atau benar/salah */}
 												<div className="space-y-3 ml-6">
 													{question.options?.map((option: any, oIndex: number) => (
@@ -906,13 +906,12 @@ export default function CourseLearnPage() {
 													key={module.module_id}
 													onClick={() => handleModuleClick(module)}
 													disabled={module.is_locked}
-													className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all duration-200 ${
-														module.is_locked 
-															? 'opacity-50 cursor-not-allowed bg-gray-50 border-l-4 border-l-transparent' 
-															: currentModule?.module_id === module.module_id 
-																? 'bg-purple-50 border-l-4 border-l-[#661FFF]' 
+													className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all duration-200 ${module.is_locked
+															? 'opacity-50 cursor-not-allowed bg-gray-50 border-l-4 border-l-transparent'
+															: currentModule?.module_id === module.module_id
+																? 'bg-purple-50 border-l-4 border-l-[#661FFF]'
 																: 'hover:bg-gray-50 border-l-4 border-l-transparent'
-													}`}
+														}`}
 												>
 													<div className="flex items-center gap-3 flex-1 min-w-0">
 														{/* Module Icon */}
@@ -961,24 +960,23 @@ export default function CourseLearnPage() {
 														)}
 														{/* Module Title */}
 														<div className="flex flex-col flex-1 min-w-0">
-																	<span className={`text-sm font-medium truncate ${
-																		module.is_locked 
-																			? 'text-gray-400' 
-																			: currentModule?.module_id === module.module_id 
-																				? 'text-[#661FFF]' 
-																				: 'text-gray-800'
-																	}`}>
-																		{module.title}
-																		{module.is_locked && <span className="ml-2 text-xs">🔒</span>}
-																	</span>
-																	<span className="text-xs text-gray-500">
-																		{module.is_locked ? (
-																			<span className="text-xs text-gray-400">Selesaikan modul sebelumnya</span>
-																		) : module.type === 'quiz' ? (
-																			<span className="text-xs text-amber-600 font-medium">Kuis</span>
-																		) : (
-																			module.duration > 0 ? formatDuration(module.duration) : 'Video'
-																		)}
+															<span className={`text-sm font-medium truncate ${module.is_locked
+																	? 'text-gray-400'
+																	: currentModule?.module_id === module.module_id
+																		? 'text-[#661FFF]'
+																		: 'text-gray-800'
+																}`}>
+																{module.title}
+																{module.is_locked && <span className="ml-2 text-xs">🔒</span>}
+															</span>
+															<span className="text-xs text-gray-500">
+																{module.is_locked ? (
+																	<span className="text-xs text-gray-400">Selesaikan modul sebelumnya</span>
+																) : module.type === 'quiz' ? (
+																	<span className="text-xs text-amber-600 font-medium">Kuis</span>
+																) : (
+																	module.duration > 0 ? formatDuration(module.duration) : 'Video'
+																)}
 															</span>
 														</div>
 													</div>

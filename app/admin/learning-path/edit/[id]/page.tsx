@@ -3,9 +3,9 @@ import AdminSidebar from '@/app/components/AdminSidebar';
 import HeaderAdmin from '@/app/components/HeaderAdmin';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { 
-    getLearningPathById, 
-    updateLearningPath 
+import {
+    getLearningPathById,
+    updateLearningPath
 } from '@/lib/learningPathService';
 import { getAllCourses, type Course } from '@/lib/courseService';
 
@@ -63,12 +63,12 @@ export default function EditLearningPath() {
             const data = await getLearningPathById(learningPathId);
             setJudulPath(data.title);
             setDeskripsi(data.description || '');
-            
+
             // Set existing thumbnail
             if ((data as any).thumbnail) {
                 setExistingThumbnail((data as any).thumbnail);
             }
-            
+
             // Convert courses to PathCourse format
             if (data.courses) {
                 const courses = data.courses
@@ -448,8 +448,8 @@ export default function EditLearningPath() {
             {notification && (
                 <div className="fixed top-4 right-4 z-50 animate-slide-in">
                     <div className={`rounded-xl px-6 py-4 shadow-2xl border-2 min-w-[300px] max-w-md ${notification.type === 'success'
-                            ? 'bg-green-50 border-green-500 text-green-800'
-                            : 'bg-red-50 border-red-500 text-red-800'
+                        ? 'bg-green-50 border-green-500 text-green-800'
+                        : 'bg-red-50 border-red-500 text-red-800'
                         }`}>
                         <div className="flex items-start gap-3">
                             {notification.type === 'success' ? (

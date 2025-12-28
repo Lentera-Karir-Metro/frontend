@@ -4,10 +4,10 @@ import HeaderAdmin from '@/app/components/HeaderAdmin';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-    getAllLearningPaths, 
+import {
+    getAllLearningPaths,
     deleteLearningPath,
-    type LearningPath 
+    type LearningPath
 } from '@/lib/learningPathService';
 
 export default function LearningPathPage() {
@@ -294,12 +294,10 @@ export default function LearningPathPage() {
 
                 {/* Toast Notification */}
                 {notification && (
-                    <div className={`fixed top-4 right-4 z-50 transform transition-all duration-300 ${
-                        notification ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
-                    }`}>
-                        <div className={`rounded-lg shadow-lg p-4 max-w-md ${
-                            notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                    <div className={`fixed top-4 right-4 z-50 transform transition-all duration-300 ${notification ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
                         }`}>
+                        <div className={`rounded-lg shadow-lg p-4 max-w-md ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                            }`}>
                             <div className="flex items-center gap-3">
                                 <div className="flex-shrink-0">
                                     {notification.type === 'success' ? (
