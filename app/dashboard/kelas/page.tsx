@@ -112,96 +112,95 @@ export default function KelasPage() {
 					onClose={() => setToastMessage(null)}
 				/>
 			)}
-			<div className="min-h-screen flex flex-col bg-white">
+			<div className="min-h-screen flex flex-col pb-18 md:pb-20 lg:pb-22 bg-gray-50">
 				<DashboardNavbar />
-				<main className="flex-grow bg-[#E5E1F6]">
+
+				<main className="flex-grow">
 					{/* Hero Section */}
-					<section className="bg-[#E5E1F6] pt-12 pb-8 md:pt-16 md:pb-12">
+					<section className="bg-gradient-to-br from-[#661FFF] to-[#9D6FFF] pt-12 pb-16 md:pt-16 md:pb-20">
 						<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
-							<h1 className="text-gray-900 text-[32px] sm:text-[36px] md:text-[42px] lg:text-[48px] font-bold mb-3 md:mb-4">
+							<h1 className="text-white text-[32px] sm:text-[36px] md:text-[42px] lg:text-[48px] font-bold mb-3 md:mb-4">
 								Kelas Saya
 							</h1>
-							<p className="text-gray-700 text-[14px] sm:text-[15px] md:text-[16px] lg:text-[17px] max-w-2xl">
+							<p className="text-white/80 text-[14px] sm:text-[15px] md:text-[16px] lg:text-[17px] max-w-2xl">
 								Kumpulan kelas yang telah kamu ikuti dari Lentera Karir
 							</p>
 						</div>
 					</section>
 
-					{/* Search and Filter Section */}
-					<section className="bg-[#E5E1F6] pb-8">
+					{/* Search Bar Section - Overlapping */}
+					<section className="-mt-6 relative z-10">
 						<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
-							{/* Search Bar */}
-							<div className="relative max-w-xl">
-								<div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400">
-									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-									</svg>
+							<div className="bg-white rounded-2xl shadow-lg p-4 md:p-6">
+								<div className="relative md:max-w-md">
+									<div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+										<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+										</svg>
+									</div>
+									<input
+										type="text"
+										placeholder="Cari kelas berdasarkan judul..."
+										value={searchQuery}
+										onChange={(e) => setSearchQuery(e.target.value)}
+										className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#661FFF] focus:border-transparent text-gray-700 placeholder-gray-400 bg-gray-50"
+									/>
 								</div>
-								<input
-									type="text"
-									placeholder="Cari kelas berdasarkan judul..."
-									value={searchQuery}
-									onChange={(e) => setSearchQuery(e.target.value)}
-									className="w-full pl-14 pr-6 py-4 rounded-full border-2 border-[#661FFF] focus:outline-none focus:ring-2 focus:ring-[#661FFF] focus:ring-opacity-20 text-gray-700 placeholder-gray-400 transition-all"
-								/>
+								{searchQuery && (
+									<p className="text-sm text-gray-500 mt-3">
+										Ditemukan {filteredCourses.length} kelas
+									</p>
+								)}
 							</div>
-							{searchQuery && (
-								<p className="mt-3 text-sm text-gray-600">
-									{filteredCourses.length > 0
-										? `Ditemukan ${filteredCourses.length} kelas`
-										: 'Tidak ada kelas ditemukan'
-									}
-								</p>
-							)}
 						</div>
 					</section>
 
 					{/* Course Cards Section */}
-					<section className="py-4 md:py-8 bg-white">
+					<section className="py-8 md:py-12">
 						<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
-							{/* Filter Buttons (now below purple hero) */}
-							<div className="flex flex-wrap gap-4 mb-6">
-								<button
-									onClick={() => setActiveFilter('all')}
-									className={`px-8 py-3 rounded-full font-semibold transition-all ${activeFilter === 'all'
-										? 'bg-[#661FFF] text-white'
-										: 'bg-white text-gray-700 border border-gray-300 hover:border-[#661FFF]'
-										}`}
-								>
-									Semua Kelas
-								</button>
-								<button
-									onClick={() => setActiveFilter('progress')}
-									className={`px-8 py-3 rounded-full font-semibold transition-all ${activeFilter === 'progress'
-										? 'bg-[#661FFF] text-white'
-										: 'bg-white text-gray-700 border border-gray-300 hover:border-[#661FFF]'
-										}`}
-								>
-									On Progress
-								</button>
-								<button
-									onClick={() => setActiveFilter('completed')}
-									className={`px-8 py-3 rounded-full font-semibold transition-all ${activeFilter === 'completed'
-										? 'bg-[#661FFF] text-white'
-										: 'bg-white text-gray-700 border border-gray-300 hover:border-[#661FFF]'
-										}`}
-								>
-									Selesai
-								</button>
-							</div>
+							{/* Filter Buttons */}
+						<div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm p-1.5 rounded-full mb-8">
+							<button
+								onClick={() => setActiveFilter('all')}
+								className={`px-6 py-2.5 rounded-full font-medium text-sm transition-all duration-200 ${activeFilter === 'all'
+									? 'bg-[#661FFF] text-white shadow-sm'
+									: 'text-gray-600 hover:text-gray-900'
+									}`}
+							>
+								Semua Kelas
+							</button>
+							<button
+								onClick={() => setActiveFilter('progress')}
+								className={`px-6 py-2.5 rounded-full font-medium text-sm transition-all duration-200 ${activeFilter === 'progress'
+									? 'bg-[#661FFF] text-white shadow-sm'
+									: 'text-gray-600 hover:text-gray-900'
+									}`}
+							>
+								On Progress
+							</button>
+							<button
+								onClick={() => setActiveFilter('completed')}
+								className={`px-6 py-2.5 rounded-full font-medium text-sm transition-all duration-200 ${activeFilter === 'completed'
+									? 'bg-[#661FFF] text-white shadow-sm'
+									: 'text-gray-600 hover:text-gray-900'
+									}`}
+							>
+								Selesai
+							</button>
+						</div>
 
 							{filteredCourses.length === 0 ? (
-								<div className="text-center py-12">
-									<div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-										<svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<div className="text-center py-16 bg-white rounded-2xl shadow-sm">
+									<div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-6">
+										<svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
 										</svg>
 									</div>
-									<p className="text-gray-600 text-lg mb-4">
-										{searchQuery ? 'Tidak ada kelas yang sesuai dengan pencarian' : 'Kamu belum mendaftar kelas apapun'}
+									<p className="text-gray-600 text-lg mb-6">
+										{searchQuery ? 'Tidak ada kelas yang sesuai dengan pencarian' : 'Kamu belum memiliki kelas'}
 									</p>
 									{!searchQuery && (
-										<Link href="/explore" className="inline-block px-6 py-2 bg-[#661FFF] text-white rounded-lg hover:bg-[#5518CC] transition">
+										<Link href="/explore" className="inline-block px-8 py-3 bg-[#661FFF] text-white rounded-xl font-semibold hover:bg-[#5518CC] transition">
 											Jelajahi Kelas
 										</Link>
 									)}
@@ -209,16 +208,16 @@ export default function KelasPage() {
 							) : (
 								// Jika filter 'all' tampilkan layout grid 3 kolom seperti dashboard
 								(activeFilter === 'all') ? (
-									<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+									<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
 										{filteredCourses.map((course) => (
 											<Link key={course.id} href={`/dashboard/kelas/${course.id}`}>
-												<div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow border border-gray-100">
+												<div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-[#661FFF]/20">
 													<div className="relative w-full h-48 md:h-52 bg-gray-200">
 														<Image src={course.thumbnail_url || '/images/placeholder.jpg'} alt={course.title} fill className="object-cover" />
 													</div>
-													<div className="p-5 md:p-6">
-														<h3 className="text-[16px] md:text-[18px] font-bold text-gray-900 mb-2 line-clamp-2">{course.title}</h3>
-														<p className="text-[18px] md:text-[20px] font-bold text-[#661FFF]">
+													<div className="p-5">
+														<h3 className="text-[15px] md:text-[17px] font-bold text-gray-900 mb-3 leading-snug line-clamp-2 min-h-[44px]">{course.title}</h3>
+														<p className="text-[16px] md:text-[18px] font-bold text-[#661FFF]">
 															{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(course.price)}
 														</p>
 													</div>

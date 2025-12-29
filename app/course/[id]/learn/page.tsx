@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import DashboardNavbar from '@/app/components/DashboardNavbar';
 import Footer from '@/app/components/Footer';
 import { DashboardSkeleton } from '@/app/components/ui/Skeleton';
@@ -251,46 +252,15 @@ export default function CourseLearnPage() {
 			setShowQuiz(false);
 			setVideoSrc(module.video_url);
 		} else if (module.type === 'quiz') {
-			setShowQuiz(true);
-			setVideoSrc(''); // Clear video
-
-			// Check if quiz_id exists
+			// Redirect to quiz page
 			if (!module.quiz_id) {
 				console.error('[Quiz] Module does not have a quiz_id:', module);
 				alert('Quiz belum tersedia untuk modul ini.');
 				return;
 			}
 
-			// Load quiz data from backend
-			try {
-				const token = localStorage.getItem('token');
-				const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
-
-				const response = await fetch(`${baseUrl}/learn/quiz/${module.quiz_id}/start`, {
-					method: 'POST',
-					headers: {
-						'Authorization': `Bearer ${token}`,
-						'Content-Type': 'application/json'
-					}
-				});
-
-				if (!response.ok) {
-					const errorData = await response.json().catch(() => ({}));
-					throw new Error(errorData.message || 'Failed to load quiz');
-				}
-
-				const data = await response.json();
-				console.log('[Quiz] Loaded quiz data:', data);
-				setCurrentQuiz(data.quiz);
-				setCurrentAttemptId(data.attempt_id);
-				setQuizAnswers(data.partial_answers || {}); // Load saved answers if resuming
-				setQuizBestScore(data.best_score);
-				setQuizHasPassed(data.has_passed || false);
-			} catch (err: any) {
-				console.error('[Quiz] Error loading quiz:', err);
-				alert(err.message || 'Gagal memuat quiz. Silakan coba lagi.');
-				setShowQuiz(false);
-			}
+			// Navigate to quiz page
+			router.push(`/course/${courseId}/quiz/${module.quiz_id}`);
 		}
 	};
 
@@ -315,21 +285,23 @@ export default function CourseLearnPage() {
 	if (!learningPathData) return null;
 
 	return (
-		<div className="min-h-screen flex flex-col bg-gray-50">
+		<motion.div 
+			className="min-h-screen flex flex-col bg-gray-50"
+			initial={{ opacity: 1 }}
+			animate={{ opacity: 1 }}
+			exit={{ opacity: 0 }}
+			transition={{ 
+				duration: 0.3,
+				ease: 'easeInOut'
+			}}
+		>
 			<DashboardNavbar />
 
-			{/* Hero Section */}
-			<div className="relative bg-gradient-to-br from-[#661FFF] via-[#8B5CF6] to-[#A78BFA] text-white py-6 md:py-8 overflow-hidden">
-				{/* Animated Background Pattern */}
-				<div className="absolute inset-0 opacity-10 pointer-events-none">
-					<div className="absolute top-0 left-1/4 w-72 h-72 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-					<div className="absolute bottom-0 right-1/4 w-72 h-72 bg-white rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
-				</div>
-
-				<div className="relative max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
-					{/* Back Button */}
+			{/* Header Section */}
+			<div className="relative bg-gradient-to-br from-[#661FFF] via-[#8B5CF6] to-[#A78BFA] text-white py-8 md:py-12">
+				<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
 					<button
-						onClick={() => router.back()}
+						onClick={() => router.push('/dashboard/kelas')}
 						className="inline-flex items-center gap-2 text-white/90 hover:text-white mb-6 transition-colors group"
 					>
 						<svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,122 +310,35 @@ export default function CourseLearnPage() {
 						<span className="text-sm font-medium">Kembali</span>
 					</button>
 
-					<div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-						{/* Left Content */}
-						<div className="flex-1 flex flex-col">
-							<div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 mb-4 self-start">
-								<div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-								<span className="text-sm font-medium text-white">Sedang Belajar</span>
-							</div>
-
-							{currentModule && (
-								<div className="space-y-2">
-									<div className="flex items-center gap-2 text-white/90">
-										<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-											<path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
-										</svg>
-										<span className="text-sm font-medium">Modul Saat Ini:</span>
-									</div>
-									<div className="bg-white/10 backdrop-blur-md rounded-xl px-3 py-2 border border-white/20 inline-block max-w-[520px]">
-										<div className="flex items-start gap-3">
-											<div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-												{currentModule.type === 'video' ? (
-													<svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-														<path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
-													</svg>
-												) : currentModule.type === 'quiz' ? (
-													<svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-														<path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-														<path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-													</svg>
-												) : (
-													<svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-														<path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
-													</svg>
-												)}
-											</div>
-											<div className="flex-1 min-w-0">
-												<h3 className="font-semibold text-white text-base mb-1 truncate">
-													{currentModule.title}
-												</h3>
-												<div className="flex items-center gap-3 text-white/80 text-sm">
-													{currentModule.type !== 'quiz' && currentModule.duration > 0 && (
-														<div className="flex items-center gap-1">
-															<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-															</svg>
-															<span>{formatDuration(currentModule.duration)} menit</span>
-														</div>
-													)}
-													{currentModule.type === 'quiz' && (
-														<div className="flex items-center gap-1">
-															<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-															</svg>
-															<span>Kuis Interaktif</span>
-														</div>
-													)}
-													{currentModule.is_completed && (
-														<div className="flex items-center gap-1 text-green-300">
-															<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-																<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-															</svg>
-															<span className="text-xs font-medium">Selesai</span>
-														</div>
-													)}
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-							)}
-
-							<h1 className="mt-4 text-2xl md:text-3xl lg:text-4xl font-bold text-white drop-shadow-lg">
-								{learningPathData.title}
-							</h1>
+					<div className="flex items-center gap-3 mb-4">
+						<div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
+							<div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+							<span className="text-sm font-medium text-white">Sedang Belajar</span>
 						</div>
-
-						{/* Right Content - Progress Stats */}
-						<div className="flex-shrink-0 flex flex-col sm:flex-row gap-4 md:mt-12">
-							<div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 min-w-[140px] min-h-[96px] flex flex-col items-center justify-center px-4 py-3">
-								<div className="flex items-center gap-2 mb-2">
-									<svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-									</svg>
-									<span className="text-sm text-white/80 font-medium">Progress</span>
-								</div>
-								<div className="text-center">
-									<div className="text-3xl font-bold text-white">
-										{Math.round((learningPathData.courses.flatMap(c => c.modules).filter(m => m.is_completed).length / learningPathData.courses.flatMap(c => c.modules).length) * 100)}%
-									</div>
-									<div className="text-sm text-white/60">selesai</div>
-								</div>
+						{currentModule && currentModule.is_completed && (
+							<div className="inline-flex items-center gap-2 bg-green-500/20 backdrop-blur-sm text-white border border-green-300/30 px-4 py-2 rounded-full">
+								<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+									<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+								</svg>
+								<span className="font-semibold text-sm">Selesai</span>
 							</div>
-
-							<div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 min-w-[140px] min-h-[96px] flex flex-col items-center justify-center px-4 py-3">
-								<div className="flex items-center gap-2 mb-2">
-									<svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-									</svg>
-									<span className="text-sm text-white/80 font-medium">Total Modul</span>
-								</div>
-								<div className="text-center">
-									<div className="text-3xl font-bold text-white">
-										{learningPathData.courses.flatMap(c => c.modules).length}
-									</div>
-									<div className="text-sm text-white/60">modul</div>
-								</div>
-							</div>
-						</div>
+						)}
 					</div>
+
+					<h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
+						{learningPathData.title}
+					</h1>
+					<p className="text-white/90 text-base">
+						{currentModule ? currentModule.title : learningPathData.description}
+					</p>
 				</div>
 			</div>
 
 			{/* Main Content */}
 			<div className="flex-1 max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-6 md:py-8">
-				<div className="grid grid-cols-1 lg:grid-cols-[1fr_480px] gap-12">
+				<div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-8">
 					{/* Left Content - Video Player/Quiz & Course Info */}
-					<div className="space-y-6">
+					<div className="space-y-6 min-w-0">
 						{!showQuiz ? (
 							<>
 								{/* Video Player */}
@@ -476,6 +361,7 @@ export default function CourseLearnPage() {
 														const success = await markModuleComplete(currentModule.module_id, 'Video');
 														if (!success) {
 															alert('Gagal menandai video sebagai selesai. Silakan coba lagi atau hubungi support.');
+															return;
 														}
 													} else {
 														console.log('[Video] Video ended but not marking as complete:', {
@@ -483,6 +369,39 @@ export default function CourseLearnPage() {
 															type: currentModule?.type,
 															isCompleted: currentModule?.is_completed
 														});
+													}
+
+													// Auto-navigate to next module
+													if (currentModule && learningPathData) {
+														// Find all modules across all courses
+														const allModules: Module[] = [];
+														learningPathData.courses.forEach(course => {
+															course.modules
+																.filter(m => m.type !== 'ebook') // Exclude ebooks from auto-play
+																.forEach(module => {
+																	allModules.push(module);
+																});
+														});
+
+														// Find current module index
+														const currentIndex = allModules.findIndex(m => m.module_id === currentModule.module_id);
+														
+														// Find next unlocked module
+														if (currentIndex !== -1 && currentIndex < allModules.length - 1) {
+															for (let i = currentIndex + 1; i < allModules.length; i++) {
+																const nextModule = allModules[i];
+																if (!nextModule.is_locked) {
+																	console.log('[Video] Auto-navigating to next module:', nextModule.title);
+																	// Auto-play next module after 2 seconds
+																	setTimeout(() => {
+																		handleModuleClick(nextModule);
+																	}, 2000);
+																	break;
+																}
+															}
+														} else {
+															console.log('[Video] No next module available or all locked');
+														}
 													}
 												}}
 											>
@@ -746,79 +665,141 @@ export default function CourseLearnPage() {
 							</>
 						) : (
 							/* Quiz Content */
-							<div className="bg-white rounded-xl shadow-lg p-8">
-								<div className="flex items-center justify-between mb-8">
-									<h2 className="text-3xl font-bold text-gray-900">{currentQuiz?.title || 'Final Quiz'}</h2>
-									{quizHasPassed && (
-										<div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full">
-											<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-												<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-											</svg>
-											<span className="font-semibold">Lulus</span>
+							<div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden w-full">
+								{/* Quiz Header with Gradient */}
+								<div className="bg-gradient-to-br from-[#661FFF] via-[#7C3AED] to-[#8B5CF6] px-8 md:px-10 lg:px-12 py-8">
+									<div className="flex items-start justify-between">
+										<div className="flex-1">
+											<div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1 mb-3">
+												<svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+													<path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+													<path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+												</svg>
+												<span className="text-sm font-medium text-white">Quiz Interaktif</span>
+											</div>
+											<h2 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-sm mb-2">
+												{currentQuiz?.title || 'Final Quiz'}
+											</h2>
+											<p className="text-white/90 text-sm">
+												Jawab semua pertanyaan dengan teliti untuk mendapatkan hasil terbaik
+											</p>
 										</div>
-									)}
+										{quizHasPassed && (
+											<div className="flex items-center gap-2 bg-green-500/20 backdrop-blur-sm text-white border border-green-300/30 px-4 py-2 rounded-full ml-4">
+												<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+													<path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+												</svg>
+												<span className="font-semibold text-sm">Lulus</span>
+											</div>
+										)}
+									</div>
 								</div>
 
-								{quizBestScore !== null && (
-									<div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-										<div className="flex items-center gap-2 text-blue-800">
-											<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-												<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-											</svg>
-											<span className="font-semibold">Nilai Terbaik Kamu: {Math.round(quizBestScore * 100)}%</span>
-										</div>
-									</div>
-								)}
-
-								{!currentQuiz ? (
-									<div className="text-center py-12">
-										<p className="text-gray-600">Memuat quiz...</p>
-									</div>
-								) : (
-									<div className="space-y-8">
-										{currentQuiz.questions?.map((question: any, qIndex: number) => (
-											<div key={question.id} className="space-y-4">
-												<div className="flex gap-2">
-													<span className="text-gray-900 font-medium">{qIndex + 1}.</span>
-													<p className="text-gray-900 font-medium flex-1">
-														{question.question_text}
-													</p>
+								{/* Quiz Content Area */}
+								<div className="px-8 md:px-10 lg:px-12 py-8">
+									{quizBestScore !== null && (
+										<div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-5 mb-8 shadow-sm">
+											<div className="flex items-center gap-3">
+												<div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+													<svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+														<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+													</svg>
 												</div>
-
-												{/* Soal pilihan ganda atau benar/salah */}
-												<div className="space-y-3 ml-6">
-													{question.options?.map((option: any, oIndex: number) => (
-														<div
-															key={option.id}
-															onClick={() => {
-																setQuizAnswers({ ...quizAnswers, [question.id]: option.id });
-																savePartialAnswer(question.id, option.id);
-															}}
-															className={`rounded-xl px-4 py-3 transition-colors cursor-pointer ${quizAnswers[question.id] === option.id ? 'bg-purple-100 hover:bg-purple-150' : 'bg-gray-100 hover:bg-gray-200'
-																}`}
-														>
-															<span className="text-gray-900">{option.option_text}</span>
-														</div>
-													))}
+												<div>
+													<p className="text-sm text-blue-600 font-medium mb-0.5">Nilai Terbaik Anda</p>
+													<p className="text-2xl font-bold text-blue-700">{Math.round(quizBestScore * 100)}%</p>
 												</div>
 											</div>
-										))}
-									</div>
-								)}
+										</div>
+									)}
 
-								{/* Submit Button */}
-								<div className="mt-10 flex justify-center">
-									<button
-										onClick={() => {
-											console.log('[Quiz] Current attempt_id:', currentAttemptId);
-											console.log('[Quiz] Current answers:', quizAnswers);
-											setShowSubmitModal(true);
-										}}
-										disabled={!currentQuiz || !currentAttemptId}
-										className="bg-[#661FFF] hover:bg-[#5518dd] text-white px-16 py-3 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-									>
-										Submit
-									</button>
+									{!currentQuiz ? (
+										<div className="text-center py-16">
+											<div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
+												<svg className="w-8 h-8 text-purple-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+												</svg>
+											</div>
+											<p className="text-gray-500 font-medium">Memuat quiz...</p>
+										</div>
+									) : (
+										<div className="space-y-8">
+											{currentQuiz.questions?.map((question: any, qIndex: number) => (
+												<div key={question.id} className="group">
+													{/* Question Container */}
+													<div className="bg-gray-50/50 rounded-xl p-5 mb-4 border border-gray-100">
+														<div className="flex items-start gap-3">
+															<div className="flex-shrink-0 w-8 h-8 bg-[#661FFF] text-white rounded-lg flex items-center justify-center font-bold text-sm shadow-sm">
+																{qIndex + 1}
+															</div>
+															<p className="flex-1 text-gray-800 font-medium leading-relaxed text-base pt-1">
+																{question.question_text}
+															</p>
+														</div>
+													</div>
+
+													{/* Options Grid */}
+													<div className="space-y-3 pl-0">
+														{question.options?.map((option: any, oIndex: number) => {
+															const isSelected = quizAnswers[question.id] === option.id;
+															return (
+																<button
+																	key={option.id}
+																	onClick={() => {
+																		setQuizAnswers({ ...quizAnswers, [question.id]: option.id });
+																		savePartialAnswer(question.id, option.id);
+																	}}
+																	className={`w-full text-left px-5 py-4 rounded-xl transition-all duration-300 border-2 ${
+																		isSelected 
+																			? 'bg-gradient-to-r from-[#E9D5FF] to-[#DDD6FE] border-[#8B5CF6] shadow-md scale-[1.02]' 
+																			: 'bg-white border-gray-200 hover:border-[#C4B5FD] hover:bg-gray-50 hover:shadow-sm'
+																	}`}
+																>
+																	<div className="flex items-center gap-3">
+																		{/* Radio Circle */}
+																		<div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+																			isSelected 
+																				? 'border-[#8B5CF6] bg-[#8B5CF6]' 
+																				: 'border-gray-300'
+																		}`}>
+																			{isSelected && (
+																				<div className="w-2 h-2 bg-white rounded-full"></div>
+																			)}
+																		</div>
+																		<span className={`text-sm sm:text-base leading-relaxed flex-1 ${
+																			isSelected ? 'text-gray-900 font-medium' : 'text-gray-700'
+																		}`}>
+																			{option.option_text}
+																		</span>
+																	</div>
+																</button>
+															);
+														})}
+													</div>
+												</div>
+											))}
+										</div>
+									)}
+
+									{/* Submit Button */}
+									<div className="mt-10 pt-8 border-t-2 border-gray-100 flex justify-center">
+										<button
+											onClick={() => {
+												console.log('[Quiz] Current attempt_id:', currentAttemptId);
+												console.log('[Quiz] Current answers:', quizAnswers);
+												setShowSubmitModal(true);
+											}}
+											disabled={!currentQuiz || !currentAttemptId}
+											className="group bg-gradient-to-r from-[#661FFF] to-[#7C3AED] hover:from-[#5518dd] hover:to-[#6D28D9] text-white px-24 py-4 rounded-full font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+										>
+											<span className="flex items-center gap-2">
+												Submit Quiz
+												<svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+												</svg>
+											</span>
+										</button>
+									</div>
 								</div>
 							</div>
 						)}
@@ -1121,10 +1102,10 @@ export default function CourseLearnPage() {
 			{/* Ebook Download Success Modal */}
 			{showEbookDownloadModal && (
 				<div className="fixed inset-0 backdrop-blur-sm bg-gray-900/60 flex items-center justify-center z-50 animate-fadeIn">
-					<div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 relative shadow-2xl animate-scaleIn">
+					<div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 relative shadow-2xl animate-scale-up">
 						{/* Success Icon */}
 						<div className="flex justify-center mb-6">
-							<div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center animate-bounceIn">
+							<div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
 								<svg className="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
 								</svg>
@@ -1132,18 +1113,18 @@ export default function CourseLearnPage() {
 						</div>
 
 						{/* Title */}
-						<h3 className="text-2xl font-bold text-gray-900 text-center mb-3 animate-slideDown" style={{ animationDelay: '0.15s' }}>Berhasil!</h3>
-						<p className="text-gray-600 text-center mb-6 animate-slideDown" style={{ animationDelay: '0.25s' }}>
+						<h3 className="text-2xl font-bold text-gray-900 text-center mb-3">Berhasil!</h3>
+						<p className="text-gray-600 text-center mb-6">
 							Ebook <span className="font-semibold text-[#661FFF]">"{downloadedEbookTitle}"</span> berhasil diunduh!
 							<br />
 							<span className="text-sm">Anda dapat mengaksesnya di menu Ebook.</span>
 						</p>
 
 						{/* Buttons */}
-						<div className="flex gap-3 animate-slideUp" style={{ animationDelay: '0.35s' }}>
+						<div className="flex gap-3">
 							<button
 								onClick={() => setShowEbookDownloadModal(false)}
-								className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-full font-semibold transition-all duration-300 hover:scale-[1.03] hover:shadow-md"
+								className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-full font-semibold transition-colors"
 							>
 								Tutup
 							</button>
@@ -1152,7 +1133,7 @@ export default function CourseLearnPage() {
 									setShowEbookDownloadModal(false);
 									router.push('/dashboard/ebook');
 								}}
-								className="flex-1 bg-[#661FFF] hover:bg-[#5518dd] text-white py-3 rounded-full font-semibold transition-all duration-300 hover:scale-[1.03] hover:shadow-lg"
+								className="flex-1 bg-[#661FFF] hover:bg-[#5518dd] text-white py-3 rounded-full font-semibold transition-colors"
 							>
 								Lihat Ebook
 							</button>
@@ -1160,6 +1141,6 @@ export default function CourseLearnPage() {
 					</div>
 				</div>
 			)}
-		</div>
+		</motion.div>
 	);
 }

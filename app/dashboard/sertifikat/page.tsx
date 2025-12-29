@@ -89,79 +89,75 @@ export default function SertifikatPage() {
 					onClose={() => setToastMessage(null)}
 				/>
 			)}
-			<div className="min-h-screen flex flex-col pb-18 md:pb-20 lg:pb-22 bg-white">
+			<div className="min-h-screen flex flex-col pb-18 md:pb-20 lg:pb-22 bg-gray-50">
 				<DashboardNavbar />
 
-				<main className="flex-grow bg-[#E5E1F6]">
+				<main className="flex-grow">
 					{/* Hero Section */}
-					<section className="bg-[#E5E1F6] pt-12 pb-8 md:pt-16 md:pb-12">
+					<section className="bg-gradient-to-br from-[#661FFF] to-[#9D6FFF] pt-12 pb-16 md:pt-16 md:pb-20">
 						<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
-							<h1 className="text-gray-900 text-[32px] sm:text-[36px] md:text-[42px] lg:text-[48px] font-bold mb-3 md:mb-4">
+							<h1 className="text-white text-[32px] sm:text-[36px] md:text-[42px] lg:text-[48px] font-bold mb-3 md:mb-4">
 								Sertifikat Saya
 							</h1>
-							<p className="text-gray-700 text-[14px] sm:text-[15px] md:text-[16px] lg:text-[17px] max-w-2xl">
+							<p className="text-white/80 text-[14px] sm:text-[15px] md:text-[16px] lg:text-[17px] max-w-2xl">
 								Sertifikat yang kamu dapatkan setelah menyelesaikan kelas
 							</p>
 						</div>
 					</section>
 
-					{/* Search Bar Section */}
-					<section className="bg-[#E5E1F6] pb-8">
+					{/* Search Bar Section - Overlapping */}
+					<section className="-mt-6 relative z-10">
 						<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
-							<div className="relative max-w-xl">
-								<div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400">
-									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-									</svg>
+							<div className="bg-white rounded-2xl shadow-lg p-4 md:p-6">
+								<div className="relative md:max-w-md">
+									<div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+										<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+										</svg>
+									</div>
+									<input
+										type="text"
+										placeholder="Cari sertifikat berdasarkan judul kelas..."
+										value={searchQuery}
+										onChange={(e) => setSearchQuery(e.target.value)}
+										className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#661FFF] focus:border-transparent text-gray-700 placeholder-gray-400 bg-gray-50"
+									/>
 								</div>
-								<input
-									type="text"
-									placeholder="Cari sertifikat berdasarkan judul kelas..."
-									value={searchQuery}
-									onChange={(e) => setSearchQuery(e.target.value)}
-									className="w-full pl-14 pr-6 py-4 rounded-full border-2 border-[#661FFF] focus:outline-none focus:ring-2 focus:ring-[#661FFF] focus:ring-opacity-20 text-gray-700 placeholder-gray-400 transition-all"
-								/>
+								{searchQuery && (
+									<p className="text-sm text-gray-500 mt-3">
+										Ditemukan {filteredCertificates.length} sertifikat
+									</p>
+								)}
 							</div>
-							{searchQuery && (
-								<p className="mt-3 text-sm text-gray-600">
-									{filteredCertificates.length > 0
-										? `Ditemukan ${filteredCertificates.length} sertifikat`
-										: 'Tidak ada sertifikat ditemukan'
-									}
-								</p>
-							)}
 						</div>
 					</section>
 
 					{/* Certificate Cards Section */}
-					<section className="py-8 md:py-12 bg-white">
+					<section className="py-8 md:py-12">
 						<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
 							{filteredCertificates.length === 0 ? (
-								<div className="text-center py-12">
-									<div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-										<svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+								<div className="text-center py-16 bg-white rounded-2xl shadow-sm">
+									<div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-6">
+										<svg className="w-10 h-10 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
 											<path d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z" />
 											<path d="M3 8a2 2 0 012-2v10h8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
 										</svg>
 									</div>
-									<p className="text-gray-600 text-lg mb-2">
+									<p className="text-gray-600 text-lg mb-6">
 										{searchQuery ? 'Tidak ada sertifikat yang sesuai dengan pencarian' : 'Kamu belum memiliki sertifikat'}
 									</p>
-									<p className="text-gray-500 text-sm mb-6">
-										Selesaikan kelas hingga 100% untuk mendapatkan sertifikat
-									</p>
 									{!searchQuery && (
-										<Link href="/dashboard/kelas" className="inline-block px-6 py-2 bg-[#661FFF] text-white rounded-lg hover:bg-[#5518CC] transition">
+										<Link href="/dashboard/kelas" className="inline-block px-8 py-3 bg-[#661FFF] text-white rounded-xl font-semibold hover:bg-[#5518CC] transition">
 											Lihat Kelas Saya
 										</Link>
 									)}
 								</div>
 							) : (
-								<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+								<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
 									{filteredCertificates.map((certificate) => (
 										<div
 											key={certificate.id}
-											className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow border border-gray-200"
+											className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-[#661FFF]/20"
 										>
 											{/* Certificate Image */}
 											<div className="relative w-full h-48 md:h-56 bg-gradient-to-br from-[#661FFF] to-[#9D6FFF]">

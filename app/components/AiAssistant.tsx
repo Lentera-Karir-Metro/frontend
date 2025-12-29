@@ -20,10 +20,11 @@ export default function AiAssistant() {
 
     // Quick action questions
     const quickActions = [
-        'Cara memilih course yang tepat',
+        'Apa itu Lentera Karir?',
         'Rekomendasi learning path',
         'Cara mendaftar course',
         'Tips membangun karir',
+        'Bagaimana cara menyelesaikan course?',
     ];
 
     // Get dynamic greeting based on time
