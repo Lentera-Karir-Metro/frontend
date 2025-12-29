@@ -349,21 +349,31 @@ export default function BuatLearningPath() {
                                         </div>
                                     ) : (
                                         <div className="flex gap-3">
-                                            <select
-                                                value={selectedCourse}
-                                                onChange={(e) => setSelectedCourse(e.target.value)}
-                                                className="flex-1 px-6 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-[#6B21FF] text-gray-700 bg-white cursor-pointer"
-                                                disabled={loading}
-                                            >
-                                                <option value="">Pilih Course</option>
-                                                {availableCourses
-                                                    .filter(course => !pathCourses.find(pc => pc.courseId === course.id))
-                                                    .map((course) => (
-                                                        <option key={course.id} value={course.id}>
-                                                            {course.title}
-                                                        </option>
-                                                    ))}
-                                            </select>
+                                            <div className="relative flex-1">
+                                                <select
+                                                    value={selectedCourse}
+                                                    onChange={(e) => setSelectedCourse(e.target.value)}
+                                                    className="w-full px-6 py-3 border border-gray-300 rounded-2xl bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:border-transparent appearance-none pr-10 cursor-pointer"
+                                                    disabled={loading}
+                                                >
+                                                    <option value="">Pilih Course</option>
+                                                    {availableCourses
+                                                        .filter(course => !pathCourses.find(pc => pc.courseId === course.id))
+                                                        .map((course) => (
+                                                            <option key={course.id} value={course.id}>
+                                                                {course.title}
+                                                            </option>
+                                                        ))}
+                                                </select>
+                                                <svg
+                                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
                                             <button
                                                 onClick={handleAddCourse}
                                                 disabled={!selectedCourse || loading}

@@ -112,7 +112,7 @@ export default function KelasPage() {
 					onClose={() => setToastMessage(null)}
 				/>
 			)}
-			<div className="min-h-screen flex flex-col pb-18 md:pb-20 lg:pb-22 bg-gray-50">
+			<div className="min-h-screen flex flex-col bg-gray-50">
 				<DashboardNavbar />
 
 				<main className="flex-grow">
@@ -159,35 +159,35 @@ export default function KelasPage() {
 					<section className="py-8 md:py-12">
 						<div className="max-w-[1400px] mx-auto px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
 							{/* Filter Buttons */}
-						<div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm p-1.5 rounded-full mb-8">
-							<button
-								onClick={() => setActiveFilter('all')}
-								className={`px-6 py-2.5 rounded-full font-medium text-sm transition-all duration-200 ${activeFilter === 'all'
-									? 'bg-[#661FFF] text-white shadow-sm'
-									: 'text-gray-600 hover:text-gray-900'
-									}`}
-							>
-								Semua Kelas
-							</button>
-							<button
-								onClick={() => setActiveFilter('progress')}
-								className={`px-6 py-2.5 rounded-full font-medium text-sm transition-all duration-200 ${activeFilter === 'progress'
-									? 'bg-[#661FFF] text-white shadow-sm'
-									: 'text-gray-600 hover:text-gray-900'
-									}`}
-							>
-								On Progress
-							</button>
-							<button
-								onClick={() => setActiveFilter('completed')}
-								className={`px-6 py-2.5 rounded-full font-medium text-sm transition-all duration-200 ${activeFilter === 'completed'
-									? 'bg-[#661FFF] text-white shadow-sm'
-									: 'text-gray-600 hover:text-gray-900'
-									}`}
-							>
-								Selesai
-							</button>
-						</div>
+							<div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm p-1.5 rounded-full mb-8">
+								<button
+									onClick={() => setActiveFilter('all')}
+									className={`px-6 py-2.5 rounded-full font-medium text-sm transition-all duration-200 ${activeFilter === 'all'
+										? 'bg-[#661FFF] text-white shadow-sm'
+										: 'text-gray-600 hover:text-gray-900'
+										}`}
+								>
+									Semua Kelas
+								</button>
+								<button
+									onClick={() => setActiveFilter('progress')}
+									className={`px-6 py-2.5 rounded-full font-medium text-sm transition-all duration-200 ${activeFilter === 'progress'
+										? 'bg-[#661FFF] text-white shadow-sm'
+										: 'text-gray-600 hover:text-gray-900'
+										}`}
+								>
+									On Progress
+								</button>
+								<button
+									onClick={() => setActiveFilter('completed')}
+									className={`px-6 py-2.5 rounded-full font-medium text-sm transition-all duration-200 ${activeFilter === 'completed'
+										? 'bg-[#661FFF] text-white shadow-sm'
+										: 'text-gray-600 hover:text-gray-900'
+										}`}
+								>
+									Selesai
+								</button>
+							</div>
 
 							{filteredCourses.length === 0 ? (
 								<div className="text-center py-16 bg-white rounded-2xl shadow-sm">
@@ -206,35 +206,42 @@ export default function KelasPage() {
 									)}
 								</div>
 							) : (
-								// Jika filter 'all' tampilkan layout grid 3 kolom seperti dashboard
+								// Jika filter 'all' tampilkan layout grid 3 kolom seperti dashboard (tanpa harga & progress)
 								(activeFilter === 'all') ? (
-									<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+									<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
 										{filteredCourses.map((course) => (
-											<Link key={course.id} href={`/dashboard/kelas/${course.id}`}>
-												<div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-[#661FFF]/20">
-													<div className="relative w-full h-48 md:h-52 bg-gray-200">
-														<Image src={course.thumbnail_url || '/images/placeholder.jpg'} alt={course.title} fill className="object-cover" />
-													</div>
-													<div className="p-5">
-														<h3 className="text-[15px] md:text-[17px] font-bold text-gray-900 mb-3 leading-snug line-clamp-2 min-h-[44px]">{course.title}</h3>
-														<p className="text-[16px] md:text-[18px] font-bold text-[#661FFF]">
-															{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(course.price)}
+											<Link key={course.id} href={`/dashboard/kelas/${course.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 hover:-translate-y-2 flex flex-col">
+												<div className="relative w-full aspect-video bg-gray-100 overflow-hidden">
+													<Image
+														src={course.thumbnail_url || '/images/placeholder.jpg'}
+														alt={course.title}
+														fill
+														className="object-cover transition-transform duration-500 group-hover:scale-105"
+													/>
+												</div>
+												<div className="p-5 flex flex-col flex-grow">
+													<h3 className="font-bold text-gray-900 mb-2 line-clamp-2">
+														{course.title}
+													</h3>
+													{course.description && (
+														<p className="text-gray-600 text-sm line-clamp-2 flex-grow">
+															{course.description}
 														</p>
-													</div>
+													)}
 												</div>
 											</Link>
 										))}
 									</div>
 								) : (
-									// Untuk 'progress' dan 'completed' gunakan layout bar progress (tetap seperti sebelumnya)
+									// Untuk 'progress' dan 'completed' gunakan layout bar progress
 									<div className="grid grid-cols-1 gap-6 md:gap-8">
 										{filteredCourses.map((course) => (
 											<Link key={course.id} href={`/dashboard/kelas/${course.id}`}>
 												<div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow border border-gray-100 cursor-pointer">
 													<div className="p-6 md:p-8">
 														<div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-															<div className="relative w-full sm:w-40 md:w-48 h-40 md:h-36 rounded-xl overflow-hidden bg-gray-200 flex-shrink-0">
-																<Image src={course.thumbnail_url || '/images/placeholder.jpg'} alt={course.title} fill className="object-cover" />
+															<div className="relative w-full sm:w-48 md:w-56 aspect-video rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+																<Image src={course.thumbnail_url || '/images/placeholder.jpg'} alt={course.title} fill className="object-contain" />
 															</div>
 															<div className="flex-grow w-full">
 																<h3 className="text-[16px] md:text-[18px] font-bold text-gray-900 mb-3 leading-tight">{course.title}</h3>

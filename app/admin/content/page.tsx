@@ -252,16 +252,26 @@ export default function LearningContent() {
                         {/* Filters */}
                         <div className="flex gap-4 mb-6">
                             {/* Kategori Filter */}
-                            <select
-                                value={kategoriFilter}
-                                onChange={(e) => setKategoriFilter(e.target.value)}
-                                className="px-6 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-[#6B21FF] text-gray-900 bg-white cursor-pointer"
-                            >
-                                <option value="all">Semua Kategori</option>
-                                {categories.map(cat => (
-                                    <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                            </select>
+                            <div className="relative inline-block">
+                                <select
+                                    value={kategoriFilter}
+                                    onChange={(e) => setKategoriFilter(e.target.value)}
+                                    className="px-6 py-3 border border-gray-300 rounded-2xl bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:border-transparent appearance-none pr-10 cursor-pointer"
+                                >
+                                    <option value="all">Semua Kategori</option>
+                                    {categories.map(cat => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                </select>
+                                <svg
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
                         </div>
 
                         {/* Loading State */}
