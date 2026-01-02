@@ -17,7 +17,7 @@ type Course = {
 	level?: string;
 	mentor_name?: string;
 	mentor_title?: string;
-	mentor_avatar_url?: string;
+	mentor_photo_profile?: string;
 }
 
 export default function Courses() {
@@ -124,33 +124,42 @@ export default function Courses() {
 						<Link
 							key={course.id}
 							href="/sign-in"
-							className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:-translate-y-2 cursor-pointer"
+							className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:-translate-y-2 cursor-pointer flex flex-col h-full"
 							style={{ animationDelay: `${index * 100}ms` }}
 						>
 							{/* Course Image */}
-							<div className="relative w-full h-48 md:h-52 bg-gray-200 overflow-hidden">
-								<Image
+							<div className="relative w-full overflow-hidden flex-shrink-0">
+								<img
 									src={course.thumbnail_url || '/images/courses.png'}
 									alt={course.title}
-									fill
-									className="object-cover transition-transform duration-500 group-hover:scale-110"
+									className="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-110"
 								/>
 							</div>
 
 							{/* Course Content */}
-							<div className="p-5 md:p-6">
+							<div className="p-5 md:p-6 flex flex-col flex-grow">
 
-								{/* Title */}
-								<h3 className="text-gray-900 font-bold text-base md:text-lg mb-2 leading-snug">
-									{course.title}
-								</h3>
+								{/* Title & Description - flexible height area */}
+								<div className="flex-grow">
+									{/* Title */}
+									<h3 className="text-gray-900 font-bold text-base md:text-lg mb-2 leading-snug line-clamp-2">
+										{course.title}
+									</h3>
 
-								{/* Price */}
-								<p className="text-[#661FFF] font-semibold text-base md:text-lg mb-4">
-									{course.price ? `Rp${Number(course.price).toLocaleString('id-ID')}` : 'Gratis'}
-								</p>
+									{/* Description */}
+									<p className="text-gray-600 text-sm mb-3 line-clamp-2 leading-relaxed">
+										{course.description || ''}
+									</p>
+								</div>
 
-								{/* Description intentionally hidden on this list page */}
+								{/* Bottom Section - always at bottom */}
+								<div className="mt-auto">
+									{/* Price */}
+									<p className="text-[#661FFF] font-semibold text-base md:text-lg">
+										{course.price ? `Rp${Number(course.price).toLocaleString('id-ID')}` : 'Gratis'}
+									</p>
+								</div>
+
 							</div>
 						</Link>
 					))}

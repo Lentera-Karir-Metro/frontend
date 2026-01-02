@@ -371,34 +371,107 @@ export default function CourseDetailPage() {
 											</div>
 										</button>
 
-										{expandedSections[course.id] && (
-											<div className="pl-8 pb-4 space-y-2">
-												{course.modules && course.modules
-													.slice()
-													.sort((a, b) => {
-														// Urutkan berdasarkan tipe: video -> quiz -> ebook
-														const typeOrder: { [key: string]: number } = {
-															'video': 1,
-															'quiz': 2,
-															'ebook': 3
-														};
-														const typeA = getModuleType(a);
-														const typeB = getModuleType(b);
-														return (typeOrder[typeA] || 999) - (typeOrder[typeB] || 999);
-													})
-													.map((module) => (
-														<div key={module.id} className="flex items-center justify-between py-2 hover:bg-gray-50 px-3 rounded">
-															<div className="flex items-center gap-3">
-																{getModuleIcon(getModuleType(module))}
-																<span className="text-gray-700">{module.title}</span>
+										{expandedSections[course.id] && (() => {
+											// Group modules by base title (remove " (Part X)" suffix)
+											const getBaseTitle = (title: string) => {
+												return title.replace(/\s*\(Part\s*\d+\)\s*$/i, '').trim();
+											};
+
+											// Group modules by base title
+											const moduleGroups: { [key: string]: Module[] } = {};
+											(course.modules || []).forEach(module => {
+												const baseTitle = getBaseTitle(module.title);
+												if (!moduleGroups[baseTitle]) {
+													moduleGroups[baseTitle] = [];
+												}
+												moduleGroups[baseTitle].push(module);
+											});
+
+											// Sort each group by sequence_order
+											Object.keys(moduleGroups).forEach(key => {
+												moduleGroups[key].sort((a, b) => a.sequence_order - b.sequence_order);
+											});
+
+											// Get sorted group keys by first module's sequence_order
+											const sortedGroupKeys = Object.keys(moduleGroups).sort((a, b) => {
+												const firstA = moduleGroups[a][0];
+												const firstB = moduleGroups[b][0];
+												return (firstA?.sequence_order || 0) - (firstB?.sequence_order || 0);
+											});
+
+											return (
+												<div className="pl-4 pb-4 space-y-2">
+													{sortedGroupKeys.map((groupTitle) => {
+														const groupModules = moduleGroups[groupTitle];
+														const groupId = `${course.id}-${groupTitle}`;
+														const isGroupExpanded = expandedSections[groupId] !== false;
+														const firstModule = groupModules[0];
+														const moduleType = getModuleType(firstModule);
+
+														// If only 1 module, show directly
+														if (groupModules.length === 1) {
+															const module = groupModules[0];
+															return (
+																<div key={module.id} className="flex items-center justify-between py-2 hover:bg-gray-50 px-3 rounded ml-4">
+																	<div className="flex items-center gap-3">
+																		{getModuleIcon(getModuleType(module))}
+																		<span className="text-gray-700">{module.title}</span>
+																	</div>
+																	<span className="text-sm text-gray-500">
+																		{formatDuration(module.durasi_video_menit || module.estimasi_waktu_menit)}
+																	</span>
+																</div>
+															);
+														}
+
+														// Multiple modules - show as nested group
+														return (
+															<div key={groupId} className="border-l-2 border-purple-200 ml-4">
+																<button
+																	onClick={() => toggleSection(groupId)}
+																	className="w-full flex items-center justify-between py-2 px-3 text-left hover:bg-purple-50 transition-colors rounded-r"
+																>
+																	<div className="flex items-center gap-3">
+																		<svg
+																			className={`w-4 h-4 text-purple-500 transition-transform ${isGroupExpanded ? 'rotate-90' : ''}`}
+																			fill="none"
+																			stroke="currentColor"
+																			viewBox="0 0 24 24"
+																		>
+																			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+																		</svg>
+																		<div className="w-6 h-6 rounded bg-purple-100 flex items-center justify-center">
+																			<svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																				<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+																			</svg>
+																		</div>
+																		<span className="font-medium text-gray-800">{groupTitle}</span>
+																		<span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+																			{groupModules.length} materi
+																		</span>
+																	</div>
+																</button>
+																{isGroupExpanded && (
+																	<div className="pl-6 space-y-1">
+																		{groupModules.map((module) => (
+																			<div key={module.id} className="flex items-center justify-between py-2 hover:bg-gray-50 px-3 rounded">
+																				<div className="flex items-center gap-3">
+																					{getModuleIcon(getModuleType(module))}
+																					<span className="text-gray-700 text-sm">{module.title}</span>
+																				</div>
+																				<span className="text-xs text-gray-500">
+																					{formatDuration(module.durasi_video_menit || module.estimasi_waktu_menit)}
+																				</span>
+																			</div>
+																		))}
+																	</div>
+																)}
 															</div>
-															<span className="text-sm text-gray-500">
-																{formatDuration(module.durasi_video_menit || module.estimasi_waktu_menit)}
-															</span>
-														</div>
-													))}
-											</div>
-										)}
+														);
+													})}
+												</div>
+											);
+										})()}
 									</div>
 								);
 							})}

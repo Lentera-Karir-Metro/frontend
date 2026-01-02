@@ -285,12 +285,12 @@ export default function CourseLearnPage() {
 	if (!learningPathData) return null;
 
 	return (
-		<motion.div 
+		<motion.div
 			className="min-h-screen flex flex-col bg-gray-50"
 			initial={{ opacity: 1 }}
 			animate={{ opacity: 1 }}
 			exit={{ opacity: 0 }}
-			transition={{ 
+			transition={{
 				duration: 0.3,
 				ease: 'easeInOut'
 			}}
@@ -385,7 +385,7 @@ export default function CourseLearnPage() {
 
 														// Find current module index
 														const currentIndex = allModules.findIndex(m => m.module_id === currentModule.module_id);
-														
+
 														// Find next unlocked module
 														if (currentIndex !== -1 && currentIndex < allModules.length - 1) {
 															for (let i = currentIndex + 1; i < allModules.length; i++) {
@@ -504,12 +504,12 @@ export default function CourseLearnPage() {
 																<button
 																	onClick={async (e) => {
 																		e.preventDefault();
-																		
+
 																		// If already downloaded, do nothing
 																		if (ebook.is_completed) {
 																			return;
 																		}
-																		
+
 																		try {
 																			const token = localStorage.getItem('token');
 																			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
@@ -551,11 +551,10 @@ export default function CourseLearnPage() {
 																			alert(err.message || 'Gagal menyimpan ebook. Silakan coba lagi.');
 																		}
 																	}}
-																	className={`${
-																		ebook.is_completed 
-																			? 'bg-green-500 cursor-default' 
+																	className={`${ebook.is_completed
+																			? 'bg-green-500 cursor-default'
 																			: 'bg-[#661FFF] hover:bg-[#5518dd]'
-																	} text-white rounded-full p-2.5 transition-colors shadow-lg hover:shadow-xl`}
+																		} text-white rounded-full p-2.5 transition-colors shadow-lg hover:shadow-xl`}
 																	title={ebook.is_completed ? 'Ebook sudah di-download' : 'Download ebook'}
 																>
 																	{ebook.is_completed ? (
@@ -749,26 +748,23 @@ export default function CourseLearnPage() {
 																		setQuizAnswers({ ...quizAnswers, [question.id]: option.id });
 																		savePartialAnswer(question.id, option.id);
 																	}}
-																	className={`w-full text-left px-5 py-4 rounded-xl transition-all duration-300 border-2 ${
-																		isSelected 
-																			? 'bg-gradient-to-r from-[#E9D5FF] to-[#DDD6FE] border-[#8B5CF6] shadow-md scale-[1.02]' 
+																	className={`w-full text-left px-5 py-4 rounded-xl transition-all duration-300 border-2 ${isSelected
+																			? 'bg-gradient-to-r from-[#E9D5FF] to-[#DDD6FE] border-[#8B5CF6] shadow-md scale-[1.02]'
 																			: 'bg-white border-gray-200 hover:border-[#C4B5FD] hover:bg-gray-50 hover:shadow-sm'
-																	}`}
+																		}`}
 																>
 																	<div className="flex items-center gap-3">
 																		{/* Radio Circle */}
-																		<div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-																			isSelected 
-																				? 'border-[#8B5CF6] bg-[#8B5CF6]' 
+																		<div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isSelected
+																				? 'border-[#8B5CF6] bg-[#8B5CF6]'
 																				: 'border-gray-300'
-																		}`}>
+																			}`}>
 																			{isSelected && (
 																				<div className="w-2 h-2 bg-white rounded-full"></div>
 																			)}
 																		</div>
-																		<span className={`text-sm sm:text-base leading-relaxed flex-1 ${
-																			isSelected ? 'text-gray-900 font-medium' : 'text-gray-700'
-																		}`}>
+																		<span className={`text-sm sm:text-base leading-relaxed flex-1 ${isSelected ? 'text-gray-900 font-medium' : 'text-gray-700'
+																			}`}>
 																			{option.option_text}
 																		</span>
 																	</div>
@@ -827,102 +823,250 @@ export default function CourseLearnPage() {
 										</div>
 									</button>
 
-									{expandedSections[course.course_id] && course.modules.length > 0 && (
-										<div className="border-t border-gray-200">
-											{course.modules
-												.filter(m => m.type !== 'ebook')
-												.slice()
-												.sort((a, b) => {
-													// Urutkan berdasarkan tipe: video -> quiz
-													const typeOrder: { [key: string]: number } = {
-														'video': 1,
-														'quiz': 2
-													};
-													return (typeOrder[a.type] || 999) - (typeOrder[b.type] || 999);
-												})
-												.map((module) => (
-												<button
-													key={module.module_id}
-													onClick={() => handleModuleClick(module)}
-													disabled={module.is_locked}
-													className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all duration-200 ${module.is_locked
-															? 'opacity-50 cursor-not-allowed bg-gray-50 border-l-4 border-l-transparent'
-															: currentModule?.module_id === module.module_id
-																? 'bg-purple-50 border-l-4 border-l-[#661FFF]'
-																: 'hover:bg-gray-50 border-l-4 border-l-transparent'
-														}`}
-												>
-													<div className="flex items-center gap-3 flex-1 min-w-0">
-														{/* Module Icon */}
-														{module.is_locked ? (
-															<div className="w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
-																<svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-																	<path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-																</svg>
-															</div>
-														) : module.type === 'quiz' && module.is_passed === true ? (
-															/* Quiz Lulus - Centang Hijau */
-															<div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 shadow-sm">
-																<svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-																	<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-																</svg>
-															</div>
-														) : module.type === 'quiz' && module.is_passed === false ? (
-															/* Quiz Gagal - Silang Merah */
-															<div className="w-7 h-7 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 shadow-sm">
-																<svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-																	<path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-																</svg>
-															</div>
-														) : module.type === 'quiz' && !module.is_completed ? (
-															/* Quiz Belum Dikerjakan - Clipboard Amber */
-															<div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-																<svg className="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-																	<path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-																	<path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-																</svg>
-															</div>
-														) : module.type !== 'quiz' && module.is_completed ? (
-															/* Video/Ebook Selesai - Centang Hijau */
-															<div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 shadow-sm">
-																<svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-																	<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-																</svg>
-															</div>
-														) : (
-															/* Default Icon */
-															<div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${currentModule?.module_id === module.module_id ? 'bg-[#661FFF]' : 'bg-gray-100'}`}>
-																<svg className={`w-3.5 h-3.5 ${currentModule?.module_id === module.module_id ? 'text-white' : 'text-gray-500'}`} fill="currentColor" viewBox="0 0 20 20">
-																	<path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-																</svg>
-															</div>
-														)}
-														{/* Module Title */}
-														<div className="flex flex-col flex-1 min-w-0">
-															<span className={`text-sm font-medium truncate ${module.is_locked
-																	? 'text-gray-400'
+									{expandedSections[course.course_id] && course.modules.length > 0 && (() => {
+										// Group modules by their base title (remove " (Part X)" suffix)
+										const getBaseTitle = (title: string) => {
+											return title.replace(/\s*\(Part\s*\d+\)\s*$/i, '').trim();
+										};
+
+										// Group modules by base title
+										const moduleGroups: { [key: string]: Module[] } = {};
+										course.modules
+											.filter(m => m.type !== 'ebook')
+											.forEach(module => {
+												const baseTitle = getBaseTitle(module.title);
+												if (!moduleGroups[baseTitle]) {
+													moduleGroups[baseTitle] = [];
+												}
+												moduleGroups[baseTitle].push(module);
+											});
+
+										// Sort each group by sequence_order
+										Object.keys(moduleGroups).forEach(key => {
+											moduleGroups[key].sort((a, b) => a.sequence_order - b.sequence_order);
+										});
+
+										// Get sorted group keys by first module's sequence_order
+										const sortedGroupKeys = Object.keys(moduleGroups).sort((a, b) => {
+											const firstA = moduleGroups[a][0];
+											const firstB = moduleGroups[b][0];
+											return (firstA?.sequence_order || 0) - (firstB?.sequence_order || 0);
+										});
+
+										return (
+											<div className="border-t border-gray-200">
+												{sortedGroupKeys.map((groupTitle) => {
+													const groupModules = moduleGroups[groupTitle];
+													const groupId = `${course.course_id}-${groupTitle}`;
+													const isGroupExpanded = expandedSections[groupId] !== false; // Default expanded
+													const allCompleted = groupModules.every(m => m.is_completed || m.is_passed);
+													const someCompleted = groupModules.some(m => m.is_completed || m.is_passed);
+
+													// If only 1 module in group, show it directly without nested dropdown
+													if (groupModules.length === 1) {
+														const module = groupModules[0];
+														return (
+															<button
+																key={module.module_id}
+																onClick={() => handleModuleClick(module)}
+																disabled={module.is_locked}
+																className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all duration-200 ${module.is_locked
+																	? 'opacity-50 cursor-not-allowed bg-gray-50 border-l-4 border-l-transparent'
 																	: currentModule?.module_id === module.module_id
-																		? 'text-[#661FFF]'
-																		: 'text-gray-800'
-																}`}>
-																{module.title}
-																{module.is_locked && <span className="ml-2 text-xs">🔒</span>}
-															</span>
-															<span className="text-xs text-gray-500">
-																{module.is_locked ? (
-																	<span className="text-xs text-gray-400">Selesaikan modul sebelumnya</span>
-																) : module.type === 'quiz' ? (
-																	<span className="text-xs text-amber-600 font-medium">Kuis</span>
-																) : (
-																	module.duration > 0 ? formatDuration(module.duration) : 'Video'
-																)}
-															</span>
+																		? 'bg-purple-50 border-l-4 border-l-[#661FFF]'
+																		: 'hover:bg-gray-50 border-l-4 border-l-transparent'
+																	}`}
+															>
+																<div className="flex items-center gap-3 flex-1 min-w-0">
+																	{/* Module Icon */}
+																	{module.is_locked ? (
+																		<div className="w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
+																			<svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+																				<path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+																			</svg>
+																		</div>
+																	) : module.type === 'quiz' && module.is_passed === true ? (
+																		<div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+																			<svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+																				<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+																			</svg>
+																		</div>
+																	) : module.type === 'quiz' && module.is_passed === false ? (
+																		<div className="w-7 h-7 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+																			<svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+																				<path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+																			</svg>
+																		</div>
+																	) : module.type === 'quiz' && !module.is_completed ? (
+																		<div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+																			<svg className="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+																				<path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+																				<path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+																			</svg>
+																		</div>
+																	) : module.type !== 'quiz' && module.is_completed ? (
+																		<div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+																			<svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+																				<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+																			</svg>
+																		</div>
+																	) : (
+																		<div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${currentModule?.module_id === module.module_id ? 'bg-[#661FFF]' : 'bg-gray-100'}`}>
+																			<svg className={`w-3.5 h-3.5 ${currentModule?.module_id === module.module_id ? 'text-white' : 'text-gray-500'}`} fill="currentColor" viewBox="0 0 20 20">
+																				<path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+																			</svg>
+																		</div>
+																	)}
+																	{/* Module Title */}
+																	<div className="flex flex-col flex-1 min-w-0">
+																		<span className={`text-sm font-medium truncate ${module.is_locked
+																			? 'text-gray-400'
+																			: currentModule?.module_id === module.module_id
+																				? 'text-[#661FFF]'
+																				: 'text-gray-800'
+																			}`}>
+																			{module.title}
+																			{module.is_locked && <span className="ml-2 text-xs">🔒</span>}
+																		</span>
+																		<span className="text-xs text-gray-500">
+																			{module.is_locked ? (
+																				<span className="text-xs text-gray-400">Selesaikan modul sebelumnya</span>
+																			) : module.type === 'quiz' ? (
+																				<span className="text-xs text-amber-600 font-medium">Kuis</span>
+																			) : (
+																				module.duration > 0 ? formatDuration(module.duration) : 'Video'
+																			)}
+																		</span>
+																	</div>
+																</div>
+															</button>
+														);
+													}
+
+													// Multiple modules in group - show nested dropdown
+													return (
+														<div key={groupId} className="border-b border-gray-100 last:border-b-0">
+															{/* Group Header */}
+															<button
+																onClick={() => toggleSection(groupId)}
+																className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors ${allCompleted ? 'bg-green-50' : someCompleted ? 'bg-purple-50/50' : 'hover:bg-gray-50'
+																	}`}
+															>
+																<div className="flex items-center gap-2">
+																	<svg
+																		className={`w-3 h-3 transition-transform flex-shrink-0 text-gray-400 ${isGroupExpanded ? 'rotate-90' : ''}`}
+																		fill="none"
+																		stroke="currentColor"
+																		viewBox="0 0 24 24"
+																	>
+																		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+																	</svg>
+																	{/* Completion indicator */}
+																	{allCompleted ? (
+																		<div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+																			<svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+																				<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+																			</svg>
+																		</div>
+																	) : someCompleted ? (
+																		<div className="w-5 h-5 rounded-full bg-purple-200 flex items-center justify-center flex-shrink-0">
+																			<div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+																		</div>
+																	) : (
+																		<div className="w-5 h-5 rounded-full bg-gray-200 flex-shrink-0"></div>
+																	)}
+																	<span className="text-sm font-medium text-gray-800">{groupTitle}</span>
+																	<span className="text-xs text-gray-400 ml-1">({groupModules.length})</span>
+																</div>
+															</button>
+
+															{/* Group Content - Individual Modules */}
+															{isGroupExpanded && (
+																<div className="bg-gray-50/50">
+																	{groupModules.map((module) => (
+																		<button
+																			key={module.module_id}
+																			onClick={() => handleModuleClick(module)}
+																			disabled={module.is_locked}
+																			className={`w-full flex items-center gap-3 pl-10 pr-4 py-3 text-left transition-all duration-200 ${module.is_locked
+																				? 'opacity-50 cursor-not-allowed bg-gray-50 border-l-4 border-l-transparent'
+																				: currentModule?.module_id === module.module_id
+																					? 'bg-purple-50 border-l-4 border-l-[#661FFF]'
+																					: 'hover:bg-gray-100 border-l-4 border-l-transparent'
+																				}`}
+																		>
+																			<div className="flex items-center gap-3 flex-1 min-w-0">
+																				{/* Module Icon */}
+																				{module.is_locked ? (
+																					<div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
+																						<svg className="w-3 h-3 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+																							<path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+																						</svg>
+																					</div>
+																				) : module.type === 'quiz' && module.is_passed === true ? (
+																					<div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+																						<svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+																							<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+																						</svg>
+																					</div>
+																				) : module.type === 'quiz' && module.is_passed === false ? (
+																					<div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+																						<svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+																							<path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+																						</svg>
+																					</div>
+																				) : module.type === 'quiz' && !module.is_completed ? (
+																					<div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+																						<svg className="w-3 h-3 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+																							<path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+																							<path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+																						</svg>
+																					</div>
+																				) : module.type !== 'quiz' && module.is_completed ? (
+																					<div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+																						<svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+																							<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+																						</svg>
+																					</div>
+																				) : (
+																					<div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${currentModule?.module_id === module.module_id ? 'bg-[#661FFF]' : 'bg-gray-200'}`}>
+																						<svg className={`w-3 h-3 ${currentModule?.module_id === module.module_id ? 'text-white' : 'text-gray-500'}`} fill="currentColor" viewBox="0 0 20 20">
+																							<path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+																						</svg>
+																					</div>
+																				)}
+																				{/* Module Title */}
+																				<div className="flex flex-col flex-1 min-w-0">
+																					<span className={`text-sm font-medium truncate ${module.is_locked
+																						? 'text-gray-400'
+																						: currentModule?.module_id === module.module_id
+																							? 'text-[#661FFF]'
+																							: 'text-gray-700'
+																						}`}>
+																						{module.title}
+																						{module.is_locked && <span className="ml-2 text-xs">🔒</span>}
+																					</span>
+																					<span className="text-xs text-gray-500">
+																						{module.is_locked ? (
+																							<span className="text-xs text-gray-400">Selesaikan modul sebelumnya</span>
+																						) : module.type === 'quiz' ? (
+																							<span className="text-xs text-amber-600 font-medium">Kuis</span>
+																						) : (
+																							module.duration > 0 ? formatDuration(module.duration) : 'Video'
+																						)}
+																					</span>
+																				</div>
+																			</div>
+																		</button>
+																	))}
+																</div>
+															)}
 														</div>
-													</div>
-												</button>
-											))}
-										</div>
-									)}
+													);
+												})}
+											</div>
+										);
+									})()}
 								</div>
 							))}
 						</div>

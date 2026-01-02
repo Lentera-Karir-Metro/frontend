@@ -8,13 +8,12 @@ import { useParams, useRouter } from 'next/navigation';
 interface Module {
     id: string;
     title: string;
-    module_type: 'video' | 'ebook' | 'quiz';
     video_url?: string;
     ebook_url?: string;
     quiz_id?: string;
     sequence_order: number;
-    duration_minutes?: number;
     created_at: string;
+    createdAt?: string;
 }
 
 interface Course {
@@ -61,7 +60,7 @@ export default function CourseDetail() {
 
         try {
             const token = localStorage.getItem('token');
-            
+
             // Fetch course info
             const courseResponse = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/admin/courses/${courseId}`,
@@ -184,6 +183,13 @@ export default function CourseDetail() {
         }
     };
 
+    // Helper to derive module type from URL fields (module_type column removed from DB)
+    const getModuleType = (module: Module): 'video' | 'ebook' | 'quiz' => {
+        if (module.video_url) return 'video';
+        if (module.ebook_url) return 'ebook';
+        return 'quiz';
+    };
+
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('id-ID', {
@@ -198,14 +204,13 @@ export default function CourseDetail() {
             <AdminSidebar />
             <div className="flex-1 ml-[250px]">
                 <HeaderAdmin />
-                
+
                 {/* Notification */}
                 {notification && (
-                    <div className={`fixed top-20 right-4 z-50 px-6 py-4 rounded-xl shadow-2xl ${
-                        notification.type === 'success' 
-                            ? 'bg-gradient-to-r from-green-500 to-green-600 text-white' 
-                            : 'bg-gradient-to-r from-red-500 to-red-600 text-white'
-                    } animate-slide-in`}>
+                    <div className={`fixed top-20 right-4 z-50 px-6 py-4 rounded-xl shadow-2xl ${notification.type === 'success'
+                        ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
+                        : 'bg-gradient-to-r from-red-500 to-red-600 text-white'
+                        } animate-slide-in`}>
                         <div className="flex items-center gap-3">
                             {notification.type === 'success' ? (
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,15 +242,15 @@ export default function CourseDetail() {
                                 <p className="text-gray-600 text-sm mt-1">Atur dan kelola modul pembelajaran</p>
                             </div>
                         </div>
-                        
+
                         {course && (
                             <div className="bg-gradient-to-r from-[#6B21FF] to-purple-600 rounded-2xl p-6 shadow-xl text-white">
                                 <div className="flex items-center justify-between">
                                     <div className="flex gap-6 items-center flex-1">
                                         {course.thumbnail_url && (
                                             <div className="flex-shrink-0">
-                                                <img 
-                                                    src={course.thumbnail_url} 
+                                                <img
+                                                    src={course.thumbnail_url}
                                                     alt={course.title}
                                                     className="w-32 h-32 object-cover rounded-xl shadow-lg ring-4 ring-white/20"
                                                 />
@@ -311,8 +316,8 @@ export default function CourseDetail() {
                             <div className="mb-6">
                                 <h2 className="text-2xl font-bold text-gray-900">Daftar Modul</h2>
                                 <p className="text-gray-600 mt-1">
-                                    {modules.length === 0 
-                                        ? 'Belum ada modul yang ditambahkan' 
+                                    {modules.length === 0
+                                        ? 'Belum ada modul yang ditambahkan'
                                         : `Total ${modules.length} modul tersedia`}
                                 </p>
                             </div>
@@ -337,98 +342,116 @@ export default function CourseDetail() {
                                         </button>
                                     </Link>
                                 </div>
-                            ) : (
-                                <div className="grid gap-5">
-                                    {modules.map((module, index) => (
-                                        <div 
-                                            key={module.id} 
-                                            className="group bg-white rounded-2xl border-2 border-gray-200 overflow-hidden hover:border-[#6B21FF] hover:shadow-2xl transition-all duration-300"
-                                        >
-                                            <div className="flex items-stretch">
-                                                {/* Module Icon & Number - Wider colored section */}
-                                                <div className={`w-28 bg-gradient-to-br ${getModuleColor(module.module_type || 'quiz')} flex flex-col items-center justify-center text-white gap-3 relative`}>
-                                                    <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold">
-                                                        #{index + 1}
-                                                    </div>
-                                                    <div className="mt-8">
-                                                        {getModuleIcon(module.module_type || 'quiz')}
-                                                    </div>
-                                                    <span className="text-xs font-semibold uppercase tracking-wider">
-                                                        {module.module_type || 'Quiz'}
-                                                    </span>
-                                                </div>
+                            ) : (() => {
+                                // Group modules by base title (remove " (Part X)" suffix)
+                                const getBaseTitle = (title: string) => {
+                                    return title.replace(/\s*\(Part\s*\d+\)\s*$/i, '').trim();
+                                };
 
-                                                {/* Module Info */}
-                                                <div className="flex-1 p-6">
-                                                    <div className="flex items-start justify-between gap-4">
-                                                        <div className="flex-1">
-                                                            <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#6B21FF] transition-colors">
-                                                                {module.title}
-                                                            </h3>
-                                                            <div className="flex flex-wrap gap-3 text-sm">
-                                                                <span className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-semibold border-2 bg-gradient-to-r ${
-                                                                    module.module_type === 'video' 
-                                                                        ? 'from-purple-50 to-purple-100 border-purple-200 text-purple-700' 
-                                                                        : module.module_type === 'ebook' 
-                                                                        ? 'from-red-50 to-red-100 border-red-200 text-red-700'
-                                                                        : 'from-blue-50 to-blue-100 border-blue-200 text-blue-700'
-                                                                }`}>
-                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                                                    </svg>
-                                                                    {module.module_type?.toUpperCase() || 'MODULE'}
-                                                                </span>
-                                                                {module.duration_minutes && (
-                                                                    <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-100 text-gray-700 rounded-full font-semibold border-2 border-gray-200">
-                                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                        </svg>
-                                                                        {module.duration_minutes} menit
-                                                                    </span>
-                                                                )}
-                                                                <span className="inline-flex items-center gap-1.5 text-gray-500">
-                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                                    </svg>
-                                                                    {formatDate(module.created_at)}
-                                                                </span>
+                                // Group modules by base title
+                                const moduleGroups: { [key: string]: Module[] } = {};
+                                modules.forEach(module => {
+                                    const baseTitle = getBaseTitle(module.title);
+                                    if (!moduleGroups[baseTitle]) {
+                                        moduleGroups[baseTitle] = [];
+                                    }
+                                    moduleGroups[baseTitle].push(module);
+                                });
+
+                                // Sort each group by sequence_order
+                                Object.keys(moduleGroups).forEach(key => {
+                                    moduleGroups[key].sort((a, b) => a.sequence_order - b.sequence_order);
+                                });
+
+                                // Get sorted group keys by first module's sequence_order
+                                const sortedGroupKeys = Object.keys(moduleGroups).sort((a, b) => {
+                                    const firstA = moduleGroups[a][0];
+                                    const firstB = moduleGroups[b][0];
+                                    return (firstA?.sequence_order || 0) - (firstB?.sequence_order || 0);
+                                });
+
+                                return (
+                                    <div className="space-y-4">
+                                        {sortedGroupKeys.map((groupTitle, groupIndex) => {
+                                            const groupModules = moduleGroups[groupTitle];
+                                            const firstModule = groupModules[0];
+                                            const moduleType = getModuleType(firstModule);
+
+                                            return (
+                                                <div
+                                                    key={groupTitle}
+                                                    className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden hover:border-[#6B21FF] transition-all duration-300 shadow-sm hover:shadow-lg"
+                                                >
+                                                    {/* Group Header */}
+                                                    <div className={`flex items-center justify-between px-6 py-4 bg-gradient-to-r ${getModuleColor(moduleType)} text-white`}>
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold">
+                                                                #{groupIndex + 1}
+                                                            </div>
+                                                            <div>
+                                                                <h3 className="text-xl font-bold">{groupTitle}</h3>
+                                                                <p className="text-white/80 text-sm">
+                                                                    {groupModules.length} modul • {moduleType.toUpperCase()}
+                                                                </p>
                                                             </div>
                                                         </div>
-
-                                                        {/* Actions */}
-                                                        <div className="flex items-center gap-2 flex-shrink-0">
-                                                            {/* Edit Button */}
-                                                            <Link href={`/admin/content/${courseId}/module/${module.id}/edit`}>
-                                                                <button
-                                                                    className="text-[#6B21FF] hover:text-white hover:bg-[#6B21FF] transition-all duration-300 flex items-center justify-center p-3 rounded-xl border-2 border-[#6B21FF] hover:scale-110 hover:shadow-xl"
-                                                                    title="Edit Modul"
-                                                                >
-                                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                                    </svg>
-                                                                </button>
-                                                            </Link>
-                                                            {/* Delete Button */}
+                                                        {/* Edit Button - Only on Group Header */}
+                                                        <Link href={`/admin/content/create/module?courseId=${courseId}&groupTitle=${encodeURIComponent(groupTitle)}`}>
                                                             <button
-                                                                onClick={() => {
-                                                                    setSelectedModule(module);
-                                                                    setShowDeleteModal(true);
-                                                                }}
-                                                                className="text-red-500 hover:text-white hover:bg-red-500 transition-all duration-300 flex items-center justify-center p-3 rounded-xl border-2 border-red-500 hover:scale-110 hover:shadow-xl hover:rotate-12"
-                                                                title="Hapus Modul"
+                                                                className="flex items-center gap-2 bg-white/20 hover:bg-white hover:text-[#6B21FF] backdrop-blur-sm px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105"
+                                                                title="Edit Paket Modul"
                                                             >
                                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                                 </svg>
+                                                                Edit Paket
                                                             </button>
-                                                        </div>
+                                                        </Link>
+                                                    </div>
+
+                                                    {/* Module List within Group */}
+                                                    <div className="divide-y divide-gray-100">
+                                                        {groupModules.map((module, moduleIndex) => (
+                                                            <div
+                                                                key={module.id}
+                                                                className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors group"
+                                                            >
+                                                                <div className="flex items-center gap-4">
+                                                                    {/* Module Icon */}
+                                                                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getModuleColor(getModuleType(module))} flex items-center justify-center text-white shadow-md`}>
+                                                                        {getModuleIcon(getModuleType(module))}
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="font-semibold text-gray-900 group-hover:text-[#6B21FF] transition-colors">
+                                                                            {module.title}
+                                                                        </p>
+                                                                        <p className="text-sm text-gray-500">
+                                                                            {getModuleType(module).toUpperCase()} • {formatDate(module.created_at || module.createdAt || '')}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                {/* Delete Button Only */}
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setSelectedModule(module);
+                                                                        setShowDeleteModal(true);
+                                                                    }}
+                                                                    className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-white hover:bg-red-500 transition-all duration-300 flex items-center justify-center p-2.5 rounded-xl border-2 border-red-500 hover:scale-110"
+                                                                    title="Hapus Modul"
+                                                                >
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        ))}
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                                            );
+                                        })}
+                                    </div>
+                                );
+                            })()}
                         </div>
                     )}
                 </main>
@@ -439,7 +462,7 @@ export default function CourseDetail() {
                         <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
                             <h2 className="text-2xl font-bold text-gray-900 mb-4">Hapus Modul</h2>
                             <p className="text-gray-600 mb-6">
-                                Apakah Anda yakin ingin menghapus modul <strong>"{selectedModule.title}"</strong>? 
+                                Apakah Anda yakin ingin menghapus modul <strong>"{selectedModule.title}"</strong>?
                                 Tindakan ini tidak dapat dibatalkan.
                             </p>
                             <div className="mb-6">

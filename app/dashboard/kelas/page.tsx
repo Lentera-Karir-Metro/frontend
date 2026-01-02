@@ -2,7 +2,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import DashboardNavbar from '../../components/DashboardNavbar';
-import Footer from '../../components/Footer';
 import Toast from '../../components/Toast';
 import { useState, useEffect } from 'react';
 import { DashboardSkeleton } from '../../components/ui/Skeleton';
@@ -266,7 +265,6 @@ export default function KelasPage() {
 						</div>
 					</section>
 				</main>
-				<Footer />
 			</div>
 		</>
 	);

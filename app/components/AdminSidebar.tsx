@@ -40,6 +40,7 @@ export default function AdminSidebar() {
             subItems: [
                 { name: 'User', href: '/admin/users' },
                 { name: 'Mentor', href: '/admin/mentors' },
+                { name: 'Categories', href: '/admin/categories' },
             ],
         },
         {

@@ -190,9 +190,20 @@ export default function ExplorerPage() {
 														</div>
 													</div>
 												)}
-												<p className="text-[#661FFF] font-bold text-lg">
-													Rp{Number(course.price).toLocaleString('id-ID')}
-												</p>
+												{course.discount_amount && course.discount_amount > 0 ? (
+													<div className="flex items-center gap-2">
+														<p className="text-gray-400 line-through text-sm">
+															Rp{Number(course.price).toLocaleString('id-ID')}
+														</p>
+														<p className="text-[#661FFF] font-bold text-lg">
+															Rp{Number(course.price - course.discount_amount).toLocaleString('id-ID')}
+														</p>
+													</div>
+												) : (
+													<p className="text-[#661FFF] font-bold text-lg">
+														Rp{Number(course.price).toLocaleString('id-ID')}
+													</p>
+												)}
 											</div>
 										</div>
 									</Link>
@@ -301,9 +312,20 @@ export default function ExplorerPage() {
 																</div>
 															</div>
 														)}
-														<p className="text-[#661FFF] font-bold text-lg">
-															Rp{Number(course.price).toLocaleString('id-ID')}
-														</p>
+														{course.discount_amount && course.discount_amount > 0 ? (
+															<div className="flex items-center gap-2">
+																<p className="text-gray-400 line-through text-sm">
+																	Rp{Number(course.price).toLocaleString('id-ID')}
+																</p>
+																<p className="text-[#661FFF] font-bold text-lg">
+																	Rp{Number(course.price - course.discount_amount).toLocaleString('id-ID')}
+																</p>
+															</div>
+														) : (
+															<p className="text-[#661FFF] font-bold text-lg">
+																Rp{Number(course.price).toLocaleString('id-ID')}
+															</p>
+														)}
 													</div>
 												</div>
 											</Link>

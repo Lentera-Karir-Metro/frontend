@@ -33,10 +33,22 @@ interface UploadedEbook {
     progress: number;
 }
 
+// Interface for existing modules from database
+interface ExistingModule {
+    id: string;
+    title: string;
+    video_url?: string;
+    ebook_url?: string;
+    quiz_id?: string;
+    sequence_order: number;
+    created_at?: string;
+}
+
 export default function TambahModul() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const courseId = searchParams.get('courseId');
+    const groupTitle = searchParams.get('groupTitle'); // For editing existing group
 
     const [moduleTitle, setModuleTitle] = useState('');
     const [activeTab, setActiveTab] = useState<'video' | 'ebook' | 'quiz'>('video');
@@ -46,6 +58,10 @@ export default function TambahModul() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+    // Existing modules from database (when editing a group)
+    const [existingModules, setExistingModules] = useState<ExistingModule[]>([]);
+    const [isLoadingExisting, setIsLoadingExisting] = useState(false);
 
     // Preview states
     const [previewVideo, setPreviewVideo] = useState<{ url: string; name: string } | null>(null);
@@ -60,6 +76,77 @@ export default function TambahModul() {
             return () => clearTimeout(timer);
         }
     }, [notification]);
+
+    // Fetch existing modules when groupTitle is provided (editing mode)
+    useEffect(() => {
+        const fetchExistingModules = async () => {
+            if (!courseId || !groupTitle) return;
+
+            setIsLoadingExisting(true);
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL}/admin/courses/${courseId}/modules`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                        },
+                    }
+                );
+
+                if (!response.ok) throw new Error('Failed to fetch modules');
+
+                const allModules = await response.json();
+
+                // Filter modules that match the group title (with or without Part X suffix)
+                const groupModules = allModules.filter((m: ExistingModule) => {
+                    const baseTitle = m.title.replace(/\s*\(Part\s*\d+\)\s*$/i, '').trim();
+                    return baseTitle === groupTitle;
+                });
+
+                setExistingModules(groupModules);
+                setModuleTitle(groupTitle); // Pre-fill the module title
+            } catch (err) {
+                console.error('Error fetching existing modules:', err);
+            } finally {
+                setIsLoadingExisting(false);
+            }
+        };
+
+        fetchExistingModules();
+    }, [courseId, groupTitle]);
+
+    // Delete existing module from database
+    const handleDeleteExistingModule = async (moduleId: string) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/admin/courses/${courseId}/modules/${moduleId}`,
+                {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (!response.ok) throw new Error('Failed to delete module');
+
+            // Remove from local state
+            setExistingModules(prev => prev.filter(m => m.id !== moduleId));
+            showNotification('success', 'Modul berhasil dihapus!');
+        } catch (err: any) {
+            console.error('Error deleting module:', err);
+            showNotification('error', 'Gagal menghapus modul');
+        }
+    };
+
+    // Helper to determine module type
+    const getExistingModuleType = (module: ExistingModule): 'video' | 'ebook' | 'quiz' => {
+        if (module.video_url) return 'video';
+        if (module.ebook_url) return 'ebook';
+        return 'quiz';
+    };
 
     // Show notification helper
     const showNotification = (type: 'success' | 'error', message: string) => {
@@ -282,7 +369,7 @@ export default function TambahModul() {
 
             showNotification('success', `Berhasil membuat modul "${moduleTitle}" dengan ${createdCount} konten!`);
             setTimeout(() => {
-                router.push('/admin/content');
+                router.push(`/admin/content/${courseId}`);
             }, 2000);
         } catch (err: any) {
             console.error('Error saving module:', err);
@@ -461,12 +548,109 @@ export default function TambahModul() {
                                 value={moduleTitle}
                                 onChange={(e) => setModuleTitle(e.target.value)}
                                 className="w-full px-6 py-4 rounded-xl border-2 border-[#6B21FF] focus:outline-none focus:ring-2 focus:ring-[#6B21FF] focus:ring-opacity-20 text-gray-700 placeholder-gray-400"
-                                disabled={loading}
+                                disabled={loading || !!groupTitle}
                             />
                             <p className="mt-2 text-xs text-gray-500">
-                                Semua konten (video, ebook, quiz) akan dikelompokkan dalam modul ini
+                                {groupTitle
+                                    ? 'Anda sedang mengedit paket modul yang sudah ada'
+                                    : 'Semua konten (video, ebook, quiz) akan dikelompokkan dalam modul ini'
+                                }
                             </p>
                         </div>
+
+                        {/* Existing Modules from Group */}
+                        {groupTitle && (
+                            <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-6 border-2 border-purple-200">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h2 className="text-lg font-bold text-gray-900">Modul yang Sudah Ada</h2>
+                                            <p className="text-sm text-gray-600">
+                                                {isLoadingExisting ? 'Memuat...' : `${existingModules.length} modul dalam paket ini`}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {isLoadingExisting ? (
+                                    <div className="flex items-center justify-center py-8">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                                    </div>
+                                ) : existingModules.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {existingModules.map((module) => (
+                                            <div
+                                                key={module.id}
+                                                className="flex items-center justify-between bg-white rounded-lg px-4 py-3 border border-gray-200 shadow-sm group hover:border-purple-300 transition-colors"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    {/* Preview Thumbnail */}
+                                                    {getExistingModuleType(module) === 'video' && module.video_url ? (
+                                                        <div className="w-20 h-12 rounded-lg overflow-hidden bg-gray-900 flex-shrink-0 relative">
+                                                            <video
+                                                                src={module.video_url}
+                                                                className="w-full h-full object-cover"
+                                                                muted
+                                                                preload="metadata"
+                                                            />
+                                                            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                                                <div className="w-6 h-6 bg-white/90 rounded-full flex items-center justify-center">
+                                                                    <svg className="w-3 h-3 text-purple-600 ml-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                                                                    </svg>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ) : getExistingModuleType(module) === 'ebook' ? (
+                                                        <div className="w-20 h-12 rounded-lg bg-gradient-to-br from-red-100 to-red-200 flex-shrink-0 flex items-center justify-center border border-red-300">
+                                                            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                                            </svg>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-20 h-12 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex-shrink-0 flex items-center justify-center border border-blue-300">
+                                                            <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                            </svg>
+                                                        </div>
+                                                    )}
+                                                    {/* Module Info */}
+                                                    <div>
+                                                        <p className="font-semibold text-gray-900 text-sm">{module.title}</p>
+                                                        <p className="text-xs text-gray-500 uppercase">
+                                                            {getExistingModuleType(module)}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                {/* Delete Button (X) */}
+                                                <button
+                                                    onClick={() => handleDeleteExistingModule(module.id)}
+                                                    className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-red-500 transition-colors"
+                                                    title="Hapus modul ini"
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-gray-500 py-4 text-center">Tidak ada modul dalam paket ini</p>
+                                )}
+
+                                <div className="mt-4 pt-4 border-t border-purple-200">
+                                    <p className="text-sm text-purple-700 font-medium">
+                                        💡 Tambahkan konten baru di bawah untuk menambah modul ke paket ini
+                                    </p>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Section: Upload Videos */}
                         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">

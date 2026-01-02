@@ -46,6 +46,8 @@ export interface CreateCourseData {
   price?: number;
   discount_amount?: number;
   category?: string;
+  category_id?: string;
+  mentor_id?: string;
   mentor_name?: string;
   mentor_title?: string;
   status?: string;
@@ -60,17 +62,17 @@ export const getAllCourses = async (search?: string): Promise<Course[]> => {
   try {
     const queryParams = new URLSearchParams();
     if (search) queryParams.append('search', search);
-    
+
     const url = search ? `${COURSE_API}?${queryParams}` : COURSE_API;
     const response = await apiGet(url);
-    
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Failed to fetch courses');
     }
 
     const data = await response.json();
-    
+
     // API backend bisa mengembalikan array langsung atau object dengan data property
     if (Array.isArray(data)) {
       return data;
@@ -91,7 +93,7 @@ export const getAllCourses = async (search?: string): Promise<Course[]> => {
 export const getCourseById = async (id: string): Promise<Course> => {
   try {
     const response = await apiGet(`${COURSE_API}/${id}`);
-    
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Failed to fetch course');
@@ -110,7 +112,7 @@ export const getCourseById = async (id: string): Promise<Course> => {
 export const createCourse = async (data: CreateCourseData): Promise<Course> => {
   try {
     const formData = new FormData();
-    
+
     formData.append('title', data.title);
     if (data.description) formData.append('description', data.description);
     if (data.price !== undefined) formData.append('price', data.price.toString());
@@ -119,7 +121,7 @@ export const createCourse = async (data: CreateCourseData): Promise<Course> => {
     if (data.mentor_name) formData.append('mentor_name', data.mentor_name);
     if (data.mentor_title) formData.append('mentor_title', data.mentor_title);
     if (data.status) formData.append('status', data.status);
-    
+
     // Append files dengan field name yang sesuai dengan backend
     if (data.thumbnail) {
       formData.append('thumbnail', data.thumbnail, data.thumbnail.name);
@@ -137,7 +139,7 @@ export const createCourse = async (data: CreateCourseData): Promise<Course> => {
       },
       body: formData,
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: `HTTP Error ${response.status}` }));
       throw new Error(errorData.message || errorData.error || 'Failed to create course');
@@ -157,16 +159,17 @@ export const createCourse = async (data: CreateCourseData): Promise<Course> => {
 export const updateCourse = async (id: string, data: CreateCourseData): Promise<Course> => {
   try {
     const formData = new FormData();
-    
+
     formData.append('title', data.title);
     if (data.description) formData.append('description', data.description);
     if (data.price !== undefined) formData.append('price', data.price.toString());
     if (data.discount_amount !== undefined) formData.append('discount_amount', data.discount_amount.toString());
     if (data.category) formData.append('category', data.category);
+    if (data.mentor_id) formData.append('mentor_id', data.mentor_id);
     if (data.mentor_name) formData.append('mentor_name', data.mentor_name);
     if (data.mentor_title) formData.append('mentor_title', data.mentor_title);
     if (data.status) formData.append('status', data.status);
-    
+
     if (data.thumbnail) formData.append('thumbnail', data.thumbnail);
     if (data.mentor_photo) formData.append('mentor_photo', data.mentor_photo);
 
@@ -178,7 +181,7 @@ export const updateCourse = async (id: string, data: CreateCourseData): Promise<
       },
       body: formData,
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Failed to update course');
@@ -197,7 +200,7 @@ export const updateCourse = async (id: string, data: CreateCourseData): Promise<
 export const deleteCourse = async (id: string): Promise<void> => {
   try {
     const response = await apiDelete(`${COURSE_API}/${id}`);
-    
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Failed to delete course');

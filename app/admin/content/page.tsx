@@ -4,7 +4,22 @@ import HeaderAdmin from '@/app/components/HeaderAdmin';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { getAllCourses, deleteCourse, type Course } from '@/lib/courseService';
-import { COURSE_CATEGORIES } from '@/lib/constants';
+
+// Interface untuk kategori dari API
+interface Category {
+    id: string;
+    name: string;
+    icon: string;
+    color: string;
+}
+
+// Interface untuk mentor dari API
+interface Mentor {
+    id: string;
+    name: string;
+    title: string | null;
+    photo_url: string | null;
+}
 
 export default function LearningContent() {
     // State management
@@ -26,6 +41,7 @@ export default function LearningContent() {
     const [editFormData, setEditFormData] = useState({
         title: '',
         category: '',
+        mentor_id: '',
         price: 0,
         discount_amount: 0,
         status: 'draft' as 'draft' | 'published'
@@ -33,6 +49,37 @@ export default function LearningContent() {
 
     // Notification
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+    // Kategori dinamis dari API
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [loadingCategories, setLoadingCategories] = useState(true);
+
+    // Mentor dinamis dari API
+    const [mentors, setMentors] = useState<Mentor[]>([]);
+
+    // Fetch categories dan mentors dari API
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoadingCategories(true);
+                const [catRes, mentorRes] = await Promise.all([
+                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/catalog/categories`),
+                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/catalog/mentors`)
+                ]);
+
+                const catData = await catRes.json();
+                const mentorData = await mentorRes.json();
+
+                if (catData.success) setCategories(catData.data);
+                if (mentorData.success) setMentors(mentorData.data);
+            } catch (err) {
+                console.error('Error fetching data:', err);
+            } finally {
+                setLoadingCategories(false);
+            }
+        };
+        fetchData();
+    }, []);
 
     // Auto-hide notification
     useEffect(() => {
@@ -106,9 +153,12 @@ export default function LearningContent() {
     // Open edit modal
     const handleEdit = (course: Course) => {
         setSelectedCourse(course);
+        // Find mentor by name to get mentor_id
+        const matchedMentor = mentors.find(m => m.name === course.mentor_name);
         setEditFormData({
             title: course.title,
             category: course.category || '',
+            mentor_id: matchedMentor?.id || '',
             price: course.price || 0,
             discount_amount: course.discount_amount || 0,
             status: (course.status || 'draft') as 'draft' | 'published'
@@ -123,6 +173,17 @@ export default function LearningContent() {
 
         try {
             const token = localStorage.getItem('token');
+
+            // Get selected mentor data
+            const selectedMentor = mentors.find(m => m.id === editFormData.mentor_id);
+
+            // Build update data with mentor info
+            const updateData = {
+                ...editFormData,
+                mentor_name: selectedMentor?.name || undefined,
+                mentor_title: selectedMentor?.title || undefined,
+            };
+
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/admin/courses/${selectedCourse.id}`,
                 {
@@ -131,7 +192,7 @@ export default function LearningContent() {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`,
                     },
-                    body: JSON.stringify(editFormData),
+                    body: JSON.stringify(updateData),
                 }
             );
 
@@ -161,11 +222,10 @@ export default function LearningContent() {
     // Filter courses by kategori (client-side)
     const filteredCourses = courses.filter(course => {
         if (kategoriFilter === 'all') return true;
-        return course.category === kategoriFilter;
+        // Match by category name or category_id
+        const selectedCat = categories.find(c => c.id === kategoriFilter);
+        return course.category === kategoriFilter || course.category === selectedCat?.name;
     });
-
-    // Use shared categories from constants
-    const categories = [...COURSE_CATEGORIES];
 
     // Format date
     const formatDate = (dateString?: string) => {
@@ -260,7 +320,7 @@ export default function LearningContent() {
                                 >
                                     <option value="all">Semua Kategori</option>
                                     {categories.map(cat => (
-                                        <option key={cat} value={cat}>{cat}</option>
+                                        <option key={cat.id} value={cat.id}>{cat.name}</option>
                                     ))}
                                 </select>
                                 <svg
@@ -305,13 +365,14 @@ export default function LearningContent() {
                                                 <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Judul Kelas</th>
                                                 <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Kategori</th>
                                                 <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Status</th>
+                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Modul</th>
                                                 <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
                                             {filteredCourses.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                                                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                                                         Tidak ada course ditemukan
                                                     </td>
                                                 </tr>
@@ -329,6 +390,16 @@ export default function LearningContent() {
                                                                 }`}>
                                                                 {course.status || 'published'}
                                                             </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <Link href={`/admin/content/${course.id}`}>
+                                                                <button className="inline-flex items-center gap-2 bg-gradient-to-r from-[#6B21FF] to-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold hover:scale-105 transition-all shadow-md hover:shadow-lg">
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                    </svg>
+                                                                    Kelola Modul
+                                                                </button>
+                                                            </Link>
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
                                                             <div className="flex items-center justify-center gap-3">
@@ -388,7 +459,7 @@ export default function LearningContent() {
                                     >
                                         <option value="">Pilih Kategori</option>
                                         {categories.map(cat => (
-                                            <option key={cat} value={cat}>{cat}</option>
+                                            <option key={cat.id} value={cat.name}>{cat.name}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -411,6 +482,21 @@ export default function LearningContent() {
                                         min="0"
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#6B21FF] text-gray-900"
                                     />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Mentor</label>
+                                    <select
+                                        value={editFormData.mentor_id}
+                                        onChange={(e) => setEditFormData({ ...editFormData, mentor_id: e.target.value })}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#6B21FF] text-gray-900"
+                                    >
+                                        <option value="">Pilih Mentor</option>
+                                        {mentors.map(mentor => (
+                                            <option key={mentor.id} value={mentor.id}>
+                                                {mentor.name} {mentor.title ? `- ${mentor.title}` : ''}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>

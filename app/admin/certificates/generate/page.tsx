@@ -84,7 +84,7 @@ export default function GenerateCertificatePage() {
             );
 
             showNotification('success', 'Sertifikat berhasil dibuat!');
-            
+
             // Set generated certificate for preview
             if (result && result.certificate_url) {
                 setGeneratedCertificate({
@@ -158,14 +158,15 @@ export default function GenerateCertificatePage() {
                         {/* Template Selection */}
                         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
                             <h2 className="text-lg font-bold text-gray-900 mb-4">Pilih Desain Sertifikat</h2>
-                            
+
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Template Sertifikat</label>
                                     <select
                                         value={selectedTemplateId || ''}
                                         onChange={(e) => setSelectedTemplateId(e.target.value ? Number(e.target.value) : undefined)}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6B21FF] text-gray-900"
+                                        className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6B21FF] text-gray-900 appearance-none bg-white bg-no-repeat"
+                                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.75rem center', backgroundSize: '1.25rem' }}
                                     >
                                         <option value="">Default Template</option>
                                         {templates.map((template) => (
@@ -181,7 +182,8 @@ export default function GenerateCertificatePage() {
                                     <select
                                         value={outputFormat}
                                         onChange={(e) => setOutputFormat(e.target.value as 'pdf' | 'png')}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6B21FF] text-gray-900"
+                                        className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6B21FF] text-gray-900 appearance-none bg-white bg-no-repeat"
+                                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.75rem center', backgroundSize: '1.25rem' }}
                                     >
                                         <option value="pdf">PDF</option>
                                         <option value="png">PNG</option>
@@ -193,7 +195,7 @@ export default function GenerateCertificatePage() {
                         {/* Certificate Preview */}
                         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
                             <h2 className="text-lg font-bold text-gray-900 mb-4">Preview Sertifikat</h2>
-                            
+
                             {generatedCertificate ? (
                                 // Show generated certificate
                                 <div className="space-y-4">
@@ -204,12 +206,12 @@ export default function GenerateCertificatePage() {
                                             </svg>
                                             <p className="text-green-700 font-semibold">Sertifikat berhasil dibuat!</p>
                                         </div>
-                                        
+
                                         {generatedCertificate.format === 'png' ? (
                                             <div className="bg-white rounded-lg border border-gray-200 p-4">
-                                                <img 
-                                                    src={generatedCertificate.url} 
-                                                    alt="Generated Certificate" 
+                                                <img
+                                                    src={generatedCertificate.url}
+                                                    alt="Generated Certificate"
                                                     className="w-full h-auto rounded shadow-lg"
                                                 />
                                             </div>
@@ -245,9 +247,9 @@ export default function GenerateCertificatePage() {
                                 // Show template preview
                                 <div className="bg-gray-50 rounded-lg aspect-[4/3] flex items-center justify-center p-8">
                                     {getSelectedTemplatePreview() ? (
-                                        <img 
-                                            src={getSelectedTemplatePreview()!} 
-                                            alt="Template Preview" 
+                                        <img
+                                            src={getSelectedTemplatePreview()!}
+                                            alt="Template Preview"
                                             className="max-w-full max-h-full object-contain rounded shadow-lg"
                                         />
                                     ) : (
@@ -293,12 +295,10 @@ export default function GenerateCertificatePage() {
 
                 {/* Toast Notification */}
                 {notification && (
-                    <div className={`fixed top-4 right-4 z-50 transform transition-all duration-300 ${
-                        notification ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
-                    }`}>
-                        <div className={`rounded-lg shadow-lg p-4 max-w-md ${
-                            notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                    <div className={`fixed top-4 right-4 z-50 transform transition-all duration-300 ${notification ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
                         }`}>
+                        <div className={`rounded-lg shadow-lg p-4 max-w-md ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                            }`}>
                             <div className="flex items-center gap-3">
                                 <div className="flex-shrink-0">
                                     {notification.type === 'success' ? (
