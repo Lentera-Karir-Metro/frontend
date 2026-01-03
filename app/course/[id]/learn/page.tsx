@@ -686,8 +686,8 @@ export default function CourseLearnPage() {
 																	</svg>
 																</div>
 																<div className="flex-1">
-																	<h3 className="text-lg font-bold text-gray-900 mb-2">Sertifikatmu sedang di proses</h3>
-																	<p className="text-gray-600 text-sm">Tunggu dalam beberapa saat untuk klaim sertifikat</p>
+																	<h3 className="text-lg font-bold text-gray-900 mb-2">Buat Sertifikat Kamu</h3>
+																	<p className="text-gray-600 text-sm">Silakan klik di sini untuk membuat sertifikat berdasarkan template yang kamu suka</p>
 																</div>
 															</div>
 														</div>
