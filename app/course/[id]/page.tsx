@@ -483,11 +483,6 @@ export default function CourseDetailPage() {
 							<div className="pt-2">
 								<h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Mentor</h2>
 								<div className="flex items-center gap-4">
-									<img
-										src={learningPath.mentor_photo_profile || '/images/default-avatar.png'}
-										alt={learningPath.mentor_name}
-										className="w-14 h-14 rounded-full object-cover"
-									/>
 									<div>
 										<h3 className="font-bold text-gray-900">{learningPath.mentor_name}</h3>
 										<p className="text-gray-600 text-sm">{learningPath.mentor_title}</p>

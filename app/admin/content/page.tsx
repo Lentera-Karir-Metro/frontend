@@ -4,6 +4,7 @@ import HeaderAdmin from '@/app/components/HeaderAdmin';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { getAllCourses, deleteCourse, type Course } from '@/lib/courseService';
+import { getCertificateTemplates, type CertificateTemplate } from '@/lib/certificateService';
 
 // Interface untuk kategori dari API
 interface Category {
@@ -44,7 +45,8 @@ export default function LearningContent() {
         mentor_id: '',
         price: 0,
         discount_amount: 0,
-        status: 'draft' as 'draft' | 'published'
+        status: 'draft' as 'draft' | 'published',
+        certificate_template_id: null as number | null
     });
 
     // Notification
@@ -56,8 +58,11 @@ export default function LearningContent() {
 
     // Mentor dinamis dari API
     const [mentors, setMentors] = useState<Mentor[]>([]);
+    
+    // Certificate Templates
+    const [certificateTemplates, setCertificateTemplates] = useState<CertificateTemplate[]>([]);
 
-    // Fetch categories dan mentors dari API
+    // Fetch categories, mentors, and certificate templates dari API
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -72,6 +77,14 @@ export default function LearningContent() {
 
                 if (catData.success) setCategories(catData.data);
                 if (mentorData.success) setMentors(mentorData.data);
+                
+                // Fetch certificate templates
+                try {
+                    const templates = await getCertificateTemplates();
+                    setCertificateTemplates(templates);
+                } catch (err) {
+                    console.error('Error fetching templates:', err);
+                }
             } catch (err) {
                 console.error('Error fetching data:', err);
             } finally {
@@ -161,7 +174,8 @@ export default function LearningContent() {
             mentor_id: matchedMentor?.id || '',
             price: course.price || 0,
             discount_amount: course.discount_amount || 0,
-            status: (course.status || 'draft') as 'draft' | 'published'
+            status: (course.status || 'draft') as 'draft' | 'published',
+            certificate_template_id: course.certificate_template_id || null
         });
         setShowEditModal(true);
     };
@@ -508,6 +522,22 @@ export default function LearningContent() {
                                         <option value="draft">Draft</option>
                                         <option value="published">Published</option>
                                     </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Template Sertifikat (Opsional)</label>
+                                    <select
+                                        value={editFormData.certificate_template_id || ''}
+                                        onChange={(e) => setEditFormData({ ...editFormData, certificate_template_id: e.target.value ? Number(e.target.value) : null })}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#6B21FF] text-gray-900"
+                                    >
+                                        <option value="">Tidak Ada (Gunakan Default)</option>
+                                        {certificateTemplates.map(template => (
+                                            <option key={template.id} value={template.id}>
+                                                {template.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="text-xs text-gray-500 mt-1">Sertifikat akan otomatis dibuat saat user menyelesaikan course</p>
                                 </div>
                                 <div className="flex gap-3 mt-6">
                                     <button

@@ -18,6 +18,7 @@ export interface Course {
   mentor_title?: string;
   mentor_photo_profile?: string;
   status?: string;
+  certificate_template_id?: number | null;
   createdAt?: string;
   updatedAt?: string;
   modules?: Module[];

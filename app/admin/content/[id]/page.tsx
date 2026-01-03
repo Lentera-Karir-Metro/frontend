@@ -458,8 +458,8 @@ export default function CourseDetail() {
 
                 {/* Delete Modal */}
                 {showDeleteModal && selectedModule && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
+                    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl animate-scale-up">
                             <h2 className="text-2xl font-bold text-gray-900 mb-4">Hapus Modul</h2>
                             <p className="text-gray-600 mb-6">
                                 Apakah Anda yakin ingin menghapus modul <strong>"{selectedModule.title}"</strong>?

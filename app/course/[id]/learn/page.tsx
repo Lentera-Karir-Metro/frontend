@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import DashboardNavbar from '@/app/components/DashboardNavbar';
 import Footer from '@/app/components/Footer';
 import { DashboardSkeleton } from '@/app/components/ui/Skeleton';
+import CertificateGenerationModal from '@/app/components/CertificateGenerationModal';
 
 type Module = {
 	module_id: string;
@@ -71,6 +72,10 @@ export default function CourseLearnPage() {
 	const [downloadedEbookTitle, setDownloadedEbookTitle] = useState('');
 	const [courseCertificate, setCourseCertificate] = useState<any>(null);
 	const [certificateLoading, setCertificateLoading] = useState(false);
+	const [showCertificateModal, setShowCertificateModal] = useState(false);
+	const [eligibleCourseId, setEligibleCourseId] = useState<string | null>(null);
+	const [eligibleCourseTitle, setEligibleCourseTitle] = useState<string>('');
+	const [recommendedTemplateId, setRecommendedTemplateId] = useState<number | undefined>();
 
 	// Fetch course certificate
 	const fetchCourseCertificate = async () => {
@@ -623,9 +628,58 @@ export default function CourseLearnPage() {
 															</div>
 														</div>
 													) : isFullyCompleted ? (
-														// Sertifikat sedang diproses - menunggu admin generate
+														// Sertifikat sedang diproses - klik untuk generate
 														<div className="max-w-2xl mx-auto">
-															<div className="bg-gray-100 border border-gray-300 rounded-xl p-6 flex items-start gap-4">
+															<div
+																className="bg-gray-100 border border-gray-300 rounded-xl p-6 flex items-start gap-4 cursor-pointer hover:bg-gray-200 transition-colors"
+																onClick={async (e) => {
+																	e.preventDefault();
+																	// Check eligibility and show modal
+																	try {
+																		const token = localStorage.getItem('token');
+																		const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+																		
+																		console.log('Clicking certificate box, checking eligibility for course:', courseId);
+																		
+																		const response = await fetch(`${baseUrl}/user-certificates/check/${courseId}`, {
+																			headers: {
+																				'Authorization': `Bearer ${token}`
+																			}
+																		});
+
+																		const result = await response.json();
+																		console.log('Certificate eligibility check:', result);
+
+																		if (!response.ok) {
+																			const error = result;
+																			alert(error.message || 'Gagal memeriksa kelayakan sertifikat');
+																			return;
+																		}
+																		
+																		// Check if already has certificate
+																		if (result.data?.has_certificate) {
+																			alert('Anda sudah memiliki sertifikat untuk course ini. Silakan refresh halaman untuk melihatnya.');
+																			await fetchCourseCertificate();
+																			return;
+																		}
+																		
+																		// Check if eligible
+																		if (result.data?.eligible_for_certificate || result.data?.is_completed) {
+																			console.log('User is eligible, showing modal');
+																			setEligibleCourseId(courseId);
+																			setEligibleCourseTitle(result.data?.course_title || learningPathData?.title || 'Course');
+																			setRecommendedTemplateId(result.data?.recommended_template_id);
+																			setShowCertificateModal(true);
+																		} else {
+																			const msg = `Anda belum menyelesaikan semua modul di course ini.\n\nProgress:\n- Modul selesai: ${result.data?.completed_modules || 0}\n- Total modul: ${result.data?.total_modules || 0}`;
+																			alert(msg);
+																		}
+																	} catch (err) {
+																		console.error('Error checking certificate eligibility:', err);
+																		alert('Gagal memeriksa kelayakan sertifikat: ' + (err as Error).message);
+																	}
+																}}
+															>
 																<div className="flex-shrink-0">
 																	<svg className="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 																		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
@@ -1284,6 +1338,31 @@ export default function CourseLearnPage() {
 						</div>
 					</div>
 				</div>
+			)}
+
+			{/* Certificate Generation Modal */}
+			{showCertificateModal && eligibleCourseId && (
+				<CertificateGenerationModal
+					isOpen={showCertificateModal}
+					courseId={eligibleCourseId}
+					courseTitle={eligibleCourseTitle}
+					recommendedTemplateId={recommendedTemplateId}
+					onClose={() => {
+						setShowCertificateModal(false);
+						setEligibleCourseId(null);
+						setEligibleCourseTitle('');
+						setRecommendedTemplateId(undefined);
+					}}
+					onSuccess={async (certificate) => {
+						console.log('Certificate generated successfully:', certificate);
+						// Refresh certificate list
+						await fetchCourseCertificate();
+						setShowCertificateModal(false);
+						setEligibleCourseId(null);
+						setEligibleCourseTitle('');
+						setRecommendedTemplateId(undefined);
+					}}
+				/>
 			)}
 		</motion.div>
 	);

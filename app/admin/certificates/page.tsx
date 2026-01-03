@@ -4,16 +4,13 @@ import HeaderAdmin from '@/app/components/HeaderAdmin';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-    getCertificateCandidates,
     getCertificateTemplates,
-    type CertificateCandidate,
     type CertificateTemplate
 } from '@/lib/certificateService';
 
 export default function CertificatePage() {
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [candidates, setCandidates] = useState<CertificateCandidate[]>([]);
     const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -58,12 +55,7 @@ export default function CertificatePage() {
             setLoading(true);
             setError(null);
 
-            const [candidatesData, templatesData] = await Promise.all([
-                getCertificateCandidates(),
-                getCertificateTemplates()
-            ]);
-
-            setCandidates(candidatesData);
+            const templatesData = await getCertificateTemplates();
             setTemplates(templatesData);
         } catch (err: any) {
             console.error('Error fetching data:', err);
@@ -73,15 +65,47 @@ export default function CertificatePage() {
         }
     };
 
-    const handleGenerateClick = (candidate: CertificateCandidate) => {
-        // Navigate to generate page with candidate data
-        const params = new URLSearchParams({
-            userId: candidate.user_id.toString(),
-            courseId: candidate.course_id.toString(),
-            userName: encodeURIComponent(candidate.user_name),
-            courseTitle: encodeURIComponent(candidate.course_title)
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('id-ID', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
-        router.push(`/admin/certificates/generate?${params.toString()}`);
+    };
+
+    const handleDeleteTemplate = async () => {
+        if (!selectedTemplateToDelete) return;
+
+        if (deleteConfirmText !== 'hapus') {
+            showNotification('error', 'Ketik "hapus" untuk konfirmasi');
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/certificates/admin/templates/${selectedTemplateToDelete.id}`,
+                {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Gagal menghapus template');
+            }
+
+            showNotification('success', 'Template berhasil dihapus!');
+            setShowDeleteTemplateModal(false);
+            setSelectedTemplateToDelete(null);
+            setDeleteConfirmText('');
+            fetchData(); // Refresh templates
+        } catch (err: any) {
+            console.error('Error deleting template:', err);
+            showNotification('error', err.message || 'Gagal menghapus template');
+        }
     };
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,14 +186,6 @@ export default function CertificatePage() {
         }
     };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('id-ID', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
-
     return (
         <div className="flex min-h-screen bg-gray-50">
             <AdminSidebar />
@@ -180,7 +196,8 @@ export default function CertificatePage() {
                 <main className="p-8">
                     {/* Header */}
                     <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900">Certificate Template</h1>
+                        <h1 className="text-3xl font-bold text-gray-900">Manajemen Sertifikat</h1>
+                        <p className="text-gray-600 mt-2">Kelola template sertifikat untuk auto-generate ketika user menyelesaikan course</p>
                     </div>
 
                     {/* Error State */}
@@ -198,48 +215,40 @@ export default function CertificatePage() {
                         </div>
                     ) : (
                         <>
-                            {/* Candidates Table */}
-                            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm mb-8">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full">
-                                        <thead className="bg-[#E8DEFF]">
-                                            <tr>
-                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Nama</th>
-                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Email</th>
-                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Judul Kelas</th>
-                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Tanggal Selesai</th>
-                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Mentor</th>
-                                                <th className="px-6 py-4 text-center text-sm font-semibold text-[#6B21FF]">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-100">
-                                            {candidates.length === 0 ? (
-                                                <tr>
-                                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                                                        Tidak ada peserta yang menunggu sertifikat
-                                                    </td>
-                                                </tr>
-                                            ) : (
-                                                candidates.map((candidate, index) => (
-                                                    <tr key={index} className="hover:bg-gray-50 transition">
-                                                        <td className="px-6 py-4 text-sm text-gray-900 text-center">{candidate.user_name}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-600 text-center">{candidate.user_email}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-900 text-center">{candidate.course_title}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-600 text-center">{formatDate(candidate.completed_at)}</td>
-                                                        <td className="px-6 py-4 text-sm text-gray-600 text-center">{candidate.mentor_name || '-'}</td>
-                                                        <td className="px-6 py-4 text-center">
-                                                            <button
-                                                                onClick={() => handleGenerateClick(candidate)}
-                                                                className="text-[#6B21FF] hover:text-[#5518CC] font-medium text-sm transition"
-                                                            >
-                                                                Buat Sertifikat
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            )}
-                                        </tbody>
-                                    </table>
+                            {/* Info Banner */}
+                            <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-6 mb-8">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="text-lg font-bold text-gray-900 mb-2">Sistem Auto-Generate Sertifikat</h3>
+                                        <p className="text-gray-700 mb-3">
+                                            Sertifikat akan <strong>otomatis dibuat</strong> ketika user menyelesaikan semua modul di suatu course.
+                                        </p>
+                                        <ul className="space-y-2 text-sm text-gray-600">
+                                            <li className="flex items-center gap-2">
+                                                <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span>Upload template sertifikat di bawah ini</span>
+                                            </li>
+                                            <li className="flex items-center gap-2">
+                                                <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span>Assign template ke course di halaman Edit Course</span>
+                                            </li>
+                                            <li className="flex items-center gap-2">
+                                                <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span>Sistem akan otomatis generate sertifikat untuk setiap user yang menyelesaikan course</span>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
 
@@ -499,32 +508,7 @@ export default function CertificatePage() {
                                     Batal
                                 </button>
                                 <button
-                                    onClick={async () => {
-                                        if (deleteConfirmText !== 'hapus') {
-                                            showNotification('error', 'Ketik "hapus" untuk konfirmasi');
-                                            return;
-                                        }
-                                        try {
-                                            const token = localStorage.getItem('token');
-                                            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/certificates/admin/templates/${selectedTemplateToDelete.id}`, {
-                                                method: 'DELETE',
-                                                headers: { 'Authorization': `Bearer ${token}` }
-                                            });
-                                            const json = await res.json().catch(() => ({}));
-                                            if (!res.ok) {
-                                                showNotification('error', json.message || 'Gagal menghapus template');
-                                            } else {
-                                                showNotification('success', json.message || 'Template berhasil dihapus');
-                                                setShowDeleteTemplateModal(false);
-                                                setSelectedTemplateToDelete(null);
-                                                setDeleteConfirmText('');
-                                                fetchData();
-                                            }
-                                        } catch (err: any) {
-                                            console.error('Error deleting template:', err);
-                                            showNotification('error', err.message || 'Gagal menghapus template');
-                                        }
-                                    }}
+                                    onClick={handleDeleteTemplate}
                                     disabled={deleteConfirmText !== 'hapus'}
                                     className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
