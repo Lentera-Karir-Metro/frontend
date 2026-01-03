@@ -1,7 +1,7 @@
 "use client";
 import AdminSidebar from '@/app/components/AdminSidebar';
 import HeaderAdmin from '@/app/components/HeaderAdmin';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createModules, createQuiz } from '@/lib/moduleService';
 
@@ -44,7 +44,7 @@ interface ExistingModule {
     created_at?: string;
 }
 
-export default function TambahModul() {
+function TambahModulContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const courseId = searchParams.get('courseId');
@@ -1275,5 +1275,26 @@ export default function TambahModul() {
                 }
             `}</style>
         </div>
+    );
+}
+
+export default function TambahModul() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen bg-gray-50">
+                <AdminSidebar />
+                <div className="flex-1 ml-[250px]">
+                    <HeaderAdmin />
+                    <main className="p-8">
+                        <div className="flex justify-center items-center py-12">
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B21FF]"></div>
+                            <p className="text-gray-500 ml-3">Memuat data...</p>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        }>
+            <TambahModulContent />
+        </Suspense>
     );
 }

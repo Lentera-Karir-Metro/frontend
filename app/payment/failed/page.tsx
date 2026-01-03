@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardNavbar from '@/app/components/DashboardNavbar';
 import Footer from '@/app/components/Footer';
 
-export default function PaymentFailedPage() {
+function PaymentFailedContent() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const [countdown, setCountdown] = useState(10);
@@ -104,5 +104,24 @@ export default function PaymentFailedPage() {
 
 			<Footer />
 		</div>
+	);
+}
+
+export default function PaymentFailedPage() {
+	return (
+		<Suspense fallback={
+			<div className="min-h-screen flex flex-col bg-gray-50">
+				<DashboardNavbar />
+				<main className="flex-grow flex items-center justify-center">
+					<div className="text-center">
+						<div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
+						<p className="text-gray-600">Loading...</p>
+					</div>
+				</main>
+				<Footer />
+			</div>
+		}>
+			<PaymentFailedContent />
+		</Suspense>
 	);
 }

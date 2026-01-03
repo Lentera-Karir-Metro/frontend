@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 
-export default function ResetPassword() {
+function ResetPasswordContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [token, setToken] = useState('');
@@ -278,5 +278,31 @@ export default function ResetPassword() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function ResetPassword() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 p-4">
+                <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
+                    <div className="flex justify-center mb-6">
+                        <Image
+                            src="/images/lentera.png"
+                            alt="Lentera Karir Logo"
+                            width={120}
+                            height={50}
+                            className="h-12 w-auto"
+                        />
+                    </div>
+                    <div className="text-center">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Loading...</h2>
+                        <p className="text-gray-600">Mohon tunggu sebentar</p>
+                    </div>
+                </div>
+            </div>
+        }>
+            <ResetPasswordContent />
+        </Suspense>
     );
 }

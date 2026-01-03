@@ -1,7 +1,7 @@
 "use client";
 import AdminSidebar from '@/app/components/AdminSidebar';
 import HeaderAdmin from '@/app/components/HeaderAdmin';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
     getCertificateTemplates,
@@ -9,7 +9,7 @@ import {
     type CertificateTemplate
 } from '@/lib/certificateService';
 
-export default function GenerateCertificatePage() {
+function GenerateCertificateContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const userId = searchParams.get('userId');
@@ -326,5 +326,26 @@ export default function GenerateCertificatePage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function GenerateCertificatePage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen bg-gray-50">
+                <AdminSidebar />
+                <div className="flex-1 ml-[250px]">
+                    <HeaderAdmin />
+                    <main className="p-8">
+                        <div className="flex justify-center items-center py-12">
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#6B21FF]"></div>
+                            <p className="text-gray-500 ml-3">Memuat data...</p>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        }>
+            <GenerateCertificateContent />
+        </Suspense>
     );
 }
