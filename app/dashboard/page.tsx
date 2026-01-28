@@ -64,22 +64,24 @@ export default function Dashboard() {
 				'Content-Type': 'application/json'
 			};
 
+			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+
 			// Fetch stats
-			const statsRes = await fetch('http://localhost:3000/api/v1/dashboard/stats', { headers });
+			const statsRes = await fetch(`${baseUrl}/dashboard/stats`, { headers });
 			if (statsRes.ok) {
 				const statsData = await statsRes.json();
 				setStats(statsData.data);
 			}
 
 			// Fetch continue learning
-			const continueRes = await fetch('http://localhost:3000/api/v1/dashboard/continue-learning', { headers });
+			const continueRes = await fetch(`${baseUrl}/dashboard/continue-learning`, { headers });
 			if (continueRes.ok) {
 				const continueData = await continueRes.json();
 				setContinueLearning(continueData.data);
 			}
 
 			// Fetch recommended from public catalog (3 latest courses)
-			const recommendedRes = await fetch('http://localhost:3000/api/v1/catalog/courses?limit=3');
+			const recommendedRes = await fetch(`${baseUrl}/catalog/courses?limit=3`);
 			if (recommendedRes.ok) {
 				const recommendedJson = await recommendedRes.json();
 				// API returns { data: [...], pagination: {...} }

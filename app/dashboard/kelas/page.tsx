@@ -42,7 +42,8 @@ export default function KelasPage() {
 			setToastMessage(null);
 
 			// Gunakan authenticatedFetch yang otomatis handle token expiry
-			const response = await authenticatedFetch('http://localhost:3000/api/v1/learn/my-courses');
+			const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+			const response = await authenticatedFetch(`${baseUrl}/learn/my-courses`);
 
 			if (!response.ok) {
 				// Jika 401, authenticatedFetch sudah handle logout otomatis

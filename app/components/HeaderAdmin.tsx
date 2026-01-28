@@ -25,7 +25,8 @@ export default function HeaderAdmin() {
                     return;
                 }
 
-                const response = await fetch('http://localhost:3000/api/v1/auth/me', {
+                const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+                const response = await fetch(`${baseUrl}/auth/me`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'

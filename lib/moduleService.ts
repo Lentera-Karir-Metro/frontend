@@ -1,5 +1,5 @@
 // lib/moduleService.ts
-const API_BASE_URL = 'http://localhost:3000/api/v1/admin';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/admin`.replace('/api/v1/admin', '/admin');
 
 /**
  * Create a quiz first (required before creating quiz module)
@@ -52,7 +52,7 @@ export const createModules = async (courseId: string, moduleData: {
 
     const formData = new FormData();
     formData.append('title', moduleData.title);
-    
+
     // Append files based on module type
     if (moduleData.moduleType === 'video' || moduleData.moduleType === 'ebook') {
         moduleData.files.forEach((file) => {
